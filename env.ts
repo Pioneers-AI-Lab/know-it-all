@@ -5,12 +5,14 @@ const envSchema = z.object({
 	ANTHROPIC_API_KEY: z.string(),
 	SLACK_SIGNING_SECRET: z.string(),
 	SLACK_APP_TOKEN: z.string(),
+	SLACK_BOT_TOKEN: z.string(),
 });
 
 const publicEnv: Record<string, string> = {
 	ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY!,
 	SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET!,
 	SLACK_APP_TOKEN: process.env.SLACK_APP_TOKEN!,
+	SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN!,
 };
 
 export type EnvType = z.infer<typeof envSchema>;
@@ -38,7 +40,11 @@ export const Env = {
 			return publicEnv[key];
 		}
 		const value = process.env[key];
-		if (key === 'SLACK_SIGNING_SECRET' || key === 'SLACK_APP_TOKEN') {
+		if (
+			key === 'SLACK_SIGNING_SECRET' ||
+			key === 'SLACK_BOT_TOKEN' ||
+			key === 'SLACK_APP_TOKEN'
+		) {
 			return value;
 		}
 		if (!value) {
