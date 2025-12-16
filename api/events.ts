@@ -9,12 +9,30 @@ import { verifyRequest, getBotId } from '@/lib/slack-utils';
 
 export async function POST(request: Request) {
 	const rawBody = await request.text();
-	const payload = JSON.parse(rawBody);
+
+	let payload;
+	try {
+		payload = JSON.parse(rawBody);
+	} catch (error) {
+		console.error('Error parsing request body:', error);
+		return new Response('Invalid JSON', { status: 400 });
+	}
+
 	const requestType = payload.type as 'url_verification' | 'event_callback';
 
 	// See https://api.slack.com/events/url_verification
 	if (requestType === 'url_verification') {
-		return new Response(payload.challenge, { status: 200 });
+		const challenge = payload.challenge;
+		if (!challenge) {
+			console.error('Missing challenge in url_verification request');
+			return new Response('Missing challenge', { status: 400 });
+		}
+		return new Response(challenge, {
+			status: 200,
+			headers: {
+				'Content-Type': 'text/plain',
+			},
+		});
 	}
 
 	await verifyRequest({ requestType, request, rawBody });
