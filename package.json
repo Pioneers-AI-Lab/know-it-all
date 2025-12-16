@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@slack/web-api": "^7.13.0",
+    "ai": "^5.0.113",
+    "dotenv": "^17.2.3",
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1",
