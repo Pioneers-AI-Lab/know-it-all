@@ -1,3 +1,47 @@
+/**
+ * Slack Streaming Module - Real-time Agent Response Streaming
+ *
+ * This module handles the core streaming logic that displays agent responses
+ * in Slack with animated status updates and real-time progress indicators.
+ *
+ * Key Features:
+ * - Animated spinners while agent is thinking
+ * - Progress indicators for tool calls and workflow steps
+ * - Live message updates (no message spam)
+ * - Graceful error handling with user-friendly messages
+ *
+ * Flow:
+ * 1. Post initial "thinking" message to Slack
+ * 2. Start animation timer (updates message every 300ms)
+ * 3. Stream chunks from Mastra agent
+ * 4. Update state based on chunk type
+ * 5. Show special indicators for tools/workflows
+ * 6. Stop animation and post final response
+ *
+ * Chunk Types:
+ * - text-delta: Accumulate response text
+ * - tool-call: Show tool name with spinner
+ * - tool-output: May contain nested workflow events
+ * - workflow-execution-start: Show workflow name
+ * - workflow-step-start: Show step name with spinner
+ *
+ * Nested Events:
+ * Workflow events come wrapped inside tool-output chunks and must be
+ * extracted. The chunk.payload.output object contains the actual workflow
+ * event type and data.
+ *
+ * Animation:
+ * - Uses setInterval for smooth spinner animation
+ * - Frame counter tracks animation position
+ * - Stops when stream completes or errors
+ * - Rate limit errors during animation are ignored
+ *
+ * Error Handling:
+ * - Errors are posted to Slack thread
+ * - Animation stops gracefully
+ * - Retry logic for final message (3 attempts)
+ */
+
 import type { WebClient } from '@slack/web-api';
 import { ANIMATION_INTERVAL, STEP_DISPLAY_DELAY, TOOL_DISPLAY_DELAY } from './constants.js';
 import { getStatusText } from './status.js';
@@ -6,6 +50,15 @@ import type { StreamingOptions, StreamState } from './types.js';
 
 export type { StreamingOptions } from './types.js';
 
+/**
+ * Stream agent response to Slack with animated status updates
+ *
+ * This is the main entry point for processing agent responses and
+ * displaying them in Slack with real-time progress indicators.
+ *
+ * @param options - Configuration including mastra instance, Slack client,
+ *                  channel info, agent name, and message context
+ */
 export async function streamToSlack(options: StreamingOptions): Promise<void> {
   const { mastra, slackClient, channel, threadTs, agentName, message, resourceId, threadId } = options;
 
@@ -140,6 +193,18 @@ export async function streamToSlack(options: StreamingOptions): Promise<void> {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Retry sending final message to Slack with exponential backoff
+ *
+ * The final message is critical for user experience, so we retry up to 3 times
+ * if the update fails due to rate limits or transient errors.
+ *
+ * @param client - Slack WebClient instance
+ * @param channel - Channel ID where message was posted
+ * @param ts - Message timestamp to update
+ * @param text - Final text content to display
+ * @param maxAttempts - Maximum retry attempts (default: 3)
+ */
 async function retrySlackUpdate(client: WebClient, channel: string, ts: string, text: string, maxAttempts = 3) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {

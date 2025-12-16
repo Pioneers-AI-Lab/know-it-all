@@ -1,20 +1,75 @@
 /**
- * Slack events routes for Mastra - supports multiple Slack apps
+ * Slack Events Routes - Multi-App Webhook Handler
+ *
+ * This file implements the core webhook handling logic for Slack events.
+ * It uses a factory pattern to create separate webhook endpoints for each
+ * Slack app, allowing multiple bots to coexist in the same Mastra instance.
+ *
+ * Architecture:
+ * - One route per Slack app: /slack/{name}/events
+ * - Each route has its own credentials (bot token, signing secret)
+ * - Each route connects to a specific Mastra agent
+ *
+ * Request Flow:
+ * 1. Slack sends event → POST /slack/{name}/events
+ * 2. Verify request signature (security)
+ * 3. Handle URL verification challenge (initial setup)
+ * 4. Extract message data (text, user, channel, thread)
+ * 5. Strip bot mentions from message text
+ * 6. Call streamToSlack() asynchronously (prevent 3s timeout)
+ * 7. Return 200 OK immediately to Slack
+ *
+ * Security:
+ * - All requests verified using HMAC SHA256 signature
+ * - Old requests (>5 min) rejected
+ * - Missing credentials return 500 error
+ *
+ * Message Processing:
+ * - Bot messages ignored (prevents infinite loops)
+ * - Message edits ignored (subtype check)
+ * - App mentions and DMs processed
+ * - Thread context preserved via thread_ts
+ *
+ * Important Notes:
+ * - Asynchronous processing prevents Slack's 3-second timeout
+ * - resourceId format: slack-{teamId}-{userId}
+ * - threadId format: slack-{channelId}-{threadTs}
  */
+
 import { registerApiRoute } from '@mastra/core/server';
 import { WebClient } from '@slack/web-api';
 import { verifySlackRequest } from './verify';
 import { streamToSlack } from './streaming';
 
+/**
+ * Configuration for a single Slack app
+ *
+ * Each Slack app gets its own:
+ * - Webhook route at /slack/{name}/events
+ * - Bot token for API calls
+ * - Signing secret for request verification
+ * - Connected agent for message processing
+ */
 interface SlackAppConfig {
   name: string; // Route path: /slack/{name}/events
   botToken: string;
   signingSecret: string;
-  agentName: string;
+  agentName: string; // Must match key in mastra.agents
 }
 
 /**
  * Factory function to create a Slack events route for a specific app
+ *
+ * This function creates a POST endpoint that:
+ * 1. Handles Slack's URL verification challenge (required for setup)
+ * 2. Verifies request authenticity using HMAC signatures
+ * 3. Processes app_mention and message.im events
+ * 4. Ignores bot messages and message edits
+ * 5. Strips bot mentions from message text
+ * 6. Initiates asynchronous agent processing
+ *
+ * The route handler returns immediately (200 OK) to stay within Slack's
+ * 3-second timeout requirement. Actual message processing happens async.
  */
 function createSlackEventsRoute(config: SlackAppConfig) {
   return registerApiRoute(`/slack/${config.name}/events`, {
@@ -110,7 +165,25 @@ function createSlackEventsRoute(config: SlackAppConfig) {
   });
 }
 
-// Define your Slack apps - each with its own credentials and agent
+/**
+ * Slack App Configuration
+ *
+ * Define all Slack apps here. Each entry creates:
+ * - A webhook endpoint at /slack/{name}/events
+ * - A connection to the specified Mastra agent
+ *
+ * To add a new Slack app:
+ * 1. Create the agent in src/mastra/agents/
+ * 2. Register it in src/mastra/index.ts
+ * 3. Add configuration here
+ * 4. Create Slack app at api.slack.com/apps
+ * 5. Add credentials to .env
+ * 6. Configure webhook URL in Slack app settings
+ *
+ * Environment Variables Required:
+ * - SLACK_{APP_NAME}_BOT_TOKEN (uppercase, snake_case)
+ * - SLACK_{APP_NAME}_SIGNING_SECRET
+ */
 const slackApps: SlackAppConfig[] = [
   {
     name: 'reverse',
@@ -126,5 +199,10 @@ const slackApps: SlackAppConfig[] = [
   },
 ];
 
-// Generate routes for all configured apps
+/**
+ * Generate routes for all configured apps
+ *
+ * Maps each SlackAppConfig to a registered API route.
+ * The resulting array is passed to Mastra's server.apiRoutes config.
+ */
 export const slackRoutes = slackApps.map(createSlackEventsRoute);
