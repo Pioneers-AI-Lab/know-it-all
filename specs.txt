@@ -1,353 +1,92 @@
 Pipeline candidat : du sourcing à l’onboarding
-
-
-
-
-
 Sourcing inbound : événements existants déjà automatisés via système actuel
-
-
-
 Évaluation automatisée : agent IA déployé dans Airtable pour tri des candidatures
-
-
-
-
-
 Top 5% candidats : entretien automatique garanti (ont “craqué” quelque chose sur l’IA)
-
-
-
 Applications trash : supprimées automatiquement sans review humaine
-
-
-
 Ventre mou (50-80% des candidats) : évaluation human-in-the-loop obligatoire avant passage entretien
-
-
-
 Sélection finale ~50 candidats sur 100-150 pour entretiens 30 minutes
-
-
-
 Process entretien : appels individuels 30 minutes focus évaluation skills
-
-
-
-
-
 Intégration Granola : prise de notes automatique pendant entretien
-
-
-
 Notes Granola alimentent directement champ candidat dans Airtable
-
-
-
 Sélection finale : agent IA propose scoring final sur 100 avec recommandation go/no-go
-
-
-
 Basé sur combinaison notes secteur + évaluation Granola
 
-
-
 Automatisations critiques à implémenter :
-
-
-
-
-
 Templates emails : automatisation envoi invitations entretien (actuellement manuel et “chiant”)
-
-
-
 Customer.io integration : envoi automatique mails acceptation + calendrier booking
-
-
-
 Onboarding automatisé : envoi accès Slack + premier calendrier + info meet-up pré-batch
-
-
-
 Profile book automatique : génération depuis onboarding form sans copy-paste manuel
 
 Préparation programmation batch
-
-
-
-
-
 Timeline planning : définition dates début/fin + buffer 2-3 mois pour sourcing complet
-
-
-
 Structure programme : évolution du format intensif quotidien vers 3 mois plus lissés
-
-
-
-
-
 Batch précédents : 1 mois très intense, sessions quotidiennes pendant 1.5 ans sur 4 batchs
-
-
-
 Format actuel : 3 mois avec intensité modulée (2 premières semaines chargées puis calmé)
-
-
-
 Optimisation nécessaire : meilleur lissage planning pour maximiser valeur sessions
 
-
-
 Trois piliers programmation :
-
-
-
-
-
 Exercices de groupe : création startup en 2h avec technos définies
-
-
-
 Masterclasses : speakers externes sur thématiques clés
-
-
-
 Événements informels : drinks, paddle, bowling pour cohésion sociale
-
-
-
 Milestones batch : start date, locking teams, pitch final, weekly pitches, démo day
 
-
-
 Booking speakers masterclasses :
-
-
-
-
-
 Pipeline outbound : outreach speakers, liste thématiques, targeting précis
-
-
-
 Thématiques évolutives : adaptation avec nouvelles technos (plus d’IA maintenant vs avant)
-
-
-
 Contrainte planning : jeu de “tétris” avec disponibilités speakers multiples
-
-
-
 Exemple : speaker confirmé lundi change pour mardi 18h, doit réorganiser autre speaker déjà booké mardi
-
-
-
 Booking salle Station F : actuellement manuel, possibilité automatisation future avec agent Comète
-
-
-
 Documentation planning : Calendar Google + Notion pour détails + export PDF vue semaine partageable
 
 Communication et gestion durant le batch
-
-
-
-
-
 Multi-canal obligatoire : dispersion attention fondateurs nécessite bombardement info
-
-
-
-
-
 Slack : canal principal communication quotidienne
-
-
-
 Emails : documentation officielle, acceptations, onboarding
-
-
-
 Notion : planning détaillé, ressources, updates projets
-
-
-
 Slackbot Q&A : automatisation réponses questions fréquentes
-
-
-
-
-
 Base knowledge : Notion générique Pionniers + spécifique batch courant
-
-
-
 Fonctionnement : détection automatique questions dans channels + réponse avant humain
-
-
-
 Architecture données : filtrage par sujet pour minimiser tokens et optimiser recherche
 
-
-
 Reminders automatisés par type événement :
-
-
-
-
-
 Masterclasses : rappel semaine avant + début semaine + 1h avant session
-
-
-
 Exercices de groupe : rappel semaine avant + jour J + explication rules pendant événement
-
-
-
 Événements sociaux : rappel allégé, juste jour J
-
-
-
 Office hours : calendrier Calendly simple, premier arrivé/premier servi
-
-
-
 Weekly pitches : système inscription automatique avec ordre passage
-
-
-
-
-
 Bénéfice : premiers inscrits = plus motivés/organisés (signal qualité équipes)
-
-
-
 Automatisation : génération automatique planning “14h-14h10 startup X, 14h10-14h20 startup Y”
 
-
-
 Community management durant événements :
-
-
-
-
-
 Exercices : envoi rules, reminders soumission, collecte résultats
-
-
-
 Masterclasses : coordination logistique, Q&A moderation
-
-
-
 Formation équipes : month 2, matching fondateurs + form création équipe
-
-
-
-
-
 Profile matching : utilisation profile book pour suggestions équipes
-
-
-
 Updates projet : form regular updates intégré Notion pour suivi progression
 
 Automatisations prioritaires et architecture technique
-
-
-
-
-
 Slackbot priorité #1 : développement MCP pour réponses automatiques
-
-
-
-
-
 Scope initial : channel test puis extension général ou DM
-
-
-
 Base knowledge : Notion avec infos random pour tests + vraies données batch
-
-
-
 Fonctionnalités : détection questions + recherche sémantique + réponse contextuelle
 
-
-
 Profile book automatisation :
-
-
-
-
-
 Problème actuel : copy-paste manuel entre candidature, onboarding form, et profile final
-
-
-
 Solution : création automatique profile depuis onboarding form complété
-
-
-
 Données manquantes : scraping LinkedIn pour école, expérience (40 profils par batch)
-
-
-
 Contraintes LinkedIn : mesures anti-scraping, nécessite agent Comète ou Sales Navigator
-
-
-
 Information critique : école/expérience pour analytics investisseurs, pas pour founders
 
-
-
 Templates et workflows :
-
-
-
-
-
 Customer.io : templates emails acceptation, onboarding, reminders
-
-
-
 Airtable automation : passage candidature → entretien → acceptance → onboarding
-
-
-
 Calendar integration : ajout automatique sessions + booking salles
 
-
-
 Export et partage :
-
-
-
-
-
 Vue synthétique : export calendar vers PDF/Notion pour partage programme
-
-
-
 Updates temps réel : synchronisation calendar ↔ Notion ↔ communications
 
-
-
 Contraintes high-value vs effort :
-
-
-
-
-
 High value, low effort : automatiser en priorité
-
-
-
 Low value, high effort : ne pas automatiser
-
-
-
 High value, high effort : évaluer cas par cas, possibly human-in-the-loop solutions
