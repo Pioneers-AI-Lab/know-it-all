@@ -38,21 +38,22 @@ import { reverseWorkflow } from '../workflows/reverse-workflow';
  * Example: "hello" → "olleh"
  */
 const reverseTextTool = createTool({
-  id: 'reverse-text',
-  description: 'Reverses a text string character by character',
-  inputSchema: z.object({
-    text: z.string().describe('The text to reverse'),
-  }),
-  execute: async ({ text }) => {
-    return text.split('').reverse().join('');
-  },
+	id: 'reverse-text',
+	description: 'Reverses a text string character by character',
+	inputSchema: z.object({
+		text: z.string().describe('The text to reverse'),
+	}),
+	execute: async ({ text }) => {
+		return text.split('').reverse().join('');
+	},
 });
 
 export const reverseAgent = new Agent({
-  id: 'reverse-agent',
-  name: 'reverse-agent',
-  description: 'Reverses text character by character, with an optional fancy transformation workflow',
-  instructions: `You are a text reversal agent. You have two capabilities:
+	id: 'reverse-agent',
+	name: 'reverse-agent',
+	description:
+		'Reverses text character by character, with an optional fancy transformation workflow',
+	instructions: `You are a text reversal agent. You have two capabilities:
 
 1. **Simple reverse**: Use the reverse-text tool to quickly reverse text.
 2. **Fancy transform**: Use the reverse-workflow for a full transformation that analyzes, reverses, uppercases, and formats text with decorative borders.
@@ -64,12 +65,12 @@ IMPORTANT: When calling tools or workflows, only pass the text from the user's C
 Examples:
 - User: "hello" → Use tool with text="hello" → "olleh"
 - User: "reverse hello but make it fancy" → Use workflow with text="hello" → formatted output`,
-  model: 'anthropic/claude-3-5-sonnet-20241022',
-  tools: { reverseTextTool },
-  workflows: { reverseWorkflow },
-  memory: new Memory({
-    options: {
-      lastMessages: 20, // Maintains context for conversation flow
-    },
-  }),
+	model: 'anthropic/claude-sonnet-4-20250514',
+	tools: { reverseTextTool },
+	workflows: { reverseWorkflow },
+	memory: new Memory({
+		options: {
+			lastMessages: 20, // Maintains context for conversation flow
+		},
+	}),
 });

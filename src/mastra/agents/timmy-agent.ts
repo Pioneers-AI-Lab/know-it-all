@@ -7,8 +7,9 @@ export const timmy = new Agent({
 	id: 'timmy-agent',
 	name: 'timmy-agent',
 	description: 'Timmy is a helpful assistant that can help with tasks',
-	instructions: 'You are Timmy. You are a helpful assistant that can help with tasks',
-	model: 'anthropic/claude-3-5-sonnet-20241022',
+	instructions:
+		'You are Timmy. You are a helpful assistant that can help with tasks',
+	model: 'anthropic/claude-sonnet-4-20250514',
 	memory: new Memory({
 		options: {
 			lastMessages: 20,

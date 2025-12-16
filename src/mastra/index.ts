@@ -23,31 +23,29 @@
 
 import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
-import { reverseAgent } from './agents/reverse-agent';
-import { capsAgent } from './agents/caps-agent';
-import { reverseWorkflow } from './workflows/reverse-workflow';
+import { timmy } from './agents/timmy-agent';
 import { slackRoutes } from './slack/routes';
 
 export const mastra = new Mastra({
-  // Registered agents - keys must match agentName in slack/routes.ts
-  agents: { reverseAgent, capsAgent },
+	// Registered agents - keys must match agentName in slack/routes.ts
+	agents: { timmy },
 
-  // Registered workflows - available to agents via their workflows config
-  workflows: { reverseWorkflow },
+	// Registered workflows - available to agents via their workflows config
+	workflows: {},
 
-  // Local SQLite storage for conversation memory and agent state
-  storage: new LibSQLStore({
-    id: 'mastra',
-    url: 'file:./mastra.db',
-  }),
+	// Local SQLite storage for conversation memory and agent state
+	storage: new LibSQLStore({
+		id: 'mastra',
+		url: 'file:./mastra.db',
+	}),
 
-  // API server configuration with Slack webhook routes
-  server: {
-    apiRoutes: slackRoutes,
-  },
+	// API server configuration with Slack webhook routes
+	server: {
+		apiRoutes: slackRoutes,
+	},
 
-  // Bundler configuration to prevent module resolution issues
-  bundler: {
-    externals: ['supports-color'],
-  },
+	// Bundler configuration to prevent module resolution issues
+	bundler: {
+		externals: ['supports-color'],
+	},
 });
