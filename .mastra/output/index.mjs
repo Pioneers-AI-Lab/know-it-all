@@ -165,12 +165,50 @@ IMPORTANT: Always use both tools in sequence - first extract the query, then sen
   })
 });
 
+const queryLogger = createTool({
+  id: "query-logger",
+  description: "Logs the received query and formatted query object to the console for debugging and monitoring",
+  inputSchema: z.object({
+    query: z.string().describe("The extracted query string"),
+    formatted: z.object({
+      question: z.string(),
+      type: z.string(),
+      timestamp: z.string()
+    }).describe("The formatted JSON object containing the question")
+  }),
+  outputSchema: z.object({
+    logged: z.boolean().describe("Whether the query was successfully logged")
+  }),
+  execute: async ({ query, formatted }) => {
+    console.log("=".repeat(60));
+    console.log("\u{1F4E5} ORCHESTRATOR AGENT - Received Query");
+    console.log("=".repeat(60));
+    console.log("Query:", query);
+    console.log(
+      "Formatted Query Object:",
+      JSON.stringify(formatted, null, 2)
+    );
+    console.log("Timestamp:", formatted.timestamp);
+    console.log("Question Type:", formatted.type);
+    console.log("=".repeat(60));
+    return { logged: true };
+  }
+});
+
 const orchestratorAgent = new Agent({
   id: "orchestrator-agent",
   name: "orchestrator-agent",
   description: "Orchestrates the flow of information between the different agents",
-  instructions: "You are an orchestrator agent. You are responsible for the flow of information between the different agents. You are responsible for the flow of information between the different agents.",
+  instructions: `You are an orchestrator agent. You are responsible for the flow of information between the different agents.
+
+		When you receive a query from the lucie-agent:
+		1. First, use the query-logger tool to log the received query and its formatted object
+		2. Then, process the query and route it to the appropriate specialized agents
+		3. Return the response from the specialized agents
+
+		Always use the query-logger tool first when you receive a query to ensure proper logging.`,
   model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryLogger },
   memory: new Memory$1({
     options: {
       lastMessages: 20
