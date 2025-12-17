@@ -2,6 +2,8 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';
 import { workshopsQuery } from '../tools/workshops-query';
+import { dataFormatter } from '../tools/data-formatter';
+import { responseSender } from '../tools/response-sender';
 
 export const workshopsAgent = new Agent({
 	id: 'workshops-agent',
@@ -18,11 +20,12 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Workshops Agent"
 3. Use the workshops-query tool to search for workshop information in the timeline
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Workshops Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the workshops-query tool to find relevant information.`,
+Always follow this sequence: query-receiver → workshops-query → data-formatter → response-sender.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
-	tools: { queryReceiver, workshopsQuery },
+	tools: { queryReceiver, workshopsQuery, dataFormatter, responseSender },
 	memory: new Memory({
 		options: {
 			lastMessages: 20,

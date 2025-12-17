@@ -4,8 +4,9 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 import { registerApiRoute } from '@mastra/core/server';
 import { WebClient } from '@slack/web-api';
 import * as crypto from 'crypto';
@@ -371,15 +372,50 @@ const queryReceiver = createTool({
 });
 
 "use strict";
-function loadJsonData(filename) {
-  try {
-    const filePath = join(process.cwd(), "data", filename);
-    const fileContent = readFileSync(filePath, "utf-8");
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error(`Error loading ${filename}:`, error);
-    throw new Error(`Failed to load data file: ${filename}`);
+function getProjectRoot() {
+  const currentFile = fileURLToPath(import.meta.url);
+  let currentDir = dirname(currentFile);
+  let attempts = 0;
+  const maxAttempts = 10;
+  while (attempts < maxAttempts) {
+    const dataPath = join(currentDir, "data");
+    if (existsSync(join(dataPath, "general-questions.json"))) {
+      return currentDir;
+    }
+    const parentDir = dirname(currentDir);
+    if (parentDir === currentDir) {
+      break;
+    }
+    currentDir = parentDir;
+    attempts++;
   }
+  return process.cwd();
+}
+function loadJsonData(filename) {
+  const possiblePaths = [
+    // From project root (when running from source)
+    join(process.cwd(), "data", filename),
+    // From .mastra/output (when running built version)
+    join(process.cwd(), "..", "..", "data", filename),
+    // From .mastra/output with different structure
+    join(process.cwd(), "..", "data", filename),
+    // Using project root detection
+    join(getProjectRoot(), "data", filename)
+  ];
+  for (const filePath of possiblePaths) {
+    try {
+      const fileContent = readFileSync(filePath, "utf-8");
+      return JSON.parse(fileContent);
+    } catch (error) {
+      continue;
+    }
+  }
+  console.error(`Error loading ${filename}: Tried paths:`, possiblePaths);
+  throw new Error(
+    `Failed to load data file: ${filename}. Checked paths: ${possiblePaths.join(
+      ", "
+    )}`
+  );
 }
 function searchInText(text, query) {
   const normalizedText = text.toLowerCase();
@@ -445,6 +481,128 @@ const generalQuestionsQuery = createTool({
 });
 
 "use strict";
+const dataFormatter = createTool({
+  id: "data-formatter",
+  description: "Formats retrieved data from JSON files into a structured format suitable for generating user responses",
+  inputSchema: z.object({
+    query: z.string().describe("The original user query"),
+    questionType: z.enum([
+      "startups",
+      "events",
+      "workshops",
+      "timeline",
+      "founders",
+      "guests",
+      "general"
+    ]).describe("The type of question"),
+    data: z.any().describe("The raw data retrieved from the JSON file"),
+    agentName: z.string().describe("The name of the agent that retrieved the data")
+  }),
+  outputSchema: z.object({
+    formatted: z.object({
+      query: z.string(),
+      questionType: z.string(),
+      agentName: z.string(),
+      summary: z.string(),
+      relevantData: z.any(),
+      timestamp: z.string()
+    }).describe("The formatted data ready for the response generator")
+  }),
+  execute: async ({ query, questionType, data, agentName }) => {
+    let summary = "";
+    let relevantData = data;
+    if (Array.isArray(data)) {
+      if (data.length > 0) {
+        summary = `Found ${data.length} matching result(s) for the query.`;
+        relevantData = data;
+      } else {
+        summary = "No matching results found for the query.";
+        relevantData = [];
+      }
+    } else if (data && typeof data === "object") {
+      if (data.answers && Array.isArray(data.answers)) {
+        summary = `Found ${data.answers.length} matching answer(s) in the knowledge base.`;
+        relevantData = data.answers;
+      } else if (data.startups && Array.isArray(data.startups)) {
+        summary = `Found ${data.startups.length} matching startup(s).`;
+        relevantData = data.startups;
+      } else if (data.events && Array.isArray(data.events)) {
+        summary = `Found ${data.events.length} matching event(s).`;
+        relevantData = data.events;
+      } else if (data.founders && Array.isArray(data.founders)) {
+        summary = `Found ${data.founders.length} matching founder(s).`;
+        relevantData = data.founders;
+      } else if (data.phases || data.events) {
+        const phaseCount = data.phases?.length || 0;
+        const eventCount = data.events?.length || 0;
+        summary = `Found ${phaseCount} phase(s) and ${eventCount} event(s).`;
+        relevantData = data;
+      } else {
+        summary = "Retrieved data from the knowledge base.";
+        relevantData = data;
+      }
+    } else {
+      summary = "Data retrieved successfully.";
+      relevantData = data;
+    }
+    const formatted = {
+      query,
+      questionType,
+      agentName,
+      summary,
+      relevantData,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    return { formatted };
+  }
+});
+
+"use strict";
+const responseSender = createTool({
+  id: "response-sender",
+  description: "Sends formatted data to the response-generator-agent for final response generation",
+  inputSchema: z.object({
+    formatted: z.object({
+      query: z.string(),
+      questionType: z.string(),
+      agentName: z.string(),
+      summary: z.string(),
+      relevantData: z.any(),
+      timestamp: z.string()
+    }).describe("The formatted data to send to the response generator")
+  }),
+  outputSchema: z.object({
+    success: z.boolean().describe("Whether the data was successfully sent"),
+    response: z.string().describe(
+      "The generated response from the response-generator-agent"
+    )
+  }),
+  execute: async ({
+    formatted
+  }) => {
+    const responseGeneratorAgent = mastra.getAgent(
+      "responseGeneratorAgent"
+    );
+    if (!responseGeneratorAgent) {
+      throw new Error("Response generator agent not found");
+    }
+    const message = `You have received formatted data from a specialized agent.
+
+First, extract the formatted data from this message and use the formatted-data-receiver tool to log it.
+
+Formatted Data JSON:
+${JSON.stringify(formatted, null, 2)}
+
+After logging, generate a clear, helpful, and comprehensive response to the user's query using the relevant data provided.`;
+    const response = await responseGeneratorAgent.generate(message);
+    return {
+      success: true,
+      response: response.text || JSON.stringify(response)
+    };
+  }
+});
+
+"use strict";
 const generalQuestionsAgent = new Agent({
   id: "general-questions-agent",
   name: "general-questions-agent",
@@ -459,11 +617,17 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="General Questions Agent"
 3. Use the general-questions-query tool to search the knowledge base for answers to the query
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="General Questions Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the general-questions-query tool to find relevant information.`,
+Always follow this sequence: query-receiver \u2192 general-questions-query \u2192 data-formatter \u2192 response-sender.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryReceiver, generalQuestionsQuery },
+  tools: {
+    queryReceiver,
+    generalQuestionsQuery,
+    dataFormatter,
+    responseSender
+  },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -515,11 +679,12 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Guests Agent"
 3. Use the guests-query tool to search for information about guest speakers and their events
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Event Guests Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the guests-query tool to find relevant information.`,
+Always follow this sequence: query-receiver \u2192 guests-query \u2192 data-formatter \u2192 response-sender.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryReceiver, guestsQuery },
+  tools: { queryReceiver, guestsQuery, dataFormatter, responseSender },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -571,11 +736,12 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Agent"
 3. Use the events-query tool to search for event information in the calendar
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Event Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the events-query tool to find relevant information.`,
+Always follow this sequence: query-receiver \u2192 events-query \u2192 data-formatter \u2192 response-sender.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryReceiver, eventsQuery },
+  tools: { queryReceiver, eventsQuery, dataFormatter, responseSender },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -656,11 +822,18 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Startups Agent"
 3. Use the startups-query tool to search for startup information, or the founders-query tool if the question is about founders
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Startups Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the appropriate query tool (startups-query or founders-query) to find relevant information.`,
+Always follow this sequence: query-receiver \u2192 (startups-query or founders-query) \u2192 data-formatter \u2192 response-sender.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryReceiver, startupsQuery, foundersQuery },
+  tools: {
+    queryReceiver,
+    startupsQuery,
+    foundersQuery,
+    dataFormatter,
+    responseSender
+  },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -725,11 +898,12 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Timeline Agent"
 3. Use the timeline-query tool to search for timeline information including phases and events
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Timeline Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the timeline-query tool to find relevant information.`,
+Always follow this sequence: query-receiver \u2192 timeline-query \u2192 data-formatter \u2192 response-sender.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryReceiver, timelineQuery },
+  tools: { queryReceiver, timelineQuery, dataFormatter, responseSender },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -792,11 +966,77 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Workshops Agent"
 3. Use the workshops-query tool to search for workshop information in the timeline
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Workshops Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the workshops-query tool to find relevant information.`,
+Always follow this sequence: query-receiver \u2192 workshops-query \u2192 data-formatter \u2192 response-sender.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryReceiver, workshopsQuery },
+  tools: { queryReceiver, workshopsQuery, dataFormatter, responseSender },
+  memory: new Memory({
+    options: {
+      lastMessages: 20
+    }
+  })
+});
+
+"use strict";
+const formattedDataReceiver = createTool({
+  id: "formatted-data-receiver",
+  description: "Receives and logs formatted data from specialized agents before generating the final response",
+  inputSchema: z.object({
+    formatted: z.object({
+      query: z.string(),
+      questionType: z.string(),
+      agentName: z.string(),
+      summary: z.string(),
+      relevantData: z.any(),
+      timestamp: z.string()
+    }).describe("The formatted data received from a specialized agent")
+  }),
+  outputSchema: z.object({
+    logged: z.boolean().describe("Whether the formatted data was successfully logged")
+  }),
+  execute: async ({ formatted }) => {
+    console.log("=".repeat(60));
+    console.log("\u{1F4EC} RESPONSE GENERATOR AGENT - Received Formatted Data");
+    console.log("=".repeat(60));
+    console.log("Original Query:", formatted.query);
+    console.log("Question Type:", formatted.questionType);
+    console.log("Data Source:", formatted.agentName);
+    console.log("Summary:", formatted.summary);
+    console.log("Received at:", formatted.timestamp);
+    console.log(
+      "Relevant Data:",
+      JSON.stringify(formatted.relevantData, null, 2)
+    );
+    console.log("=".repeat(60));
+    return { logged: true };
+  }
+});
+
+"use strict";
+const responseGeneratorAgent = new Agent({
+  id: "response-generator-agent",
+  name: "response-generator-agent",
+  description: "Response Generator Agent is responsible for generating responses",
+  instructions: `You are a response generator agent. You are responsible for generating final responses to user questions.
+
+When you receive a message with formatted data from a specialized agent, the message will contain a JSON object in the "Formatted Data JSON:" section with:
+- query: The original user query
+- questionType: The type of question
+- agentName: The name of the agent that retrieved the data
+- summary: A summary of the retrieved data
+- relevantData: The actual data retrieved from the JSON files
+- timestamp: When the data was formatted
+
+1. First, extract the JSON object from the "Formatted Data JSON:" section of the message
+2. Parse the JSON to get the formatted data object
+3. Use the formatted-data-receiver tool with the parsed formatted data object
+4. Then, generate a clear, helpful, and comprehensive response to the user's query based on the relevantData provided
+
+Always use the formatted-data-receiver tool first to log the data, then generate your response using the relevantData.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { formattedDataReceiver },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -1077,7 +1317,8 @@ const mastra = new Mastra({
     eventAgent,
     startupsAgent,
     timelineAgent,
-    workshopsAgent
+    workshopsAgent,
+    responseGeneratorAgent
   },
   // Registered workflows - available to agents via their workflows config
   workflows: {},

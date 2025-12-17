@@ -2,6 +2,8 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';
 import { guestsQuery } from '../tools/guests-query';
+import { dataFormatter } from '../tools/data-formatter';
+import { responseSender } from '../tools/response-sender';
 
 export const eventGuestsAgent = new Agent({
 	id: 'event-guests-agent',
@@ -17,11 +19,12 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Guests Agent"
 3. Use the guests-query tool to search for information about guest speakers and their events
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Event Guests Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the guests-query tool to find relevant information.`,
+Always follow this sequence: query-receiver → guests-query → data-formatter → response-sender.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
-	tools: { queryReceiver, guestsQuery },
+	tools: { queryReceiver, guestsQuery, dataFormatter, responseSender },
 	memory: new Memory({
 		options: {
 			lastMessages: 20,

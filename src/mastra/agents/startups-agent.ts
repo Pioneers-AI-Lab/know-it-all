@@ -3,6 +3,8 @@ import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';
 import { startupsQuery } from '../tools/startups-query';
 import { foundersQuery } from '../tools/founders-query';
+import { dataFormatter } from '../tools/data-formatter';
+import { responseSender } from '../tools/response-sender';
 
 export const startupsAgent = new Agent({
 	id: 'startups-agent',
@@ -19,11 +21,18 @@ Query: {query}"
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Startups Agent"
 3. Use the startups-query tool to search for startup information, or the founders-query tool if the question is about founders
-4. Based on the results from the query tool, provide a comprehensive answer to the user
+4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Startups Agent"
+5. Use the response-sender tool to send the formatted data to the response-generator-agent
 
-Always use the query-receiver tool first, then use the appropriate query tool (startups-query or founders-query) to find relevant information.`,
+Always follow this sequence: query-receiver → (startups-query or founders-query) → data-formatter → response-sender.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
-	tools: { queryReceiver, startupsQuery, foundersQuery },
+	tools: {
+		queryReceiver,
+		startupsQuery,
+		foundersQuery,
+		dataFormatter,
+		responseSender,
+	},
 	memory: new Memory({
 		options: {
 			lastMessages: 20,

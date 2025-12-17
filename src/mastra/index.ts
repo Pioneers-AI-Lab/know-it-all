@@ -31,6 +31,7 @@ import { eventAgent } from './agents/event-agent';
 import { startupsAgent } from './agents/startups-agent';
 import { timelineAgent } from './agents/timeline-agent';
 import { workshopsAgent } from './agents/workshops-agent';
+import { responseGeneratorAgent } from './agents/response-generator-agent';
 import { slackRoutes } from './slack/routes';
 
 export const mastra = new Mastra({
@@ -44,6 +45,7 @@ export const mastra = new Mastra({
 		startupsAgent,
 		timelineAgent,
 		workshopsAgent,
+		responseGeneratorAgent,
 	},
 
 	// Registered workflows - available to agents via their workflows config
