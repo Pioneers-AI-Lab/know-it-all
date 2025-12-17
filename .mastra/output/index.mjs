@@ -2,6 +2,9 @@ import { scoreTraces, scoreTracesWorkflow } from '@mastra/core/evals/scoreTraces
 import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { Agent, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList } from '@mastra/core/agent';
+import { Memory as Memory$1 } from '@mastra/memory';
+import { createTool, isVercelTool, Tool } from '@mastra/core/tools';
+import z$1, { z, ZodObject, ZodFirstPartyTypeKind } from 'zod';
 import { registerApiRoute, MastraServerBase } from '@mastra/core/server';
 import { WebClient } from '@slack/web-api';
 import * as crypto$1 from 'crypto';
@@ -14,8 +17,6 @@ import { Http2ServerRequest } from 'http2';
 import { Readable, Writable } from 'stream';
 import { existsSync, readFileSync, createReadStream, lstatSync } from 'fs';
 import { join, resolve as resolve$2, dirname, extname, basename, isAbsolute, relative } from 'path';
-import { isVercelTool, createTool, Tool } from '@mastra/core/tools';
-import z, { z as z$1, ZodObject, ZodFirstPartyTypeKind } from 'zod';
 import { zodToJsonSchema as zodToJsonSchema$1 } from '@mastra/core/utils/zod-to-json';
 import { MastraError, ErrorDomain, ErrorCategory } from '@mastra/core/error';
 import { generateEmptyFromSchema } from '@mastra/core/utils';
@@ -43,12 +44,80 @@ import cjsModule from 'node:module';
 const __filename = cjsUrl.fileURLToPath(import.meta.url);
 const __dirname = cjsPath.dirname(__filename);
 const require = cjsModule.createRequire(import.meta.url);
+const queryExtractor = createTool({
+  id: "query-extractor",
+  description: "Extracts the user's question from their message and formats it into a structured JSON object",
+  inputSchema: z.object({
+    message: z.string().describe("The user's message containing a question")
+  }),
+  outputSchema: z.object({
+    query: z.string().describe("The extracted question"),
+    questionType: z.enum([
+      "who",
+      "what",
+      "when",
+      "where",
+      "why",
+      "how",
+      "which",
+      "general"
+    ]).describe("The type of question"),
+    formatted: z.object({
+      question: z.string(),
+      type: z.string(),
+      timestamp: z.string()
+    }).describe("The formatted JSON object containing the question")
+  }),
+  execute: async ({ message: message2 }) => {
+    const cleanedMessage = message2.trim().replace(/\s+/g, " ");
+    let query = cleanedMessage.replace(
+      /^(can you|could you|would you|please|tell me|i want to know|i need to know|i'm asking|i ask)\s+/i,
+      ""
+    ).trim();
+    if (!query.endsWith("?") && !query.endsWith(".")) {
+      query += "?";
+    }
+    const questionWords = {
+      who: /^who\s/i,
+      what: /^what\s/i,
+      when: /^when\s/i,
+      where: /^where\s/i,
+      why: /^why\s/i,
+      how: /^how\s/i,
+      which: /^which\s/i
+    };
+    let questionType = "general";
+    for (const [type, pattern] of Object.entries(questionWords)) {
+      if (pattern.test(query)) {
+        questionType = type;
+        break;
+      }
+    }
+    const formatted = {
+      question: query,
+      type: questionType,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    return {
+      query,
+      questionType,
+      formatted
+    };
+  }
+});
+
 const lucie = new Agent({
   id: "lucie-agent",
   name: "lucie-agent",
   description: "Lucie is the CEO of the the Pioneer.vc accelerator.",
   instructions: "You are Lucie. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
-  model: "anthropic/claude-sonnet-4-20250514"
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryExtractor },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 function verifySlackRequest(signingSecret, requestSignature, timestamp, body) {
@@ -567,73 +636,73 @@ var html = (strings, ...values) => {
 };
 
 // src/server/schemas/common.ts
-var runIdSchema = z.object({
-  runId: z.string().describe("Unique identifier for the run")
+var runIdSchema = z$1.object({
+  runId: z$1.string().describe("Unique identifier for the run")
 });
-var optionalRunIdSchema = z.object({
-  runId: z.string().optional()
+var optionalRunIdSchema = z$1.object({
+  runId: z$1.string().optional()
 });
-var paginationInfoSchema = z.object({
-  total: z.number(),
-  page: z.number(),
-  perPage: z.union([z.number(), z.literal(false)]),
-  hasMore: z.boolean()
+var paginationInfoSchema = z$1.object({
+  total: z$1.number(),
+  page: z$1.number(),
+  perPage: z$1.union([z$1.number(), z$1.literal(false)]),
+  hasMore: z$1.boolean()
 });
 var createPagePaginationSchema = (defaultPerPage) => {
   const baseSchema = {
-    page: z.coerce.number().optional().default(0)
+    page: z$1.coerce.number().optional().default(0)
   };
   if (defaultPerPage !== void 0) {
-    return z.object({
+    return z$1.object({
       ...baseSchema,
-      perPage: z.coerce.number().optional().default(defaultPerPage)
+      perPage: z$1.coerce.number().optional().default(defaultPerPage)
     });
   } else {
-    return z.object({
+    return z$1.object({
       ...baseSchema,
-      perPage: z.coerce.number().optional()
+      perPage: z$1.coerce.number().optional()
     });
   }
 };
 var createCombinedPaginationSchema = () => {
-  return z.object({
-    page: z.coerce.number().optional(),
-    perPage: z.coerce.number().optional(),
+  return z$1.object({
+    page: z$1.coerce.number().optional(),
+    perPage: z$1.coerce.number().optional(),
     /**
      * @deprecated Use page and perPage instead
      */
-    offset: z.coerce.number().optional(),
+    offset: z$1.coerce.number().optional(),
     /**
      * @deprecated Use page and perPage instead
      */
-    limit: z.coerce.number().optional()
+    limit: z$1.coerce.number().optional()
   });
 };
-var tracingOptionsSchema = z.object({
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  requestContextKeys: z.array(z.string()).optional(),
-  traceId: z.string().optional(),
-  parentSpanId: z.string().optional()
+var tracingOptionsSchema = z$1.object({
+  metadata: z$1.record(z$1.string(), z$1.unknown()).optional(),
+  requestContextKeys: z$1.array(z$1.string()).optional(),
+  traceId: z$1.string().optional(),
+  parentSpanId: z$1.string().optional()
 });
-var coreMessageSchema = z.any();
-var successResponseSchema = z.object({
-  success: z.boolean()
+var coreMessageSchema = z$1.any();
+var successResponseSchema = z$1.object({
+  success: z$1.boolean()
 });
-var messageResponseSchema = z.object({
-  message: z.string()
+var messageResponseSchema = z$1.object({
+  message: z$1.string()
 });
-z.object({
-  partial: z.string().optional()
+z$1.object({
+  partial: z$1.string().optional()
 });
-var baseLogMessageSchema = z.object({
-  level: z.enum(["debug", "info", "warn", "error", "silent"]),
-  msg: z.string(),
-  time: z.date(),
-  context: z.record(z.string(), z.unknown()).optional(),
-  runId: z.string().optional(),
-  pid: z.number(),
-  hostname: z.string(),
-  name: z.string()
+var baseLogMessageSchema = z$1.object({
+  level: z$1.enum(["debug", "info", "warn", "error", "silent"]),
+  msg: z$1.string(),
+  time: z$1.date(),
+  context: z$1.record(z$1.string(), z$1.unknown()).optional(),
+  runId: z$1.string().optional(),
+  pid: z$1.number(),
+  hostname: z$1.string(),
+  name: z$1.string()
 });
 
 // src/server/server-adapter/openapi-utils.ts
@@ -840,56 +909,56 @@ function handleError$1(error, defaultMessage) {
   });
 }
 
-var storedAgentIdPathParams = z.object({
-  storedAgentId: z.string().describe("Unique identifier for the stored agent")
+var storedAgentIdPathParams = z$1.object({
+  storedAgentId: z$1.string().describe("Unique identifier for the stored agent")
 });
-var storageOrderBySchema$1 = z.object({
-  field: z.enum(["createdAt", "updatedAt"]).optional(),
-  direction: z.enum(["ASC", "DESC"]).optional()
+var storageOrderBySchema$1 = z$1.object({
+  field: z$1.enum(["createdAt", "updatedAt"]).optional(),
+  direction: z$1.enum(["ASC", "DESC"]).optional()
 });
 var listStoredAgentsQuerySchema = createPagePaginationSchema(100).extend({
   orderBy: storageOrderBySchema$1.optional()
 });
-var scorerConfigSchema = z.object({
-  sampling: z.object({
-    type: z.enum(["ratio", "count"]),
-    rate: z.number().optional(),
-    count: z.number().optional()
+var scorerConfigSchema = z$1.object({
+  sampling: z$1.object({
+    type: z$1.enum(["ratio", "count"]),
+    rate: z$1.number().optional(),
+    count: z$1.number().optional()
   }).optional()
 });
-var storedAgentBaseSchema = z.object({
-  name: z.string().describe("Name of the agent"),
-  description: z.string().optional().describe("Description of the agent"),
-  instructions: z.string().describe("System instructions for the agent"),
-  model: z.record(z.string(), z.unknown()).describe("Model configuration (provider, name, etc.)"),
-  tools: z.array(z.string()).optional().describe("Array of tool keys to resolve from Mastra registry"),
-  defaultOptions: z.record(z.string(), z.unknown()).optional().describe("Default options for generate/stream calls"),
-  workflows: z.array(z.string()).optional().describe("Array of workflow keys to resolve from Mastra registry"),
-  agents: z.array(z.string()).optional().describe("Array of agent keys to resolve from Mastra registry"),
-  inputProcessors: z.array(z.record(z.string(), z.unknown())).optional().describe("Input processor configurations"),
-  outputProcessors: z.array(z.record(z.string(), z.unknown())).optional().describe("Output processor configurations"),
-  memory: z.string().optional().describe("Memory key to resolve from Mastra registry"),
-  scorers: z.record(z.string(), scorerConfigSchema).optional().describe("Scorer keys with optional sampling config"),
-  metadata: z.record(z.string(), z.unknown()).optional().describe("Additional metadata for the agent")
+var storedAgentBaseSchema = z$1.object({
+  name: z$1.string().describe("Name of the agent"),
+  description: z$1.string().optional().describe("Description of the agent"),
+  instructions: z$1.string().describe("System instructions for the agent"),
+  model: z$1.record(z$1.string(), z$1.unknown()).describe("Model configuration (provider, name, etc.)"),
+  tools: z$1.array(z$1.string()).optional().describe("Array of tool keys to resolve from Mastra registry"),
+  defaultOptions: z$1.record(z$1.string(), z$1.unknown()).optional().describe("Default options for generate/stream calls"),
+  workflows: z$1.array(z$1.string()).optional().describe("Array of workflow keys to resolve from Mastra registry"),
+  agents: z$1.array(z$1.string()).optional().describe("Array of agent keys to resolve from Mastra registry"),
+  inputProcessors: z$1.array(z$1.record(z$1.string(), z$1.unknown())).optional().describe("Input processor configurations"),
+  outputProcessors: z$1.array(z$1.record(z$1.string(), z$1.unknown())).optional().describe("Output processor configurations"),
+  memory: z$1.string().optional().describe("Memory key to resolve from Mastra registry"),
+  scorers: z$1.record(z$1.string(), scorerConfigSchema).optional().describe("Scorer keys with optional sampling config"),
+  metadata: z$1.record(z$1.string(), z$1.unknown()).optional().describe("Additional metadata for the agent")
 });
 var createStoredAgentBodySchema = storedAgentBaseSchema.extend({
-  id: z.string().describe("Unique identifier for the agent")
+  id: z$1.string().describe("Unique identifier for the agent")
 });
 var updateStoredAgentBodySchema = storedAgentBaseSchema.partial();
 var storedAgentSchema = storedAgentBaseSchema.extend({
-  id: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date()
+  id: z$1.string(),
+  createdAt: z$1.date(),
+  updatedAt: z$1.date()
 });
 var listStoredAgentsResponseSchema = paginationInfoSchema.extend({
-  agents: z.array(storedAgentSchema)
+  agents: z$1.array(storedAgentSchema)
 });
 var getStoredAgentResponseSchema = storedAgentSchema;
 var createStoredAgentResponseSchema = storedAgentSchema;
 var updateStoredAgentResponseSchema = storedAgentSchema;
-var deleteStoredAgentResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string()
+var deleteStoredAgentResponseSchema = z$1.object({
+  success: z$1.boolean(),
+  message: z$1.string()
 });
 
 // src/server/handlers/stored-agents.ts
@@ -1161,40 +1230,40 @@ __export(vector_exports, {
   queryVectors: () => queryVectors,
   upsertVectors: () => upsertVectors
 });
-var vectorNamePathParams = z.object({
-  vectorName: z.string().describe("Name of the vector store")
+var vectorNamePathParams = z$1.object({
+  vectorName: z$1.string().describe("Name of the vector store")
 });
 var vectorIndexPathParams = vectorNamePathParams.extend({
-  indexName: z.string().describe("Name of the index")
+  indexName: z$1.string().describe("Name of the index")
 });
-var indexBodyBaseSchema = z.object({
-  indexName: z.string()
+var indexBodyBaseSchema = z$1.object({
+  indexName: z$1.string()
 });
 var upsertVectorsBodySchema = indexBodyBaseSchema.extend({
-  vectors: z.array(z.array(z.number())),
-  metadata: z.array(z.record(z.string(), z.any())).optional(),
-  ids: z.array(z.string()).optional()
+  vectors: z$1.array(z$1.array(z$1.number())),
+  metadata: z$1.array(z$1.record(z$1.string(), z$1.any())).optional(),
+  ids: z$1.array(z$1.string()).optional()
 });
 var createIndexBodySchema = indexBodyBaseSchema.extend({
-  dimension: z.number(),
-  metric: z.enum(["cosine", "euclidean", "dotproduct"]).optional()
+  dimension: z$1.number(),
+  metric: z$1.enum(["cosine", "euclidean", "dotproduct"]).optional()
 });
 var queryVectorsBodySchema = indexBodyBaseSchema.extend({
-  queryVector: z.array(z.number()),
-  topK: z.number().optional(),
-  filter: z.record(z.string(), z.any()).optional(),
-  includeVector: z.boolean().optional()
+  queryVector: z$1.array(z$1.number()),
+  topK: z$1.number().optional(),
+  filter: z$1.record(z$1.string(), z$1.any()).optional(),
+  includeVector: z$1.boolean().optional()
 });
-var upsertVectorsResponseSchema = z.object({
-  ids: z.array(z.string())
+var upsertVectorsResponseSchema = z$1.object({
+  ids: z$1.array(z$1.string())
 });
 var createIndexResponseSchema = successResponseSchema;
-var queryVectorsResponseSchema = z.array(z.unknown());
-var listIndexesResponseSchema = z.array(z.string());
-var describeIndexResponseSchema = z.object({
-  dimension: z.number(),
-  count: z.number(),
-  metric: z.string().optional()
+var queryVectorsResponseSchema = z$1.array(z$1.unknown());
+var listIndexesResponseSchema = z$1.array(z$1.string());
+var describeIndexResponseSchema = z$1.object({
+  dimension: z$1.number(),
+  count: z$1.number(),
+  metric: z$1.string().optional()
 });
 var deleteIndexResponseSchema = successResponseSchema;
 
@@ -1493,225 +1562,225 @@ function parseFilters(filters) {
   );
 }
 
-var agentIdPathParams = z.object({
-  agentId: z.string().describe("Unique identifier for the agent")
+var agentIdPathParams = z$1.object({
+  agentId: z$1.string().describe("Unique identifier for the agent")
 });
-var toolIdPathParams = z.object({
-  toolId: z.string().describe("Unique identifier for the tool")
+var toolIdPathParams = z$1.object({
+  toolId: z$1.string().describe("Unique identifier for the tool")
 });
 var agentToolPathParams = agentIdPathParams.extend({
-  toolId: z.string().describe("Unique identifier for the tool")
+  toolId: z$1.string().describe("Unique identifier for the tool")
 });
 var modelConfigIdPathParams = agentIdPathParams.extend({
-  modelConfigId: z.string().describe("Unique identifier for the model configuration")
+  modelConfigId: z$1.string().describe("Unique identifier for the model configuration")
 });
-var serializedProcessorSchema = z.object({
-  id: z.string(),
-  name: z.string().optional()
+var serializedProcessorSchema = z$1.object({
+  id: z$1.string(),
+  name: z$1.string().optional()
 });
-var serializedToolSchema = z.object({
-  id: z.string(),
-  description: z.string().optional(),
-  inputSchema: z.string().optional(),
-  outputSchema: z.string().optional(),
-  requireApproval: z.boolean().optional()
+var serializedToolSchema = z$1.object({
+  id: z$1.string(),
+  description: z$1.string().optional(),
+  inputSchema: z$1.string().optional(),
+  outputSchema: z$1.string().optional(),
+  requireApproval: z$1.boolean().optional()
 });
-var serializedWorkflowSchema = z.object({
-  name: z.string(),
-  steps: z.record(
-    z.string(),
-    z.object({
-      id: z.string(),
-      description: z.string().optional()
+var serializedWorkflowSchema = z$1.object({
+  name: z$1.string(),
+  steps: z$1.record(
+    z$1.string(),
+    z$1.object({
+      id: z$1.string(),
+      description: z$1.string().optional()
     })
   ).optional()
 });
-var serializedAgentDefinitionSchema = z.object({
-  id: z.string(),
-  name: z.string()
+var serializedAgentDefinitionSchema = z$1.object({
+  id: z$1.string(),
+  name: z$1.string()
 });
-var systemMessageSchema = z.union([
-  z.string(),
-  z.array(z.string()),
-  z.any(),
+var systemMessageSchema = z$1.union([
+  z$1.string(),
+  z$1.array(z$1.string()),
+  z$1.any(),
   // CoreSystemMessage or SystemModelMessage
-  z.array(z.any())
+  z$1.array(z$1.any())
 ]);
-var modelConfigSchema = z.object({
-  model: z.object({
-    modelId: z.string(),
-    provider: z.string(),
-    modelVersion: z.string()
+var modelConfigSchema = z$1.object({
+  model: z$1.object({
+    modelId: z$1.string(),
+    provider: z$1.string(),
+    modelVersion: z$1.string()
   })
   // Additional fields from AgentModelManagerConfig can be added here
 });
-var serializedAgentSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
+var serializedAgentSchema = z$1.object({
+  name: z$1.string(),
+  description: z$1.string().optional(),
   instructions: systemMessageSchema.optional(),
-  tools: z.record(z.string(), serializedToolSchema),
-  agents: z.record(z.string(), serializedAgentDefinitionSchema),
-  workflows: z.record(z.string(), serializedWorkflowSchema),
-  inputProcessors: z.array(serializedProcessorSchema),
-  outputProcessors: z.array(serializedProcessorSchema),
-  provider: z.string().optional(),
-  modelId: z.string().optional(),
-  modelVersion: z.string().optional(),
-  modelList: z.array(modelConfigSchema).optional(),
-  defaultOptions: z.record(z.string(), z.any()).optional(),
-  defaultGenerateOptionsLegacy: z.record(z.string(), z.any()).optional(),
-  defaultStreamOptionsLegacy: z.record(z.string(), z.any()).optional()
+  tools: z$1.record(z$1.string(), serializedToolSchema),
+  agents: z$1.record(z$1.string(), serializedAgentDefinitionSchema),
+  workflows: z$1.record(z$1.string(), serializedWorkflowSchema),
+  inputProcessors: z$1.array(serializedProcessorSchema),
+  outputProcessors: z$1.array(serializedProcessorSchema),
+  provider: z$1.string().optional(),
+  modelId: z$1.string().optional(),
+  modelVersion: z$1.string().optional(),
+  modelList: z$1.array(modelConfigSchema).optional(),
+  defaultOptions: z$1.record(z$1.string(), z$1.any()).optional(),
+  defaultGenerateOptionsLegacy: z$1.record(z$1.string(), z$1.any()).optional(),
+  defaultStreamOptionsLegacy: z$1.record(z$1.string(), z$1.any()).optional()
 });
 serializedAgentSchema.extend({
-  id: z.string()
+  id: z$1.string()
 });
-var providerSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  label: z.string().optional(),
-  description: z.string().optional()
+var providerSchema = z$1.object({
+  id: z$1.string(),
+  name: z$1.string(),
+  label: z$1.string().optional(),
+  description: z$1.string().optional()
 });
-var providersResponseSchema = z.object({
-  providers: z.array(providerSchema)
+var providersResponseSchema = z$1.object({
+  providers: z$1.array(providerSchema)
 });
-var listAgentsResponseSchema = z.record(z.string(), serializedAgentSchema);
-var listToolsResponseSchema = z.record(z.string(), serializedToolSchema);
-var agentMemoryOptionSchema = z.object({
-  thread: z.union([z.string(), z.object({ id: z.string() }).passthrough()]),
-  resource: z.string(),
-  options: z.record(z.string(), z.any()).optional(),
-  readOnly: z.boolean().optional()
+var listAgentsResponseSchema = z$1.record(z$1.string(), serializedAgentSchema);
+var listToolsResponseSchema = z$1.record(z$1.string(), serializedToolSchema);
+var agentMemoryOptionSchema = z$1.object({
+  thread: z$1.union([z$1.string(), z$1.object({ id: z$1.string() }).passthrough()]),
+  resource: z$1.string(),
+  options: z$1.record(z$1.string(), z$1.any()).optional(),
+  readOnly: z$1.boolean().optional()
 });
-var toolChoiceSchema = z.union([
-  z.enum(["auto", "none", "required"]),
-  z.object({ type: z.literal("tool"), toolName: z.string() })
+var toolChoiceSchema = z$1.union([
+  z$1.enum(["auto", "none", "required"]),
+  z$1.object({ type: z$1.literal("tool"), toolName: z$1.string() })
 ]);
-var agentExecutionBodySchema$1 = z.object({
+var agentExecutionBodySchema$1 = z$1.object({
   // REQUIRED
-  messages: z.union([
-    z.array(coreMessageSchema),
+  messages: z$1.union([
+    z$1.array(coreMessageSchema),
     // Array of messages
-    z.string()
+    z$1.string()
     // Single user message shorthand
   ]),
   // Message Configuration
   instructions: systemMessageSchema.optional(),
   system: systemMessageSchema.optional(),
-  context: z.array(coreMessageSchema).optional(),
+  context: z$1.array(coreMessageSchema).optional(),
   // Memory & Persistence
   memory: agentMemoryOptionSchema.optional(),
-  resourceId: z.string().optional(),
+  resourceId: z$1.string().optional(),
   // @deprecated
-  resourceid: z.string().optional(),
-  threadId: z.string().optional(),
+  resourceid: z$1.string().optional(),
+  threadId: z$1.string().optional(),
   // @deprecated
-  runId: z.string().optional(),
-  savePerStep: z.boolean().optional(),
+  runId: z$1.string().optional(),
+  savePerStep: z$1.boolean().optional(),
   // Request Context (handler-specific field - merged with server's requestContext)
-  requestContext: z.record(z.string(), z.any()).optional(),
+  requestContext: z$1.record(z$1.string(), z$1.any()).optional(),
   // Execution Control
-  maxSteps: z.number().optional(),
-  stopWhen: z.any().optional(),
+  maxSteps: z$1.number().optional(),
+  stopWhen: z$1.any().optional(),
   // Model Configuration
-  providerOptions: z.object({
-    anthropic: z.record(z.string(), z.any()).optional(),
-    google: z.record(z.string(), z.any()).optional(),
-    openai: z.record(z.string(), z.any()).optional(),
-    xai: z.record(z.string(), z.any()).optional()
+  providerOptions: z$1.object({
+    anthropic: z$1.record(z$1.string(), z$1.any()).optional(),
+    google: z$1.record(z$1.string(), z$1.any()).optional(),
+    openai: z$1.record(z$1.string(), z$1.any()).optional(),
+    xai: z$1.record(z$1.string(), z$1.any()).optional()
   }).optional(),
-  modelSettings: z.any().optional(),
+  modelSettings: z$1.any().optional(),
   // Tool Configuration
-  activeTools: z.array(z.string()).optional(),
-  toolsets: z.record(z.string(), z.any()).optional(),
-  clientTools: z.record(z.string(), z.any()).optional(),
+  activeTools: z$1.array(z$1.string()).optional(),
+  toolsets: z$1.record(z$1.string(), z$1.any()).optional(),
+  clientTools: z$1.record(z$1.string(), z$1.any()).optional(),
   toolChoice: toolChoiceSchema.optional(),
-  requireToolApproval: z.boolean().optional(),
+  requireToolApproval: z$1.boolean().optional(),
   // Evaluation
-  scorers: z.union([
-    z.record(z.string(), z.any()),
-    z.record(
-      z.string(),
-      z.object({
-        scorer: z.string(),
-        sampling: z.any().optional()
+  scorers: z$1.union([
+    z$1.record(z$1.string(), z$1.any()),
+    z$1.record(
+      z$1.string(),
+      z$1.object({
+        scorer: z$1.string(),
+        sampling: z$1.any().optional()
       })
     )
   ]).optional(),
-  returnScorerData: z.boolean().optional(),
+  returnScorerData: z$1.boolean().optional(),
   // Observability
   tracingOptions: tracingOptionsSchema.optional(),
   // Structured Output
-  output: z.any().optional(),
+  output: z$1.any().optional(),
   // Zod schema, JSON schema, or structured output object
-  structuredOutput: z.object({
-    schema: z.object({}).passthrough(),
-    model: z.union([z.string(), z.any()]).optional(),
-    instructions: z.string().optional(),
-    jsonPromptInjection: z.boolean().optional(),
-    errorStrategy: z.enum(["strict", "warn", "fallback"]).optional(),
-    fallbackValue: z.any().optional()
+  structuredOutput: z$1.object({
+    schema: z$1.object({}).passthrough(),
+    model: z$1.union([z$1.string(), z$1.any()]).optional(),
+    instructions: z$1.string().optional(),
+    jsonPromptInjection: z$1.boolean().optional(),
+    errorStrategy: z$1.enum(["strict", "warn", "fallback"]).optional(),
+    fallbackValue: z$1.any().optional()
   }).optional()
 }).passthrough();
-var executeToolDataBodySchema = z.object({
-  data: z.custom((x) => x !== void 0, { message: "data is required" })
+var executeToolDataBodySchema = z$1.object({
+  data: z$1.custom((x) => x !== void 0, { message: "data is required" })
 });
 var executeToolBodySchema$1 = executeToolDataBodySchema.extend({
-  requestContext: z.record(z.string(), z.any()).optional()
+  requestContext: z$1.record(z$1.string(), z$1.any()).optional()
 });
 var executeToolContextBodySchema = executeToolDataBodySchema.extend({
-  requestContext: z.record(z.string(), z.any()).optional()
+  requestContext: z$1.record(z$1.string(), z$1.any()).optional()
 });
-var voiceSpeakersResponseSchema = z.array(
-  z.object({
-    voiceId: z.string()
+var voiceSpeakersResponseSchema = z$1.array(
+  z$1.object({
+    voiceId: z$1.string()
   }).passthrough()
   // Allow provider-specific fields like name, language, etc.
 );
-var toolCallActionBodySchema = z.object({
-  runId: z.string(),
-  requestContext: z.record(z.string(), z.any()).optional(),
-  toolCallId: z.string(),
-  format: z.string().optional()
+var toolCallActionBodySchema = z$1.object({
+  runId: z$1.string(),
+  requestContext: z$1.record(z$1.string(), z$1.any()).optional(),
+  toolCallId: z$1.string(),
+  format: z$1.string().optional()
 });
 var approveToolCallBodySchema = toolCallActionBodySchema;
 var declineToolCallBodySchema = toolCallActionBodySchema;
-var toolCallResponseSchema = z.object({
-  fullStream: z.any()
+var toolCallResponseSchema = z$1.object({
+  fullStream: z$1.any()
   // ReadableStream
 });
-var updateAgentModelBodySchema = z.object({
-  modelId: z.string(),
-  provider: z.string()
+var updateAgentModelBodySchema = z$1.object({
+  modelId: z$1.string(),
+  provider: z$1.string()
 });
-var reorderAgentModelListBodySchema = z.object({
-  reorderedModelIds: z.array(z.string())
+var reorderAgentModelListBodySchema = z$1.object({
+  reorderedModelIds: z$1.array(z$1.string())
 });
-var updateAgentModelInModelListBodySchema = z.object({
-  model: z.object({
-    modelId: z.string(),
-    provider: z.string()
+var updateAgentModelInModelListBodySchema = z$1.object({
+  model: z$1.object({
+    modelId: z$1.string(),
+    provider: z$1.string()
   }).optional(),
-  maxRetries: z.number().optional(),
-  enabled: z.boolean().optional()
+  maxRetries: z$1.number().optional(),
+  enabled: z$1.boolean().optional()
 });
 var modelManagementResponseSchema = messageResponseSchema;
-var generateSpeechBodySchema = z.object({
-  text: z.string(),
-  speakerId: z.string().optional()
+var generateSpeechBodySchema = z$1.object({
+  text: z$1.string(),
+  speakerId: z$1.string().optional()
 });
-var transcribeSpeechBodySchema = z.object({
-  audioData: z.any(),
+var transcribeSpeechBodySchema = z$1.object({
+  audioData: z$1.any(),
   // Buffer
-  options: z.record(z.string(), z.any()).optional()
+  options: z$1.record(z$1.string(), z$1.any()).optional()
 });
-var transcribeSpeechResponseSchema = z.object({
-  text: z.string()
+var transcribeSpeechResponseSchema = z$1.object({
+  text: z$1.string()
 });
-var getListenerResponseSchema = z.any();
-var generateResponseSchema = z.any();
-var streamResponseSchema = z.any();
-var speakResponseSchema = z.any();
-var executeToolResponseSchema$1 = z.any();
+var getListenerResponseSchema = z$1.any();
+var generateResponseSchema = z$1.any();
+var streamResponseSchema = z$1.any();
+var speakResponseSchema = z$1.any();
+var executeToolResponseSchema$1 = z$1.any();
 
 // src/server/handlers/voice.ts
 var voice_exports = {};
@@ -1905,21 +1974,21 @@ __export(logs_exports, {
   LIST_LOG_TRANSPORTS_ROUTE: () => LIST_LOG_TRANSPORTS_ROUTE
 });
 var listLogsQuerySchema = createPagePaginationSchema().extend({
-  fromDate: z.coerce.date().optional(),
-  toDate: z.coerce.date().optional(),
-  logLevel: z.enum(["debug", "info", "warn", "error", "silent"]).optional(),
-  filters: z.union([z.string(), z.array(z.string())]).optional(),
-  transportId: z.string()
+  fromDate: z$1.coerce.date().optional(),
+  toDate: z$1.coerce.date().optional(),
+  logLevel: z$1.enum(["debug", "info", "warn", "error", "silent"]).optional(),
+  filters: z$1.union([z$1.string(), z$1.array(z$1.string())]).optional(),
+  transportId: z$1.string()
 });
-var listLogsResponseSchema = z.object({
-  logs: z.array(baseLogMessageSchema),
-  total: z.number(),
-  page: z.number(),
-  perPage: z.union([z.number(), z.literal(false)]),
-  hasMore: z.boolean()
+var listLogsResponseSchema = z$1.object({
+  logs: z$1.array(baseLogMessageSchema),
+  total: z$1.number(),
+  page: z$1.number(),
+  perPage: z$1.union([z$1.number(), z$1.literal(false)]),
+  hasMore: z$1.boolean()
 });
-var listLogTransportsResponseSchema = z.object({
-  transports: z.array(z.string())
+var listLogTransportsResponseSchema = z$1.object({
+  transports: z$1.array(z$1.string())
 });
 
 // src/server/handlers/logs.ts
@@ -2015,67 +2084,67 @@ __export(mcp_exports, {
   MCP_SSE_MESSAGES_ROUTE: () => MCP_SSE_MESSAGES_ROUTE,
   MCP_SSE_TRANSPORT_ROUTE: () => MCP_SSE_TRANSPORT_ROUTE
 });
-var mcpServerIdPathParams = z$1.object({
-  serverId: z$1.string().describe("MCP server ID")
+var mcpServerIdPathParams = z.object({
+  serverId: z.string().describe("MCP server ID")
 });
-var mcpServerDetailPathParams = z$1.object({
-  id: z$1.string().describe("MCP server ID")
+var mcpServerDetailPathParams = z.object({
+  id: z.string().describe("MCP server ID")
 });
-var mcpServerToolPathParams = z$1.object({
-  serverId: z$1.string().describe("MCP server ID"),
-  toolId: z$1.string().describe("Tool ID")
+var mcpServerToolPathParams = z.object({
+  serverId: z.string().describe("MCP server ID"),
+  toolId: z.string().describe("Tool ID")
 });
-var executeToolBodySchema = z$1.object({
-  data: z$1.unknown().optional()
+var executeToolBodySchema = z.object({
+  data: z.unknown().optional()
 });
 var listMcpServersQuerySchema = createCombinedPaginationSchema();
-var getMcpServerDetailQuerySchema = z$1.object({
-  version: z$1.string().optional()
+var getMcpServerDetailQuerySchema = z.object({
+  version: z.string().optional()
 });
-var versionDetailSchema = z$1.object({
-  version: z$1.string(),
-  release_date: z$1.string(),
-  is_latest: z$1.boolean()
+var versionDetailSchema = z.object({
+  version: z.string(),
+  release_date: z.string(),
+  is_latest: z.boolean()
 });
-var serverInfoSchema = z$1.object({
-  id: z$1.string(),
-  name: z$1.string(),
+var serverInfoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
   version_detail: versionDetailSchema
 });
-var listMcpServersResponseSchema = z$1.object({
-  servers: z$1.array(serverInfoSchema),
-  total_count: z$1.number(),
-  next: z$1.string().nullable()
+var listMcpServersResponseSchema = z.object({
+  servers: z.array(serverInfoSchema),
+  total_count: z.number(),
+  next: z.string().nullable()
 });
-var serverDetailSchema = z$1.object({
-  id: z$1.string(),
-  name: z$1.string(),
-  description: z$1.string().optional(),
+var serverDetailSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
   version_detail: versionDetailSchema,
-  package_canonical: z$1.string().optional(),
-  packages: z$1.array(z$1.unknown()).optional(),
-  remotes: z$1.array(z$1.unknown()).optional()
+  package_canonical: z.string().optional(),
+  packages: z.array(z.unknown()).optional(),
+  remotes: z.array(z.unknown()).optional()
 });
-var mcpToolInfoSchema = z$1.object({
-  name: z$1.string(),
-  description: z$1.string().optional(),
-  inputSchema: z$1.unknown(),
-  outputSchema: z$1.unknown().optional(),
-  toolType: z$1.string().optional()
+var mcpToolInfoSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  inputSchema: z.unknown(),
+  outputSchema: z.unknown().optional(),
+  toolType: z.string().optional()
 });
-var listMcpServerToolsResponseSchema = z$1.object({
-  tools: z$1.array(mcpToolInfoSchema)
+var listMcpServerToolsResponseSchema = z.object({
+  tools: z.array(mcpToolInfoSchema)
 });
-var executeToolResponseSchema = z$1.object({
-  result: z$1.unknown()
+var executeToolResponseSchema = z.object({
+  result: z.unknown()
 });
-z$1.object({
-  jsonrpc: z$1.literal("2.0"),
-  error: z$1.object({
-    code: z$1.number(),
-    message: z$1.string()
+z.object({
+  jsonrpc: z.literal("2.0"),
+  error: z.object({
+    code: z.number(),
+    message: z.string()
   }),
-  id: z$1.null()
+  id: z.null()
 });
 
 // src/server/handlers/mcp.ts
@@ -2323,21 +2392,21 @@ __export(memory_exports, {
   UPDATE_WORKING_MEMORY_ROUTE: () => UPDATE_WORKING_MEMORY_ROUTE,
   getTextContent: () => getTextContent
 });
-var threadIdPathParams = z.object({
-  threadId: z.string().describe("Unique identifier for the conversation thread")
+var threadIdPathParams = z$1.object({
+  threadId: z$1.string().describe("Unique identifier for the conversation thread")
 });
-var agentIdQuerySchema = z.object({
-  agentId: z.string()
+var agentIdQuerySchema = z$1.object({
+  agentId: z$1.string()
 });
-var storageOrderBySchema = z.object({
-  field: z.enum(["createdAt", "updatedAt"]).optional(),
-  direction: z.enum(["ASC", "DESC"]).optional()
+var storageOrderBySchema = z$1.object({
+  field: z$1.enum(["createdAt", "updatedAt"]).optional(),
+  direction: z$1.enum(["ASC", "DESC"]).optional()
 });
-var messageOrderBySchema = z.object({
-  field: z.enum(["createdAt"]).optional(),
-  direction: z.enum(["ASC", "DESC"]).optional()
+var messageOrderBySchema = z$1.object({
+  field: z$1.enum(["createdAt"]).optional(),
+  direction: z$1.enum(["ASC", "DESC"]).optional()
 });
-var includeSchema = z.preprocess(
+var includeSchema = z$1.preprocess(
   (val) => {
     if (typeof val === "string") {
       try {
@@ -2348,16 +2417,16 @@ var includeSchema = z.preprocess(
     }
     return val;
   },
-  z.array(
-    z.object({
-      id: z.string(),
-      threadId: z.string().optional(),
-      withPreviousMessages: z.number().optional(),
-      withNextMessages: z.number().optional()
+  z$1.array(
+    z$1.object({
+      id: z$1.string(),
+      threadId: z$1.string().optional(),
+      withPreviousMessages: z$1.number().optional(),
+      withNextMessages: z$1.number().optional()
     })
   ).optional()
 );
-var filterSchema = z.preprocess(
+var filterSchema = z$1.preprocess(
   (val) => {
     if (typeof val === "string") {
       try {
@@ -2368,14 +2437,14 @@ var filterSchema = z.preprocess(
     }
     return val;
   },
-  z.object({
-    dateRange: z.object({
-      start: z.coerce.date().optional(),
-      end: z.coerce.date().optional()
+  z$1.object({
+    dateRange: z$1.object({
+      start: z$1.coerce.date().optional(),
+      end: z$1.coerce.date().optional()
     }).optional()
   }).optional()
 );
-var memoryConfigSchema = z.preprocess((val) => {
+var memoryConfigSchema = z$1.preprocess((val) => {
   if (typeof val === "string") {
     try {
       return JSON.parse(val);
@@ -2384,46 +2453,46 @@ var memoryConfigSchema = z.preprocess((val) => {
     }
   }
   return val;
-}, z.record(z.string(), z.unknown()).optional());
-var threadSchema = z.object({
-  id: z.string(),
-  title: z.string().optional(),
-  resourceId: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  metadata: z.record(z.string(), z.unknown()).optional()
+}, z$1.record(z$1.string(), z$1.unknown()).optional());
+var threadSchema = z$1.object({
+  id: z$1.string(),
+  title: z$1.string().optional(),
+  resourceId: z$1.string(),
+  createdAt: z$1.date(),
+  updatedAt: z$1.date(),
+  metadata: z$1.record(z$1.string(), z$1.unknown()).optional()
 });
-var messageSchema$1 = z.any();
+var messageSchema$1 = z$1.any();
 var getMemoryStatusQuerySchema = agentIdQuerySchema;
 var getMemoryConfigQuerySchema = agentIdQuerySchema;
 var listThreadsQuerySchema = createPagePaginationSchema(100).extend({
-  agentId: z.string(),
-  resourceId: z.string(),
+  agentId: z$1.string(),
+  resourceId: z$1.string(),
   orderBy: storageOrderBySchema.optional()
 });
 var getThreadByIdQuerySchema = agentIdQuerySchema;
 var listMessagesQuerySchema = createPagePaginationSchema(40).extend({
-  agentId: z.string(),
-  resourceId: z.string().optional(),
+  agentId: z$1.string(),
+  resourceId: z$1.string().optional(),
   orderBy: messageOrderBySchema.optional(),
   include: includeSchema,
   filter: filterSchema
 });
-var getWorkingMemoryQuerySchema = z.object({
-  agentId: z.string(),
-  resourceId: z.string().optional(),
+var getWorkingMemoryQuerySchema = z$1.object({
+  agentId: z$1.string(),
+  resourceId: z$1.string().optional(),
   memoryConfig: memoryConfigSchema
 });
 var getMemoryStatusNetworkQuerySchema = agentIdQuerySchema;
 var listThreadsNetworkQuerySchema = createPagePaginationSchema(100).extend({
-  agentId: z.string(),
-  resourceId: z.string(),
+  agentId: z$1.string(),
+  resourceId: z$1.string(),
   orderBy: storageOrderBySchema.optional()
 });
 var getThreadByIdNetworkQuerySchema = agentIdQuerySchema;
 var listMessagesNetworkQuerySchema = createPagePaginationSchema(40).extend({
-  agentId: z.string(),
-  resourceId: z.string().optional(),
+  agentId: z$1.string(),
+  resourceId: z$1.string().optional(),
   orderBy: messageOrderBySchema.optional(),
   include: includeSchema,
   filter: filterSchema
@@ -2433,84 +2502,84 @@ var createThreadNetworkQuerySchema = agentIdQuerySchema;
 var updateThreadNetworkQuerySchema = agentIdQuerySchema;
 var deleteThreadNetworkQuerySchema = agentIdQuerySchema;
 var deleteMessagesNetworkQuerySchema = agentIdQuerySchema;
-var memoryStatusResponseSchema = z.object({
-  result: z.boolean()
+var memoryStatusResponseSchema = z$1.object({
+  result: z$1.boolean()
 });
-var memoryConfigResponseSchema = z.object({
-  config: z.object({
-    lastMessages: z.union([z.number(), z.literal(false)]).optional(),
-    semanticRecall: z.union([z.boolean(), z.any()]).optional(),
-    workingMemory: z.any().optional()
+var memoryConfigResponseSchema = z$1.object({
+  config: z$1.object({
+    lastMessages: z$1.union([z$1.number(), z$1.literal(false)]).optional(),
+    semanticRecall: z$1.union([z$1.boolean(), z$1.any()]).optional(),
+    workingMemory: z$1.any().optional()
   })
 });
 var listThreadsResponseSchema = paginationInfoSchema.extend({
-  threads: z.array(threadSchema)
+  threads: z$1.array(threadSchema)
 });
 var getThreadByIdResponseSchema = threadSchema;
-var listMessagesResponseSchema = z.object({
-  messages: z.array(messageSchema$1),
-  uiMessages: z.unknown()
+var listMessagesResponseSchema = z$1.object({
+  messages: z$1.array(messageSchema$1),
+  uiMessages: z$1.unknown()
   // Converted messages in UI format
 });
-var getWorkingMemoryResponseSchema = z.object({
-  workingMemory: z.unknown(),
+var getWorkingMemoryResponseSchema = z$1.object({
+  workingMemory: z$1.unknown(),
   // Can be string or structured object depending on template
-  source: z.enum(["thread", "resource"]),
-  workingMemoryTemplate: z.unknown(),
+  source: z$1.enum(["thread", "resource"]),
+  workingMemoryTemplate: z$1.unknown(),
   // Template structure varies
-  threadExists: z.boolean()
+  threadExists: z$1.boolean()
 });
-var saveMessagesBodySchema = z.object({
-  messages: z.array(messageSchema$1)
+var saveMessagesBodySchema = z$1.object({
+  messages: z$1.array(messageSchema$1)
 });
-var createThreadBodySchema = z.object({
-  resourceId: z.string(),
-  title: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  threadId: z.string().optional()
+var createThreadBodySchema = z$1.object({
+  resourceId: z$1.string(),
+  title: z$1.string().optional(),
+  metadata: z$1.record(z$1.string(), z$1.unknown()).optional(),
+  threadId: z$1.string().optional()
 });
-var updateThreadBodySchema = z.object({
-  title: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  resourceId: z.string().optional()
+var updateThreadBodySchema = z$1.object({
+  title: z$1.string().optional(),
+  metadata: z$1.record(z$1.string(), z$1.unknown()).optional(),
+  resourceId: z$1.string().optional()
 });
-var updateWorkingMemoryBodySchema = z.object({
-  workingMemory: z.string(),
-  resourceId: z.string().optional(),
-  memoryConfig: z.record(z.string(), z.unknown()).optional()
+var updateWorkingMemoryBodySchema = z$1.object({
+  workingMemory: z$1.string(),
+  resourceId: z$1.string().optional(),
+  memoryConfig: z$1.record(z$1.string(), z$1.unknown()).optional()
 });
-var deleteMessagesBodySchema = z.object({
-  messageIds: z.union([
-    z.string(),
-    z.array(z.string()),
-    z.object({ id: z.string() }),
-    z.array(z.object({ id: z.string() }))
+var deleteMessagesBodySchema = z$1.object({
+  messageIds: z$1.union([
+    z$1.string(),
+    z$1.array(z$1.string()),
+    z$1.object({ id: z$1.string() }),
+    z$1.array(z$1.object({ id: z$1.string() }))
   ])
 });
-var searchMemoryQuerySchema = z.object({
-  agentId: z.string(),
-  searchQuery: z.string(),
-  resourceId: z.string(),
-  threadId: z.string().optional(),
-  limit: z.coerce.number().optional().default(20),
+var searchMemoryQuerySchema = z$1.object({
+  agentId: z$1.string(),
+  searchQuery: z$1.string(),
+  resourceId: z$1.string(),
+  threadId: z$1.string().optional(),
+  limit: z$1.coerce.number().optional().default(20),
   memoryConfig: memoryConfigSchema
 });
-var saveMessagesResponseSchema = z.object({
-  messages: z.array(messageSchema$1)
+var saveMessagesResponseSchema = z$1.object({
+  messages: z$1.array(messageSchema$1)
 });
-var deleteThreadResponseSchema = z.object({
-  result: z.string()
+var deleteThreadResponseSchema = z$1.object({
+  result: z$1.string()
 });
 var updateWorkingMemoryResponseSchema = successResponseSchema;
 var deleteMessagesResponseSchema = successResponseSchema.extend({
-  message: z.string()
+  message: z$1.string()
 });
-var searchMemoryResponseSchema = z.object({
-  results: z.array(z.unknown()),
-  count: z.number(),
-  query: z.string(),
-  searchScope: z.string().optional(),
-  searchType: z.string().optional()
+var searchMemoryResponseSchema = z$1.object({
+  results: z$1.array(z$1.unknown()),
+  count: z$1.number(),
+  query: z$1.string(),
+  searchScope: z$1.string().optional(),
+  searchType: z$1.string().optional()
 });
 
 // src/server/handlers/memory.ts
@@ -3187,7 +3256,7 @@ __export(observability_exports, {
   listScoresBySpan: () => listScoresBySpan,
   scoreTracesHandler: () => scoreTracesHandler
 });
-var aiSpanTypeSchema = z.enum([
+var aiSpanTypeSchema = z$1.enum([
   "agent_run",
   "generic",
   "model_generation",
@@ -3205,55 +3274,55 @@ var aiSpanTypeSchema = z.enum([
   "workflow_sleep",
   "workflow_wait_event"
 ]);
-var aiSpanRecordSchema = z.object({
-  traceId: z.string(),
-  spanId: z.string(),
-  parentSpanId: z.string().nullable(),
-  name: z.string(),
-  scope: z.record(z.string(), z.any()).nullable(),
+var aiSpanRecordSchema = z$1.object({
+  traceId: z$1.string(),
+  spanId: z$1.string(),
+  parentSpanId: z$1.string().nullable(),
+  name: z$1.string(),
+  scope: z$1.record(z$1.string(), z$1.any()).nullable(),
   spanType: aiSpanTypeSchema,
-  attributes: z.record(z.string(), z.any()).nullable(),
-  metadata: z.record(z.string(), z.any()).nullable(),
-  links: z.any(),
-  startedAt: z.coerce.date(),
-  endedAt: z.coerce.date().nullable(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date().nullable(),
-  input: z.any(),
-  output: z.any(),
-  error: z.any(),
-  isEvent: z.boolean()
+  attributes: z$1.record(z$1.string(), z$1.any()).nullable(),
+  metadata: z$1.record(z$1.string(), z$1.any()).nullable(),
+  links: z$1.any(),
+  startedAt: z$1.coerce.date(),
+  endedAt: z$1.coerce.date().nullable(),
+  createdAt: z$1.coerce.date(),
+  updatedAt: z$1.coerce.date().nullable(),
+  input: z$1.any(),
+  output: z$1.any(),
+  error: z$1.any(),
+  isEvent: z$1.boolean()
 });
-var getAITracesPaginatedResponseSchema = z.object({
+var getAITracesPaginatedResponseSchema = z$1.object({
   pagination: paginationInfoSchema,
-  spans: z.array(aiSpanRecordSchema)
+  spans: z$1.array(aiSpanRecordSchema)
 });
-var traceIdPathParams = z.object({
-  traceId: z.string().describe("Unique identifier for the trace")
+var traceIdPathParams = z$1.object({
+  traceId: z$1.string().describe("Unique identifier for the trace")
 });
 var traceSpanPathParams = traceIdPathParams.extend({
-  spanId: z.string().describe("Unique identifier for the span")
+  spanId: z$1.string().describe("Unique identifier for the span")
 });
-var scoreTracesBodySchema = z.object({
-  scorerName: z.string(),
-  targets: z.array(
-    z.object({
-      traceId: z.string(),
-      spanId: z.string().optional()
+var scoreTracesBodySchema = z$1.object({
+  scorerName: z$1.string(),
+  targets: z$1.array(
+    z$1.object({
+      traceId: z$1.string(),
+      spanId: z$1.string().optional()
     })
   )
 });
-var getAITraceResponseSchema = z.object({
-  spans: z.array(aiSpanRecordSchema)
+var getAITraceResponseSchema = z$1.object({
+  spans: z$1.array(aiSpanRecordSchema)
 });
-var scoreTracesResponseSchema = z.object({
-  status: z.string(),
-  message: z.string(),
-  traceCount: z.number()
+var scoreTracesResponseSchema = z$1.object({
+  status: z$1.string(),
+  message: z$1.string(),
+  traceCount: z$1.number()
 });
-var listScoresBySpanResponseSchema = z.object({
+var listScoresBySpanResponseSchema = z$1.object({
   pagination: paginationInfoSchema,
-  scores: z.array(z.unknown())
+  scores: z$1.array(z$1.unknown())
 });
 var listScoresBySpanQuerySchema = createPagePaginationSchema(10);
 
@@ -3362,14 +3431,14 @@ var GET_TRACES_PAGINATED_ROUTE = createRoute({
   method: "GET",
   path: "/api/observability/traces",
   responseType: "json",
-  queryParamSchema: z.object({
-    page: z.coerce.number().optional().default(0),
-    perPage: z.coerce.number().optional().default(10),
-    name: z.string().optional(),
-    spanType: z.string().optional(),
-    dateRange: z.string().optional(),
-    entityId: z.string().optional(),
-    entityType: z.string().optional()
+  queryParamSchema: z$1.object({
+    page: z$1.coerce.number().optional().default(0),
+    perPage: z$1.coerce.number().optional().default(10),
+    name: z$1.string().optional(),
+    spanType: z$1.string().optional(),
+    dateRange: z$1.string().optional(),
+    entityId: z$1.string().optional(),
+    entityType: z$1.string().optional()
   }),
   responseSchema: getAITracesPaginatedResponseSchema,
   summary: "Get AI traces",
@@ -3528,58 +3597,58 @@ __export(scores_exports, {
   LIST_SCORES_BY_SCORER_ID_ROUTE: () => LIST_SCORES_BY_SCORER_ID_ROUTE,
   SAVE_SCORE_ROUTE: () => SAVE_SCORE_ROUTE
 });
-var scoringSamplingConfigSchema = z.object({});
-var mastraScorerConfigSchema = z.object({
-  id: z.string(),
-  name: z.string().optional(),
-  description: z.string(),
-  type: z.unknown().optional(),
-  judge: z.unknown().optional()
+var scoringSamplingConfigSchema = z$1.object({});
+var mastraScorerConfigSchema = z$1.object({
+  id: z$1.string(),
+  name: z$1.string().optional(),
+  description: z$1.string(),
+  type: z$1.unknown().optional(),
+  judge: z$1.unknown().optional()
 });
-var mastraScorerSchema = z.object({
+var mastraScorerSchema = z$1.object({
   config: mastraScorerConfigSchema
 });
-var scorerEntrySchema = z.object({
+var scorerEntrySchema = z$1.object({
   scorer: mastraScorerSchema,
   sampling: scoringSamplingConfigSchema.optional(),
-  agentIds: z.array(z.string()),
-  agentNames: z.array(z.string()),
-  workflowIds: z.array(z.string()),
-  isRegistered: z.boolean()
+  agentIds: z$1.array(z$1.string()),
+  agentNames: z$1.array(z$1.string()),
+  workflowIds: z$1.array(z$1.string()),
+  isRegistered: z$1.boolean()
 });
-var listScorersResponseSchema = z.record(z.string(), scorerEntrySchema);
-var scorerIdPathParams = z.object({
-  scorerId: z.string().describe("Unique identifier for the scorer")
+var listScorersResponseSchema = z$1.record(z$1.string(), scorerEntrySchema);
+var scorerIdPathParams = z$1.object({
+  scorerId: z$1.string().describe("Unique identifier for the scorer")
 });
-var entityPathParams = z.object({
-  entityType: z.string().describe("Type of the entity (AGENT or WORKFLOW)"),
-  entityId: z.string().describe("Unique identifier for the entity")
+var entityPathParams = z$1.object({
+  entityType: z$1.string().describe("Type of the entity (AGENT or WORKFLOW)"),
+  entityId: z$1.string().describe("Unique identifier for the entity")
 });
-var listScoresByRunIdQuerySchema = z.object({
-  page: z.coerce.number().optional().default(0),
-  perPage: z.coerce.number().optional().default(10)
+var listScoresByRunIdQuerySchema = z$1.object({
+  page: z$1.coerce.number().optional().default(0),
+  perPage: z$1.coerce.number().optional().default(10)
 });
-var listScoresByScorerIdQuerySchema = z.object({
-  page: z.coerce.number().optional().default(0),
-  perPage: z.coerce.number().optional().default(10),
-  entityId: z.string().optional(),
-  entityType: z.string().optional()
+var listScoresByScorerIdQuerySchema = z$1.object({
+  page: z$1.coerce.number().optional().default(0),
+  perPage: z$1.coerce.number().optional().default(10),
+  entityId: z$1.string().optional(),
+  entityType: z$1.string().optional()
 });
-var listScoresByEntityIdQuerySchema = z.object({
-  page: z.coerce.number().optional().default(0),
-  perPage: z.coerce.number().optional().default(10)
+var listScoresByEntityIdQuerySchema = z$1.object({
+  page: z$1.coerce.number().optional().default(0),
+  perPage: z$1.coerce.number().optional().default(10)
 });
-var saveScoreBodySchema = z.object({
-  score: z.unknown()
+var saveScoreBodySchema = z$1.object({
+  score: z$1.unknown()
   // ScoreRowData - complex type
 });
-var scoresWithPaginationResponseSchema = z.object({
+var scoresWithPaginationResponseSchema = z$1.object({
   pagination: paginationInfoSchema,
-  scores: z.array(z.unknown())
+  scores: z$1.array(z$1.unknown())
   // Array of score records
 });
-var saveScoreResponseSchema = z.object({
-  score: z.unknown()
+var saveScoreResponseSchema = z$1.object({
+  score: z$1.unknown()
   // ScoreRowData
 });
 
@@ -5087,138 +5156,138 @@ function createTaskContext({
     isCancelled: () => activeCancellations.has(task.id)
   };
 }
-var a2aAgentIdPathParams = z.object({
-  agentId: z.string().describe("Unique identifier for the agent")
+var a2aAgentIdPathParams = z$1.object({
+  agentId: z$1.string().describe("Unique identifier for the agent")
 });
 a2aAgentIdPathParams.extend({
-  taskId: z.string().describe("Unique identifier for the task")
+  taskId: z$1.string().describe("Unique identifier for the task")
 });
-var pushNotificationAuthenticationInfoSchema = z.object({
-  schemes: z.array(z.string()).describe("Supported authentication schemes - e.g. Basic, Bearer"),
-  credentials: z.string().optional().describe("Optional credentials")
+var pushNotificationAuthenticationInfoSchema = z$1.object({
+  schemes: z$1.array(z$1.string()).describe("Supported authentication schemes - e.g. Basic, Bearer"),
+  credentials: z$1.string().optional().describe("Optional credentials")
 });
-var pushNotificationConfigSchema = z.object({
-  url: z.string().describe("URL for sending the push notifications"),
-  id: z.string().optional().describe("Push Notification ID - created by server to support multiple callbacks"),
-  token: z.string().optional().describe("Token unique to this task/session"),
+var pushNotificationConfigSchema = z$1.object({
+  url: z$1.string().describe("URL for sending the push notifications"),
+  id: z$1.string().optional().describe("Push Notification ID - created by server to support multiple callbacks"),
+  token: z$1.string().optional().describe("Token unique to this task/session"),
   authentication: pushNotificationAuthenticationInfoSchema.optional()
 });
-var messageSendConfigurationSchema = z.object({
-  acceptedOutputModes: z.array(z.string()).describe("Accepted output modalities by the client"),
-  blocking: z.boolean().optional().describe("If the server should treat the client as a blocking request"),
-  historyLength: z.number().optional().describe("Number of recent messages to be retrieved"),
+var messageSendConfigurationSchema = z$1.object({
+  acceptedOutputModes: z$1.array(z$1.string()).describe("Accepted output modalities by the client"),
+  blocking: z$1.boolean().optional().describe("If the server should treat the client as a blocking request"),
+  historyLength: z$1.number().optional().describe("Number of recent messages to be retrieved"),
   pushNotificationConfig: pushNotificationConfigSchema.optional()
 });
-var textPartSchema$1 = z.object({
-  kind: z.literal("text").describe("Part type - text for TextParts"),
-  text: z.string().describe("Text content"),
-  metadata: z.record(z.unknown()).optional().describe("Optional metadata associated with the part")
+var textPartSchema$1 = z$1.object({
+  kind: z$1.literal("text").describe("Part type - text for TextParts"),
+  text: z$1.string().describe("Text content"),
+  metadata: z$1.record(z$1.unknown()).optional().describe("Optional metadata associated with the part")
 });
-var fileWithBytesSchema = z.object({
-  bytes: z.string().describe("base64 encoded content of the file"),
-  mimeType: z.string().optional().describe("Optional mimeType for the file"),
-  name: z.string().optional().describe("Optional name for the file")
+var fileWithBytesSchema = z$1.object({
+  bytes: z$1.string().describe("base64 encoded content of the file"),
+  mimeType: z$1.string().optional().describe("Optional mimeType for the file"),
+  name: z$1.string().optional().describe("Optional name for the file")
 });
-var fileWithUriSchema = z.object({
-  uri: z.string().describe("URL for the File content"),
-  mimeType: z.string().optional().describe("Optional mimeType for the file"),
-  name: z.string().optional().describe("Optional name for the file")
+var fileWithUriSchema = z$1.object({
+  uri: z$1.string().describe("URL for the File content"),
+  mimeType: z$1.string().optional().describe("Optional mimeType for the file"),
+  name: z$1.string().optional().describe("Optional name for the file")
 });
-var filePartSchema$1 = z.object({
-  kind: z.literal("file").describe("Part type - file for FileParts"),
-  file: z.union([fileWithBytesSchema, fileWithUriSchema]).describe("File content either as url or bytes"),
-  metadata: z.record(z.unknown()).optional().describe("Optional metadata associated with the part")
+var filePartSchema$1 = z$1.object({
+  kind: z$1.literal("file").describe("Part type - file for FileParts"),
+  file: z$1.union([fileWithBytesSchema, fileWithUriSchema]).describe("File content either as url or bytes"),
+  metadata: z$1.record(z$1.unknown()).optional().describe("Optional metadata associated with the part")
 });
-var dataPartSchema = z.object({
-  kind: z.literal("data").describe("Part type - data for DataParts"),
-  data: z.record(z.unknown()).describe("Structured data content"),
-  metadata: z.record(z.unknown()).optional().describe("Optional metadata associated with the part")
+var dataPartSchema = z$1.object({
+  kind: z$1.literal("data").describe("Part type - data for DataParts"),
+  data: z$1.record(z$1.unknown()).describe("Structured data content"),
+  metadata: z$1.record(z$1.unknown()).optional().describe("Optional metadata associated with the part")
 });
-var partSchema = z.union([textPartSchema$1, filePartSchema$1, dataPartSchema]);
-var messageSchema = z.object({
-  kind: z.literal("message").describe("Event type"),
-  messageId: z.string().describe("Identifier created by the message creator"),
-  role: z.enum(["user", "agent"]).describe("Message sender's role"),
-  parts: z.array(partSchema).describe("Message content"),
-  contextId: z.string().optional().describe("The context the message is associated with"),
-  taskId: z.string().optional().describe("Identifier of task the message is related to"),
-  referenceTaskIds: z.array(z.string()).optional().describe("List of tasks referenced as context by this message"),
-  extensions: z.array(z.string()).optional().describe("The URIs of extensions that are present or contributed to this Message"),
-  metadata: z.record(z.unknown()).optional().describe("Extension metadata")
+var partSchema = z$1.union([textPartSchema$1, filePartSchema$1, dataPartSchema]);
+var messageSchema = z$1.object({
+  kind: z$1.literal("message").describe("Event type"),
+  messageId: z$1.string().describe("Identifier created by the message creator"),
+  role: z$1.enum(["user", "agent"]).describe("Message sender's role"),
+  parts: z$1.array(partSchema).describe("Message content"),
+  contextId: z$1.string().optional().describe("The context the message is associated with"),
+  taskId: z$1.string().optional().describe("Identifier of task the message is related to"),
+  referenceTaskIds: z$1.array(z$1.string()).optional().describe("List of tasks referenced as context by this message"),
+  extensions: z$1.array(z$1.string()).optional().describe("The URIs of extensions that are present or contributed to this Message"),
+  metadata: z$1.record(z$1.unknown()).optional().describe("Extension metadata")
 });
-var messageSendParamsSchema = z.object({
+var messageSendParamsSchema = z$1.object({
   message: messageSchema,
   configuration: messageSendConfigurationSchema.optional(),
-  metadata: z.record(z.unknown()).optional().describe("Extension metadata")
+  metadata: z$1.record(z$1.unknown()).optional().describe("Extension metadata")
 });
-var taskQueryParamsSchema = z.object({
-  id: z.string().describe("Task id"),
-  historyLength: z.number().optional().describe("Number of recent messages to be retrieved"),
-  metadata: z.record(z.unknown()).optional()
+var taskQueryParamsSchema = z$1.object({
+  id: z$1.string().describe("Task id"),
+  historyLength: z$1.number().optional().describe("Number of recent messages to be retrieved"),
+  metadata: z$1.record(z$1.unknown()).optional()
 });
-var taskIdParamsSchema = z.object({
-  id: z.string().describe("Task id"),
-  metadata: z.record(z.unknown()).optional()
+var taskIdParamsSchema = z$1.object({
+  id: z$1.string().describe("Task id"),
+  metadata: z$1.record(z$1.unknown()).optional()
 });
-z.object({
+z$1.object({
   message: messageSchema,
-  metadata: z.record(z.any()).optional()
+  metadata: z$1.record(z$1.any()).optional()
 });
-z.object({
-  id: z.string()
+z$1.object({
+  id: z$1.string()
 });
-var agentExecutionParamsSchema = z.union([messageSendParamsSchema, taskQueryParamsSchema, taskIdParamsSchema]);
-var agentExecutionBodySchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string(), z.number()]),
-  method: z.enum(["message/send", "message/stream", "tasks/get", "tasks/cancel"]),
+var agentExecutionParamsSchema = z$1.union([messageSendParamsSchema, taskQueryParamsSchema, taskIdParamsSchema]);
+var agentExecutionBodySchema = z$1.object({
+  jsonrpc: z$1.literal("2.0"),
+  id: z$1.union([z$1.string(), z$1.number()]),
+  method: z$1.enum(["message/send", "message/stream", "tasks/get", "tasks/cancel"]),
   params: agentExecutionParamsSchema
 });
-var agentCardResponseSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  url: z.string(),
-  provider: z.object({
-    organization: z.string(),
-    url: z.string()
+var agentCardResponseSchema = z$1.object({
+  name: z$1.string(),
+  description: z$1.string(),
+  url: z$1.string(),
+  provider: z$1.object({
+    organization: z$1.string(),
+    url: z$1.string()
   }).optional(),
-  version: z.string(),
-  capabilities: z.object({
-    streaming: z.boolean().optional(),
-    pushNotifications: z.boolean().optional(),
-    stateTransitionHistory: z.boolean().optional()
+  version: z$1.string(),
+  capabilities: z$1.object({
+    streaming: z$1.boolean().optional(),
+    pushNotifications: z$1.boolean().optional(),
+    stateTransitionHistory: z$1.boolean().optional()
   }),
-  defaultInputModes: z.array(z.string()),
-  defaultOutputModes: z.array(z.string()),
-  skills: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      description: z.string(),
-      tags: z.array(z.string()).optional()
+  defaultInputModes: z$1.array(z$1.string()),
+  defaultOutputModes: z$1.array(z$1.string()),
+  skills: z$1.array(
+    z$1.object({
+      id: z$1.string(),
+      name: z$1.string(),
+      description: z$1.string(),
+      tags: z$1.array(z$1.string()).optional()
     })
   )
 });
-z.unknown();
-var agentExecutionResponseSchema = z.unknown();
+z$1.unknown();
+var agentExecutionResponseSchema = z$1.unknown();
 
 // src/server/handlers/a2a.ts
-var messageSendParamsSchema2 = z$1.object({
-  message: z$1.object({
-    role: z$1.enum(["user", "agent"]),
-    parts: z$1.array(
-      z$1.object({
-        kind: z$1.enum(["text"]),
-        text: z$1.string()
+var messageSendParamsSchema2 = z.object({
+  message: z.object({
+    role: z.enum(["user", "agent"]),
+    parts: z.array(
+      z.object({
+        kind: z.enum(["text"]),
+        text: z.string()
       })
     ),
-    kind: z$1.literal("message"),
-    messageId: z$1.string(),
-    contextId: z$1.string().optional(),
-    taskId: z$1.string().optional(),
-    referenceTaskIds: z$1.array(z$1.string()).optional(),
-    extensions: z$1.array(z$1.string()).optional(),
-    metadata: z$1.record(z$1.any()).optional()
+    kind: z.literal("message"),
+    messageId: z.string(),
+    contextId: z.string().optional(),
+    taskId: z.string().optional(),
+    referenceTaskIds: z.array(z.string()).optional(),
+    extensions: z.array(z.string()).optional(),
+    metadata: z.record(z.any()).optional()
   })
 });
 async function getAgentCardByIdHandler({
@@ -5269,7 +5338,7 @@ function validateMessageSendParams(params) {
   try {
     messageSendParamsSchema2.parse(params);
   } catch (error) {
-    if (error instanceof z$1.ZodError) {
+    if (error instanceof z.ZodError) {
       throw MastraA2AError.invalidParams(error.errors[0].message);
     }
     throw error;
@@ -5597,7 +5666,7 @@ __export(workflows_exports, {
   TIME_TRAVEL_STREAM_WORKFLOW_ROUTE: () => TIME_TRAVEL_STREAM_WORKFLOW_ROUTE,
   TIME_TRAVEL_WORKFLOW_ROUTE: () => TIME_TRAVEL_WORKFLOW_ROUTE
 });
-var workflowRunStatusSchema = z.enum([
+var workflowRunStatusSchema = z$1.enum([
   "running",
   "waiting",
   "suspended",
@@ -5608,94 +5677,94 @@ var workflowRunStatusSchema = z.enum([
   "bailed",
   "tripwire"
 ]);
-var workflowIdPathParams = z.object({
-  workflowId: z.string().describe("Unique identifier for the workflow")
+var workflowIdPathParams = z$1.object({
+  workflowId: z$1.string().describe("Unique identifier for the workflow")
 });
 var workflowRunPathParams = workflowIdPathParams.extend({
-  runId: z.string().describe("Unique identifier for the workflow run")
+  runId: z$1.string().describe("Unique identifier for the workflow run")
 });
-var serializedStepSchema = z.object({
-  id: z.string(),
-  description: z.string().optional()
+var serializedStepSchema = z$1.object({
+  id: z$1.string(),
+  description: z$1.string().optional()
 });
-var serializedStepFlowEntrySchema = z.object({
-  type: z.enum(["step", "sleep", "sleepUntil", "waitForEvent", "parallel", "conditional", "loop", "foreach"])
+var serializedStepFlowEntrySchema = z$1.object({
+  type: z$1.enum(["step", "sleep", "sleepUntil", "waitForEvent", "parallel", "conditional", "loop", "foreach"])
 });
-var workflowInfoSchema = z.object({
-  steps: z.record(z.string(), serializedStepSchema),
-  allSteps: z.record(z.string(), serializedStepSchema),
-  name: z.string().optional(),
-  description: z.string().optional(),
-  stepGraph: z.array(serializedStepFlowEntrySchema),
-  inputSchema: z.string().optional(),
-  outputSchema: z.string().optional(),
-  options: z.object({}).optional(),
-  isProcessorWorkflow: z.boolean().optional()
+var workflowInfoSchema = z$1.object({
+  steps: z$1.record(z$1.string(), serializedStepSchema),
+  allSteps: z$1.record(z$1.string(), serializedStepSchema),
+  name: z$1.string().optional(),
+  description: z$1.string().optional(),
+  stepGraph: z$1.array(serializedStepFlowEntrySchema),
+  inputSchema: z$1.string().optional(),
+  outputSchema: z$1.string().optional(),
+  options: z$1.object({}).optional(),
+  isProcessorWorkflow: z$1.boolean().optional()
 });
-var listWorkflowsResponseSchema = z.record(z.string(), workflowInfoSchema);
-var workflowRunSchema = z.object({
-  workflowName: z.string(),
-  runId: z.string(),
-  snapshot: z.union([z.object({}), z.string()]),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  resourceId: z.string().optional()
+var listWorkflowsResponseSchema = z$1.record(z$1.string(), workflowInfoSchema);
+var workflowRunSchema = z$1.object({
+  workflowName: z$1.string(),
+  runId: z$1.string(),
+  snapshot: z$1.union([z$1.object({}), z$1.string()]),
+  createdAt: z$1.date(),
+  updatedAt: z$1.date(),
+  resourceId: z$1.string().optional()
 });
-var workflowRunsResponseSchema = z.object({
-  runs: z.array(workflowRunSchema),
-  total: z.number()
+var workflowRunsResponseSchema = z$1.object({
+  runs: z$1.array(workflowRunSchema),
+  total: z$1.number()
 });
 var workflowRunResponseSchema = workflowRunSchema;
 var listWorkflowRunsQuerySchema = createCombinedPaginationSchema().extend({
-  fromDate: z.coerce.date().optional(),
-  toDate: z.coerce.date().optional(),
-  resourceId: z.string().optional(),
+  fromDate: z$1.coerce.date().optional(),
+  toDate: z$1.coerce.date().optional(),
+  resourceId: z$1.string().optional(),
   status: workflowRunStatusSchema.optional()
 });
-var workflowExecutionBodySchema = z.object({
-  inputData: z.unknown().optional(),
-  initialState: z.unknown().optional(),
-  requestContext: z.record(z.string(), z.unknown()).optional(),
+var workflowExecutionBodySchema = z$1.object({
+  inputData: z$1.unknown().optional(),
+  initialState: z$1.unknown().optional(),
+  requestContext: z$1.record(z$1.string(), z$1.unknown()).optional(),
   tracingOptions: tracingOptionsSchema.optional()
 });
 var streamLegacyWorkflowBodySchema = workflowExecutionBodySchema;
 var streamWorkflowBodySchema = workflowExecutionBodySchema.extend({
-  closeOnSuspend: z.boolean().optional()
+  closeOnSuspend: z$1.boolean().optional()
 });
-var resumeBodySchema = z.object({
-  step: z.union([z.string(), z.array(z.string())]).optional(),
+var resumeBodySchema = z$1.object({
+  step: z$1.union([z$1.string(), z$1.array(z$1.string())]).optional(),
   // Optional - workflow can auto-resume all suspended steps
-  resumeData: z.unknown().optional(),
-  requestContext: z.record(z.string(), z.unknown()).optional(),
+  resumeData: z$1.unknown().optional(),
+  requestContext: z$1.record(z$1.string(), z$1.unknown()).optional(),
   tracingOptions: tracingOptionsSchema.optional()
 });
-var restartBodySchema = z.object({
-  requestContext: z.record(z.string(), z.unknown()).optional(),
+var restartBodySchema = z$1.object({
+  requestContext: z$1.record(z$1.string(), z$1.unknown()).optional(),
   tracingOptions: tracingOptionsSchema.optional()
 });
-var timeTravelBodySchema = z.object({
-  inputData: z.unknown().optional(),
-  resumeData: z.unknown().optional(),
-  initialState: z.unknown().optional(),
-  step: z.union([z.string(), z.array(z.string())]),
-  context: z.record(z.string(), z.any()).optional(),
-  nestedStepsContext: z.record(z.string(), z.record(z.string(), z.any())).optional(),
-  requestContext: z.record(z.string(), z.unknown()).optional(),
+var timeTravelBodySchema = z$1.object({
+  inputData: z$1.unknown().optional(),
+  resumeData: z$1.unknown().optional(),
+  initialState: z$1.unknown().optional(),
+  step: z$1.union([z$1.string(), z$1.array(z$1.string())]),
+  context: z$1.record(z$1.string(), z$1.any()).optional(),
+  nestedStepsContext: z$1.record(z$1.string(), z$1.record(z$1.string(), z$1.any())).optional(),
+  requestContext: z$1.record(z$1.string(), z$1.unknown()).optional(),
   tracingOptions: tracingOptionsSchema.optional()
 });
 var startAsyncWorkflowBodySchema = workflowExecutionBodySchema;
-z.object({
-  event: z.string(),
-  data: z.unknown()
+z$1.object({
+  event: z$1.string(),
+  data: z$1.unknown()
 });
-var workflowExecutionResultSchema = z.object({
+var workflowExecutionResultSchema = z$1.object({
   status: workflowRunStatusSchema,
-  result: z.unknown().optional(),
-  error: z.unknown().optional()
+  result: z$1.unknown().optional(),
+  error: z$1.unknown().optional()
 });
 var workflowControlResponseSchema = messageResponseSchema;
-var createWorkflowRunResponseSchema = z.object({
-  runId: z.string()
+var createWorkflowRunResponseSchema = z$1.object({
+  runId: z$1.string()
 });
 
 // src/server/handlers/workflows.ts
@@ -5740,8 +5809,8 @@ var LIST_WORKFLOWS_ROUTE = createRoute({
   method: "GET",
   path: "/api/workflows",
   responseType: "json",
-  queryParamSchema: z$1.object({
-    partial: z$1.string().optional()
+  queryParamSchema: z.object({
+    partial: z.string().optional()
   }),
   responseSchema: listWorkflowsResponseSchema,
   summary: "List all workflows",
@@ -7858,15 +7927,15 @@ function mapOpenAIFinishReason(finishReason) {
       return "unknown";
   }
 }
-var openaiErrorDataSchema = z$1.object({
-  error: z$1.object({
-    message: z$1.string(),
+var openaiErrorDataSchema = z.object({
+  error: z.object({
+    message: z.string(),
     // The additional information below is handled loosely to support
     // OpenAI-compatible providers that have slightly different error
     // responses:
-    type: z$1.string().nullish(),
-    param: z$1.any().nullish(),
-    code: z$1.union([z$1.string(), z$1.number()]).nullish()
+    type: z.string().nullish(),
+    param: z.any().nullish(),
+    code: z.union([z.string(), z.number()]).nullish()
   })
 });
 var openaiFailedResponseHandler = createJsonErrorResponseHandler$1({
@@ -8562,104 +8631,104 @@ var OpenAIChatLanguageModel = class {
     };
   }
 };
-var openaiTokenUsageSchema = z$1.object({
-  prompt_tokens: z$1.number().nullish(),
-  completion_tokens: z$1.number().nullish(),
-  prompt_tokens_details: z$1.object({
-    cached_tokens: z$1.number().nullish()
+var openaiTokenUsageSchema = z.object({
+  prompt_tokens: z.number().nullish(),
+  completion_tokens: z.number().nullish(),
+  prompt_tokens_details: z.object({
+    cached_tokens: z.number().nullish()
   }).nullish(),
-  completion_tokens_details: z$1.object({
-    reasoning_tokens: z$1.number().nullish(),
-    accepted_prediction_tokens: z$1.number().nullish(),
-    rejected_prediction_tokens: z$1.number().nullish()
+  completion_tokens_details: z.object({
+    reasoning_tokens: z.number().nullish(),
+    accepted_prediction_tokens: z.number().nullish(),
+    rejected_prediction_tokens: z.number().nullish()
   }).nullish()
 }).nullish();
-var openaiChatResponseSchema = z$1.object({
-  id: z$1.string().nullish(),
-  created: z$1.number().nullish(),
-  model: z$1.string().nullish(),
-  choices: z$1.array(
-    z$1.object({
-      message: z$1.object({
-        role: z$1.literal("assistant").nullish(),
-        content: z$1.string().nullish(),
-        function_call: z$1.object({
-          arguments: z$1.string(),
-          name: z$1.string()
+var openaiChatResponseSchema = z.object({
+  id: z.string().nullish(),
+  created: z.number().nullish(),
+  model: z.string().nullish(),
+  choices: z.array(
+    z.object({
+      message: z.object({
+        role: z.literal("assistant").nullish(),
+        content: z.string().nullish(),
+        function_call: z.object({
+          arguments: z.string(),
+          name: z.string()
         }).nullish(),
-        tool_calls: z$1.array(
-          z$1.object({
-            id: z$1.string().nullish(),
-            type: z$1.literal("function"),
-            function: z$1.object({
-              name: z$1.string(),
-              arguments: z$1.string()
+        tool_calls: z.array(
+          z.object({
+            id: z.string().nullish(),
+            type: z.literal("function"),
+            function: z.object({
+              name: z.string(),
+              arguments: z.string()
             })
           })
         ).nullish()
       }),
-      index: z$1.number(),
-      logprobs: z$1.object({
-        content: z$1.array(
-          z$1.object({
-            token: z$1.string(),
-            logprob: z$1.number(),
-            top_logprobs: z$1.array(
-              z$1.object({
-                token: z$1.string(),
-                logprob: z$1.number()
+      index: z.number(),
+      logprobs: z.object({
+        content: z.array(
+          z.object({
+            token: z.string(),
+            logprob: z.number(),
+            top_logprobs: z.array(
+              z.object({
+                token: z.string(),
+                logprob: z.number()
               })
             )
           })
         ).nullable()
       }).nullish(),
-      finish_reason: z$1.string().nullish()
+      finish_reason: z.string().nullish()
     })
   ),
   usage: openaiTokenUsageSchema
 });
-var openaiChatChunkSchema = z$1.union([
-  z$1.object({
-    id: z$1.string().nullish(),
-    created: z$1.number().nullish(),
-    model: z$1.string().nullish(),
-    choices: z$1.array(
-      z$1.object({
-        delta: z$1.object({
-          role: z$1.enum(["assistant"]).nullish(),
-          content: z$1.string().nullish(),
-          function_call: z$1.object({
-            name: z$1.string().optional(),
-            arguments: z$1.string().optional()
+var openaiChatChunkSchema = z.union([
+  z.object({
+    id: z.string().nullish(),
+    created: z.number().nullish(),
+    model: z.string().nullish(),
+    choices: z.array(
+      z.object({
+        delta: z.object({
+          role: z.enum(["assistant"]).nullish(),
+          content: z.string().nullish(),
+          function_call: z.object({
+            name: z.string().optional(),
+            arguments: z.string().optional()
           }).nullish(),
-          tool_calls: z$1.array(
-            z$1.object({
-              index: z$1.number(),
-              id: z$1.string().nullish(),
-              type: z$1.literal("function").nullish(),
-              function: z$1.object({
-                name: z$1.string().nullish(),
-                arguments: z$1.string().nullish()
+          tool_calls: z.array(
+            z.object({
+              index: z.number(),
+              id: z.string().nullish(),
+              type: z.literal("function").nullish(),
+              function: z.object({
+                name: z.string().nullish(),
+                arguments: z.string().nullish()
               })
             })
           ).nullish()
         }).nullish(),
-        logprobs: z$1.object({
-          content: z$1.array(
-            z$1.object({
-              token: z$1.string(),
-              logprob: z$1.number(),
-              top_logprobs: z$1.array(
-                z$1.object({
-                  token: z$1.string(),
-                  logprob: z$1.number()
+        logprobs: z.object({
+          content: z.array(
+            z.object({
+              token: z.string(),
+              logprob: z.number(),
+              top_logprobs: z.array(
+                z.object({
+                  token: z.string(),
+                  logprob: z.number()
                 })
               )
             })
           ).nullable()
         }).nullish(),
-        finish_reason: z$1.string().nullish(),
-        index: z$1.number()
+        finish_reason: z.string().nullish(),
+        index: z.number()
       })
     ),
     usage: openaiTokenUsageSchema
@@ -9028,46 +9097,46 @@ var OpenAICompletionLanguageModel = class {
     };
   }
 };
-var openaiCompletionResponseSchema = z$1.object({
-  id: z$1.string().nullish(),
-  created: z$1.number().nullish(),
-  model: z$1.string().nullish(),
-  choices: z$1.array(
-    z$1.object({
-      text: z$1.string(),
-      finish_reason: z$1.string(),
-      logprobs: z$1.object({
-        tokens: z$1.array(z$1.string()),
-        token_logprobs: z$1.array(z$1.number()),
-        top_logprobs: z$1.array(z$1.record(z$1.string(), z$1.number())).nullable()
+var openaiCompletionResponseSchema = z.object({
+  id: z.string().nullish(),
+  created: z.number().nullish(),
+  model: z.string().nullish(),
+  choices: z.array(
+    z.object({
+      text: z.string(),
+      finish_reason: z.string(),
+      logprobs: z.object({
+        tokens: z.array(z.string()),
+        token_logprobs: z.array(z.number()),
+        top_logprobs: z.array(z.record(z.string(), z.number())).nullable()
       }).nullish()
     })
   ),
-  usage: z$1.object({
-    prompt_tokens: z$1.number(),
-    completion_tokens: z$1.number()
+  usage: z.object({
+    prompt_tokens: z.number(),
+    completion_tokens: z.number()
   })
 });
-var openaiCompletionChunkSchema = z$1.union([
-  z$1.object({
-    id: z$1.string().nullish(),
-    created: z$1.number().nullish(),
-    model: z$1.string().nullish(),
-    choices: z$1.array(
-      z$1.object({
-        text: z$1.string(),
-        finish_reason: z$1.string().nullish(),
-        index: z$1.number(),
-        logprobs: z$1.object({
-          tokens: z$1.array(z$1.string()),
-          token_logprobs: z$1.array(z$1.number()),
-          top_logprobs: z$1.array(z$1.record(z$1.string(), z$1.number())).nullable()
+var openaiCompletionChunkSchema = z.union([
+  z.object({
+    id: z.string().nullish(),
+    created: z.number().nullish(),
+    model: z.string().nullish(),
+    choices: z.array(
+      z.object({
+        text: z.string(),
+        finish_reason: z.string().nullish(),
+        index: z.number(),
+        logprobs: z.object({
+          tokens: z.array(z.string()),
+          token_logprobs: z.array(z.number()),
+          top_logprobs: z.array(z.record(z.string(), z.number())).nullable()
         }).nullish()
       })
     ),
-    usage: z$1.object({
-      prompt_tokens: z$1.number(),
-      completion_tokens: z$1.number()
+    usage: z.object({
+      prompt_tokens: z.number(),
+      completion_tokens: z.number()
     }).nullish()
   }),
   openaiErrorDataSchema
@@ -9130,9 +9199,9 @@ var OpenAIEmbeddingModel = class {
     };
   }
 };
-var openaiTextEmbeddingResponseSchema = z$1.object({
-  data: z$1.array(z$1.object({ embedding: z$1.array(z$1.number()) })),
-  usage: z$1.object({ prompt_tokens: z$1.number() }).nullish()
+var openaiTextEmbeddingResponseSchema = z.object({
+  data: z.array(z.object({ embedding: z.array(z.number()) })),
+  usage: z.object({ prompt_tokens: z.number() }).nullish()
 });
 var modelMaxImagesPerCall = {
   "dall-e-3": 1,
@@ -9209,15 +9278,15 @@ var OpenAIImageModel = class {
     };
   }
 };
-var openaiImageResponseSchema = z$1.object({
-  data: z$1.array(z$1.object({ b64_json: z$1.string() }))
+var openaiImageResponseSchema = z.object({
+  data: z.array(z.object({ b64_json: z.string() }))
 });
-var openAIProviderOptionsSchema = z$1.object({
-  include: z$1.array(z$1.string()).nullish(),
-  language: z$1.string().nullish(),
-  prompt: z$1.string().nullish(),
-  temperature: z$1.number().min(0).max(1).nullish().default(0),
-  timestampGranularities: z$1.array(z$1.enum(["word", "segment"])).nullish().default(["segment"])
+var openAIProviderOptionsSchema = z.object({
+  include: z.array(z.string()).nullish(),
+  language: z.string().nullish(),
+  prompt: z.string().nullish(),
+  temperature: z.number().min(0).max(1).nullish().default(0),
+  timestampGranularities: z.array(z.enum(["word", "segment"])).nullish().default(["segment"])
 });
 var languageMap = {
   afrikaans: "af",
@@ -9365,15 +9434,15 @@ var OpenAITranscriptionModel = class {
     };
   }
 };
-var openaiTranscriptionResponseSchema = z$1.object({
-  text: z$1.string(),
-  language: z$1.string().nullish(),
-  duration: z$1.number().nullish(),
-  words: z$1.array(
-    z$1.object({
-      word: z$1.string(),
-      start: z$1.number(),
-      end: z$1.number()
+var openaiTranscriptionResponseSchema = z.object({
+  text: z.string(),
+  language: z.string().nullish(),
+  duration: z.number().nullish(),
+  words: z.array(
+    z.object({
+      word: z.string(),
+      start: z.number(),
+      end: z.number()
     })
   ).nullish()
 });
@@ -9790,59 +9859,59 @@ var OpenAIResponsesLanguageModel = class {
       body,
       failedResponseHandler: openaiFailedResponseHandler,
       successfulResponseHandler: createJsonResponseHandler$1(
-        z$1.object({
-          id: z$1.string(),
-          created_at: z$1.number(),
-          error: z$1.object({
-            message: z$1.string(),
-            code: z$1.string()
+        z.object({
+          id: z.string(),
+          created_at: z.number(),
+          error: z.object({
+            message: z.string(),
+            code: z.string()
           }).nullish(),
-          model: z$1.string(),
-          output: z$1.array(
-            z$1.discriminatedUnion("type", [
-              z$1.object({
-                type: z$1.literal("message"),
-                role: z$1.literal("assistant"),
-                content: z$1.array(
-                  z$1.object({
-                    type: z$1.literal("output_text"),
-                    text: z$1.string(),
-                    annotations: z$1.array(
-                      z$1.object({
-                        type: z$1.literal("url_citation"),
-                        start_index: z$1.number(),
-                        end_index: z$1.number(),
-                        url: z$1.string(),
-                        title: z$1.string()
+          model: z.string(),
+          output: z.array(
+            z.discriminatedUnion("type", [
+              z.object({
+                type: z.literal("message"),
+                role: z.literal("assistant"),
+                content: z.array(
+                  z.object({
+                    type: z.literal("output_text"),
+                    text: z.string(),
+                    annotations: z.array(
+                      z.object({
+                        type: z.literal("url_citation"),
+                        start_index: z.number(),
+                        end_index: z.number(),
+                        url: z.string(),
+                        title: z.string()
                       })
                     )
                   })
                 )
               }),
-              z$1.object({
-                type: z$1.literal("function_call"),
-                call_id: z$1.string(),
-                name: z$1.string(),
-                arguments: z$1.string()
+              z.object({
+                type: z.literal("function_call"),
+                call_id: z.string(),
+                name: z.string(),
+                arguments: z.string()
               }),
-              z$1.object({
-                type: z$1.literal("web_search_call")
+              z.object({
+                type: z.literal("web_search_call")
               }),
-              z$1.object({
-                type: z$1.literal("computer_call")
+              z.object({
+                type: z.literal("computer_call")
               }),
-              z$1.object({
-                type: z$1.literal("reasoning"),
-                summary: z$1.array(
-                  z$1.object({
-                    type: z$1.literal("summary_text"),
-                    text: z$1.string()
+              z.object({
+                type: z.literal("reasoning"),
+                summary: z.array(
+                  z.object({
+                    type: z.literal("summary_text"),
+                    text: z.string()
                   })
                 )
               })
             ])
           ),
-          incomplete_details: z$1.object({ reason: z$1.string() }).nullable(),
+          incomplete_details: z.object({ reason: z.string() }).nullable(),
           usage: usageSchema
         })
       ),
@@ -10063,93 +10132,93 @@ var OpenAIResponsesLanguageModel = class {
     };
   }
 };
-var usageSchema = z$1.object({
-  input_tokens: z$1.number(),
-  input_tokens_details: z$1.object({ cached_tokens: z$1.number().nullish() }).nullish(),
-  output_tokens: z$1.number(),
-  output_tokens_details: z$1.object({ reasoning_tokens: z$1.number().nullish() }).nullish()
+var usageSchema = z.object({
+  input_tokens: z.number(),
+  input_tokens_details: z.object({ cached_tokens: z.number().nullish() }).nullish(),
+  output_tokens: z.number(),
+  output_tokens_details: z.object({ reasoning_tokens: z.number().nullish() }).nullish()
 });
-var textDeltaChunkSchema = z$1.object({
-  type: z$1.literal("response.output_text.delta"),
-  delta: z$1.string()
+var textDeltaChunkSchema = z.object({
+  type: z.literal("response.output_text.delta"),
+  delta: z.string()
 });
-var responseFinishedChunkSchema = z$1.object({
-  type: z$1.enum(["response.completed", "response.incomplete"]),
-  response: z$1.object({
-    incomplete_details: z$1.object({ reason: z$1.string() }).nullish(),
+var responseFinishedChunkSchema = z.object({
+  type: z.enum(["response.completed", "response.incomplete"]),
+  response: z.object({
+    incomplete_details: z.object({ reason: z.string() }).nullish(),
     usage: usageSchema
   })
 });
-var responseCreatedChunkSchema = z$1.object({
-  type: z$1.literal("response.created"),
-  response: z$1.object({
-    id: z$1.string(),
-    created_at: z$1.number(),
-    model: z$1.string()
+var responseCreatedChunkSchema = z.object({
+  type: z.literal("response.created"),
+  response: z.object({
+    id: z.string(),
+    created_at: z.number(),
+    model: z.string()
   })
 });
-var responseOutputItemDoneSchema = z$1.object({
-  type: z$1.literal("response.output_item.done"),
-  output_index: z$1.number(),
-  item: z$1.discriminatedUnion("type", [
-    z$1.object({
-      type: z$1.literal("message")
+var responseOutputItemDoneSchema = z.object({
+  type: z.literal("response.output_item.done"),
+  output_index: z.number(),
+  item: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("message")
     }),
-    z$1.object({
-      type: z$1.literal("function_call"),
-      id: z$1.string(),
-      call_id: z$1.string(),
-      name: z$1.string(),
-      arguments: z$1.string(),
-      status: z$1.literal("completed")
+    z.object({
+      type: z.literal("function_call"),
+      id: z.string(),
+      call_id: z.string(),
+      name: z.string(),
+      arguments: z.string(),
+      status: z.literal("completed")
     })
   ])
 });
-var responseFunctionCallArgumentsDeltaSchema = z$1.object({
-  type: z$1.literal("response.function_call_arguments.delta"),
-  item_id: z$1.string(),
-  output_index: z$1.number(),
-  delta: z$1.string()
+var responseFunctionCallArgumentsDeltaSchema = z.object({
+  type: z.literal("response.function_call_arguments.delta"),
+  item_id: z.string(),
+  output_index: z.number(),
+  delta: z.string()
 });
-var responseOutputItemAddedSchema = z$1.object({
-  type: z$1.literal("response.output_item.added"),
-  output_index: z$1.number(),
-  item: z$1.discriminatedUnion("type", [
-    z$1.object({
-      type: z$1.literal("message")
+var responseOutputItemAddedSchema = z.object({
+  type: z.literal("response.output_item.added"),
+  output_index: z.number(),
+  item: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("message")
     }),
-    z$1.object({
-      type: z$1.literal("function_call"),
-      id: z$1.string(),
-      call_id: z$1.string(),
-      name: z$1.string(),
-      arguments: z$1.string()
+    z.object({
+      type: z.literal("function_call"),
+      id: z.string(),
+      call_id: z.string(),
+      name: z.string(),
+      arguments: z.string()
     })
   ])
 });
-var responseAnnotationAddedSchema = z$1.object({
-  type: z$1.literal("response.output_text.annotation.added"),
-  annotation: z$1.object({
-    type: z$1.literal("url_citation"),
-    url: z$1.string(),
-    title: z$1.string()
+var responseAnnotationAddedSchema = z.object({
+  type: z.literal("response.output_text.annotation.added"),
+  annotation: z.object({
+    type: z.literal("url_citation"),
+    url: z.string(),
+    title: z.string()
   })
 });
-var responseReasoningSummaryTextDeltaSchema = z$1.object({
-  type: z$1.literal("response.reasoning_summary_text.delta"),
-  item_id: z$1.string(),
-  output_index: z$1.number(),
-  summary_index: z$1.number(),
-  delta: z$1.string()
+var responseReasoningSummaryTextDeltaSchema = z.object({
+  type: z.literal("response.reasoning_summary_text.delta"),
+  item_id: z.string(),
+  output_index: z.number(),
+  summary_index: z.number(),
+  delta: z.string()
 });
-var errorChunkSchema = z$1.object({
-  type: z$1.literal("error"),
-  code: z$1.string(),
-  message: z$1.string(),
-  param: z$1.string().nullish(),
-  sequence_number: z$1.number()
+var errorChunkSchema = z.object({
+  type: z.literal("error"),
+  code: z.string(),
+  message: z.string(),
+  param: z.string().nullish(),
+  sequence_number: z.number()
 });
-var openaiResponsesChunkSchema = z$1.union([
+var openaiResponsesChunkSchema = z.union([
   textDeltaChunkSchema,
   responseFinishedChunkSchema,
   responseCreatedChunkSchema,
@@ -10159,7 +10228,7 @@ var openaiResponsesChunkSchema = z$1.union([
   responseAnnotationAddedSchema,
   responseReasoningSummaryTextDeltaSchema,
   errorChunkSchema,
-  z$1.object({ type: z$1.string() }).passthrough()
+  z.object({ type: z.string() }).passthrough()
   // fallback for unknown chunks
 ]);
 function isTextDeltaChunk(chunk) {
@@ -10210,18 +10279,18 @@ function getResponsesModelConfig(modelId) {
     requiredAutoTruncation: false
   };
 }
-var openaiResponsesProviderOptionsSchema = z$1.object({
-  metadata: z$1.any().nullish(),
-  parallelToolCalls: z$1.boolean().nullish(),
-  previousResponseId: z$1.string().nullish(),
-  store: z$1.boolean().nullish(),
-  user: z$1.string().nullish(),
-  reasoningEffort: z$1.string().nullish(),
-  strictSchemas: z$1.boolean().nullish(),
-  instructions: z$1.string().nullish(),
-  reasoningSummary: z$1.string().nullish()
+var openaiResponsesProviderOptionsSchema = z.object({
+  metadata: z.any().nullish(),
+  parallelToolCalls: z.boolean().nullish(),
+  previousResponseId: z.string().nullish(),
+  store: z.boolean().nullish(),
+  user: z.string().nullish(),
+  reasoningEffort: z.string().nullish(),
+  strictSchemas: z.boolean().nullish(),
+  instructions: z.string().nullish(),
+  reasoningSummary: z.string().nullish()
 });
-var WebSearchPreviewParameters = z$1.object({});
+var WebSearchPreviewParameters = z.object({});
 function webSearchPreviewTool({
   searchContextSize,
   userLocation
@@ -10239,9 +10308,9 @@ function webSearchPreviewTool({
 var openaiTools = {
   webSearchPreview: webSearchPreviewTool
 };
-var OpenAIProviderOptionsSchema = z$1.object({
-  instructions: z$1.string().nullish(),
-  speed: z$1.number().min(0.25).max(4).default(1).nullish()
+var OpenAIProviderOptionsSchema = z.object({
+  instructions: z.string().nullish(),
+  speed: z.number().min(0.25).max(4).default(1).nullish()
 });
 var OpenAISpeechModel = class {
   constructor(modelId, config) {
@@ -12326,7 +12395,7 @@ function patchRecordSchemas(schema) {
   const def = schema._zod?.def;
   if (def?.type === "record" && def.keyType && !def.valueType) {
     def.valueType = def.keyType;
-    def.keyType = z$1.string();
+    def.keyType = z.string();
   }
   if (!def) return schema;
   if (def.type === "object" && def.shape) {
@@ -12368,9 +12437,9 @@ function patchRecordSchemas(schema) {
 }
 function zodToJsonSchema2(zodSchema5, target = "jsonSchema7", strategy = "relative") {
   const fn = "toJSONSchema";
-  if (fn in z$1) {
+  if (fn in z) {
     patchRecordSchemas(zodSchema5);
-    return z$1[fn](zodSchema5, {
+    return z[fn](zodSchema5, {
       unrepresentable: "any",
       override: (ctx) => {
         const def = ctx.zodSchema?._def || ctx.zodSchema?._zod?.def;
@@ -14294,11 +14363,11 @@ var NoObjectGeneratedError = class extends AISDKError {
   }
 };
 _a4 = symbol4;
-var dataContentSchema = z$1.union([
-  z$1.string(),
-  z$1.instanceof(Uint8Array),
-  z$1.instanceof(ArrayBuffer),
-  z$1.custom(
+var dataContentSchema = z.union([
+  z.string(),
+  z.instanceof(Uint8Array),
+  z.instanceof(ArrayBuffer),
+  z.custom(
     // Buffer might not be available in some environments such as CloudFlare:
     (value) => {
       var _a172, _b8;
@@ -14307,102 +14376,102 @@ var dataContentSchema = z$1.union([
     { message: "Must be a Buffer" }
   )
 ]);
-var jsonValueSchema = z$1.lazy(
-  () => z$1.union([
-    z$1.null(),
-    z$1.string(),
-    z$1.number(),
-    z$1.boolean(),
-    z$1.record(z$1.string(), jsonValueSchema),
-    z$1.array(jsonValueSchema)
+var jsonValueSchema = z.lazy(
+  () => z.union([
+    z.null(),
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.record(z.string(), jsonValueSchema),
+    z.array(jsonValueSchema)
   ])
 );
-var providerMetadataSchema = z$1.record(
-  z$1.string(),
-  z$1.record(z$1.string(), jsonValueSchema)
+var providerMetadataSchema = z.record(
+  z.string(),
+  z.record(z.string(), jsonValueSchema)
 );
-var toolResultContentSchema = z$1.array(
-  z$1.union([
-    z$1.object({ type: z$1.literal("text"), text: z$1.string() }),
-    z$1.object({
-      type: z$1.literal("image"),
-      data: z$1.string(),
-      mimeType: z$1.string().optional()
+var toolResultContentSchema = z.array(
+  z.union([
+    z.object({ type: z.literal("text"), text: z.string() }),
+    z.object({
+      type: z.literal("image"),
+      data: z.string(),
+      mimeType: z.string().optional()
     })
   ])
 );
-var textPartSchema = z$1.object({
-  type: z$1.literal("text"),
-  text: z$1.string(),
+var textPartSchema = z.object({
+  type: z.literal("text"),
+  text: z.string(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var imagePartSchema = z$1.object({
-  type: z$1.literal("image"),
-  image: z$1.union([dataContentSchema, z$1.instanceof(URL)]),
-  mimeType: z$1.string().optional(),
+var imagePartSchema = z.object({
+  type: z.literal("image"),
+  image: z.union([dataContentSchema, z.instanceof(URL)]),
+  mimeType: z.string().optional(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var filePartSchema = z$1.object({
-  type: z$1.literal("file"),
-  data: z$1.union([dataContentSchema, z$1.instanceof(URL)]),
-  filename: z$1.string().optional(),
-  mimeType: z$1.string(),
+var filePartSchema = z.object({
+  type: z.literal("file"),
+  data: z.union([dataContentSchema, z.instanceof(URL)]),
+  filename: z.string().optional(),
+  mimeType: z.string(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var reasoningPartSchema = z$1.object({
-  type: z$1.literal("reasoning"),
-  text: z$1.string(),
+var reasoningPartSchema = z.object({
+  type: z.literal("reasoning"),
+  text: z.string(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var redactedReasoningPartSchema = z$1.object({
-  type: z$1.literal("redacted-reasoning"),
-  data: z$1.string(),
+var redactedReasoningPartSchema = z.object({
+  type: z.literal("redacted-reasoning"),
+  data: z.string(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var toolCallPartSchema = z$1.object({
-  type: z$1.literal("tool-call"),
-  toolCallId: z$1.string(),
-  toolName: z$1.string(),
-  args: z$1.unknown(),
+var toolCallPartSchema = z.object({
+  type: z.literal("tool-call"),
+  toolCallId: z.string(),
+  toolName: z.string(),
+  args: z.unknown(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var toolResultPartSchema = z$1.object({
-  type: z$1.literal("tool-result"),
-  toolCallId: z$1.string(),
-  toolName: z$1.string(),
-  result: z$1.unknown(),
+var toolResultPartSchema = z.object({
+  type: z.literal("tool-result"),
+  toolCallId: z.string(),
+  toolName: z.string(),
+  result: z.unknown(),
   content: toolResultContentSchema.optional(),
-  isError: z$1.boolean().optional(),
+  isError: z.boolean().optional(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var coreSystemMessageSchema = z$1.object({
-  role: z$1.literal("system"),
-  content: z$1.string(),
+var coreSystemMessageSchema = z.object({
+  role: z.literal("system"),
+  content: z.string(),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var coreUserMessageSchema = z$1.object({
-  role: z$1.literal("user"),
-  content: z$1.union([
-    z$1.string(),
-    z$1.array(z$1.union([textPartSchema, imagePartSchema, filePartSchema]))
+var coreUserMessageSchema = z.object({
+  role: z.literal("user"),
+  content: z.union([
+    z.string(),
+    z.array(z.union([textPartSchema, imagePartSchema, filePartSchema]))
   ]),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var coreAssistantMessageSchema = z$1.object({
-  role: z$1.literal("assistant"),
-  content: z$1.union([
-    z$1.string(),
-    z$1.array(
-      z$1.union([
+var coreAssistantMessageSchema = z.object({
+  role: z.literal("assistant"),
+  content: z.union([
+    z.string(),
+    z.array(
+      z.union([
         textPartSchema,
         filePartSchema,
         reasoningPartSchema,
@@ -14414,13 +14483,13 @@ var coreAssistantMessageSchema = z$1.object({
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-var coreToolMessageSchema = z$1.object({
-  role: z$1.literal("tool"),
-  content: z$1.array(toolResultPartSchema),
+var coreToolMessageSchema = z.object({
+  role: z.literal("tool"),
+  content: z.array(toolResultPartSchema),
   providerOptions: providerMetadataSchema.optional(),
   experimental_providerMetadata: providerMetadataSchema.optional()
 });
-z$1.union([
+z.union([
   coreSystemMessageSchema,
   coreUserMessageSchema,
   coreAssistantMessageSchema,
@@ -14630,125 +14699,125 @@ createIdGenerator({
   prefix: "msg",
   size: 24
 });
-var ClientOrServerImplementationSchema = z$1.object({
-  name: z$1.string(),
-  version: z$1.string()
+var ClientOrServerImplementationSchema = z.object({
+  name: z.string(),
+  version: z.string()
 }).passthrough();
-var BaseParamsSchema = z$1.object({
-  _meta: z$1.optional(z$1.object({}).passthrough())
+var BaseParamsSchema = z.object({
+  _meta: z.optional(z.object({}).passthrough())
 }).passthrough();
 var ResultSchema = BaseParamsSchema;
-var RequestSchema = z$1.object({
-  method: z$1.string(),
-  params: z$1.optional(BaseParamsSchema)
+var RequestSchema = z.object({
+  method: z.string(),
+  params: z.optional(BaseParamsSchema)
 });
-var ServerCapabilitiesSchema = z$1.object({
-  experimental: z$1.optional(z$1.object({}).passthrough()),
-  logging: z$1.optional(z$1.object({}).passthrough()),
-  prompts: z$1.optional(
-    z$1.object({
-      listChanged: z$1.optional(z$1.boolean())
+var ServerCapabilitiesSchema = z.object({
+  experimental: z.optional(z.object({}).passthrough()),
+  logging: z.optional(z.object({}).passthrough()),
+  prompts: z.optional(
+    z.object({
+      listChanged: z.optional(z.boolean())
     }).passthrough()
   ),
-  resources: z$1.optional(
-    z$1.object({
-      subscribe: z$1.optional(z$1.boolean()),
-      listChanged: z$1.optional(z$1.boolean())
+  resources: z.optional(
+    z.object({
+      subscribe: z.optional(z.boolean()),
+      listChanged: z.optional(z.boolean())
     }).passthrough()
   ),
-  tools: z$1.optional(
-    z$1.object({
-      listChanged: z$1.optional(z$1.boolean())
+  tools: z.optional(
+    z.object({
+      listChanged: z.optional(z.boolean())
     }).passthrough()
   )
 }).passthrough();
 ResultSchema.extend({
-  protocolVersion: z$1.string(),
+  protocolVersion: z.string(),
   capabilities: ServerCapabilitiesSchema,
   serverInfo: ClientOrServerImplementationSchema,
-  instructions: z$1.optional(z$1.string())
+  instructions: z.optional(z.string())
 });
 var PaginatedResultSchema = ResultSchema.extend({
-  nextCursor: z$1.optional(z$1.string())
+  nextCursor: z.optional(z.string())
 });
-var ToolSchema = z$1.object({
-  name: z$1.string(),
-  description: z$1.optional(z$1.string()),
-  inputSchema: z$1.object({
-    type: z$1.literal("object"),
-    properties: z$1.optional(z$1.object({}).passthrough())
+var ToolSchema = z.object({
+  name: z.string(),
+  description: z.optional(z.string()),
+  inputSchema: z.object({
+    type: z.literal("object"),
+    properties: z.optional(z.object({}).passthrough())
   }).passthrough()
 }).passthrough();
 PaginatedResultSchema.extend({
-  tools: z$1.array(ToolSchema)
+  tools: z.array(ToolSchema)
 });
-var TextContentSchema = z$1.object({
-  type: z$1.literal("text"),
-  text: z$1.string()
+var TextContentSchema = z.object({
+  type: z.literal("text"),
+  text: z.string()
 }).passthrough();
-var ImageContentSchema = z$1.object({
-  type: z$1.literal("image"),
-  data: z$1.string().base64(),
-  mimeType: z$1.string()
+var ImageContentSchema = z.object({
+  type: z.literal("image"),
+  data: z.string().base64(),
+  mimeType: z.string()
 }).passthrough();
-var ResourceContentsSchema = z$1.object({
+var ResourceContentsSchema = z.object({
   /**
    * The URI of this resource.
    */
-  uri: z$1.string(),
+  uri: z.string(),
   /**
    * The MIME type of this resource, if known.
    */
-  mimeType: z$1.optional(z$1.string())
+  mimeType: z.optional(z.string())
 }).passthrough();
 var TextResourceContentsSchema = ResourceContentsSchema.extend({
-  text: z$1.string()
+  text: z.string()
 });
 var BlobResourceContentsSchema = ResourceContentsSchema.extend({
-  blob: z$1.string().base64()
+  blob: z.string().base64()
 });
-var EmbeddedResourceSchema = z$1.object({
-  type: z$1.literal("resource"),
-  resource: z$1.union([TextResourceContentsSchema, BlobResourceContentsSchema])
+var EmbeddedResourceSchema = z.object({
+  type: z.literal("resource"),
+  resource: z.union([TextResourceContentsSchema, BlobResourceContentsSchema])
 }).passthrough();
 ResultSchema.extend({
-  content: z$1.array(
-    z$1.union([TextContentSchema, ImageContentSchema, EmbeddedResourceSchema])
+  content: z.array(
+    z.union([TextContentSchema, ImageContentSchema, EmbeddedResourceSchema])
   ),
-  isError: z$1.boolean().default(false).optional()
+  isError: z.boolean().default(false).optional()
 }).or(
   ResultSchema.extend({
-    toolResult: z$1.unknown()
+    toolResult: z.unknown()
   })
 );
 var JSONRPC_VERSION = "2.0";
-var JSONRPCRequestSchema = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION),
-  id: z$1.union([z$1.string(), z$1.number().int()])
+var JSONRPCRequestSchema = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION),
+  id: z.union([z.string(), z.number().int()])
 }).merge(RequestSchema).strict();
-var JSONRPCResponseSchema = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION),
-  id: z$1.union([z$1.string(), z$1.number().int()]),
+var JSONRPCResponseSchema = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION),
+  id: z.union([z.string(), z.number().int()]),
   result: ResultSchema
 }).strict();
-var JSONRPCErrorSchema = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION),
-  id: z$1.union([z$1.string(), z$1.number().int()]),
-  error: z$1.object({
-    code: z$1.number().int(),
-    message: z$1.string(),
-    data: z$1.optional(z$1.unknown())
+var JSONRPCErrorSchema = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION),
+  id: z.union([z.string(), z.number().int()]),
+  error: z.object({
+    code: z.number().int(),
+    message: z.string(),
+    data: z.optional(z.unknown())
   })
 }).strict();
-var JSONRPCNotificationSchema = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION)
+var JSONRPCNotificationSchema = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION)
 }).merge(
-  z$1.object({
-    method: z$1.string(),
-    params: z$1.optional(BaseParamsSchema)
+  z.object({
+    method: z.string(),
+    params: z.optional(BaseParamsSchema)
   })
 ).strict();
-z$1.union([
+z.union([
   JSONRPCRequestSchema,
   JSONRPCNotificationSchema,
   JSONRPCResponseSchema,
@@ -20326,26 +20395,26 @@ function convertJsonSchemaToZod2(schema) {
   }
   if (schema.const !== void 0) {
     if (typeof schema.const === "string") {
-      return addMetadata(z$1.literal(schema.const), schema);
+      return addMetadata(z.literal(schema.const), schema);
     } else if (typeof schema.const === "number") {
-      return addMetadata(z$1.literal(schema.const), schema);
+      return addMetadata(z.literal(schema.const), schema);
     } else if (typeof schema.const === "boolean") {
-      return addMetadata(z$1.literal(schema.const), schema);
+      return addMetadata(z.literal(schema.const), schema);
     } else if (schema.const === null) {
-      return addMetadata(z$1.null(), schema);
+      return addMetadata(z.null(), schema);
     }
-    return addMetadata(z$1.literal(schema.const), schema);
+    return addMetadata(z.literal(schema.const), schema);
   }
   if (schema.type) {
     switch (schema.type) {
       case "string": {
         if (schema.enum) {
           if (schema.enum.length === 0) {
-            return addMetadata(z$1.string(), schema);
+            return addMetadata(z.string(), schema);
           }
-          return addMetadata(z$1.enum(schema.enum), schema);
+          return addMetadata(z.enum(schema.enum), schema);
         }
-        let stringSchema = z$1.string();
+        let stringSchema = z.string();
         if (schema.minLength !== void 0) {
           stringSchema = stringSchema.min(schema.minLength);
         }
@@ -20362,18 +20431,18 @@ function convertJsonSchemaToZod2(schema) {
       case "integer": {
         if (schema.enum) {
           if (schema.enum.length === 0) {
-            return addMetadata(z$1.number(), schema);
+            return addMetadata(z.number(), schema);
           }
-          const options = schema.enum.map((val) => z$1.literal(val));
+          const options = schema.enum.map((val) => z.literal(val));
           if (options.length === 1) {
             return addMetadata(options[0], schema);
           }
           if (options.length >= 2) {
-            const unionSchema = z$1.union([options[0], options[1], ...options.slice(2)]);
+            const unionSchema = z.union([options[0], options[1], ...options.slice(2)]);
             return addMetadata(unionSchema, schema);
           }
         }
-        let numberSchema = schema.type === "integer" ? z$1.number().int() : z$1.number();
+        let numberSchema = schema.type === "integer" ? z.number().int() : z.number();
         if (schema.minimum !== void 0) {
           numberSchema = numberSchema.min(schema.minimum);
         }
@@ -20394,20 +20463,20 @@ function convertJsonSchemaToZod2(schema) {
       case "boolean":
         if (schema.enum) {
           if (schema.enum.length === 0) {
-            return addMetadata(z$1.boolean(), schema);
+            return addMetadata(z.boolean(), schema);
           }
-          const options = schema.enum.map((val) => z$1.literal(val));
+          const options = schema.enum.map((val) => z.literal(val));
           if (options.length === 1) {
             return addMetadata(options[0], schema);
           }
           if (options.length >= 2) {
-            const unionSchema = z$1.union([options[0], options[1], ...options.slice(2)]);
+            const unionSchema = z.union([options[0], options[1], ...options.slice(2)]);
             return addMetadata(unionSchema, schema);
           }
         }
-        return addMetadata(z$1.boolean(), schema);
+        return addMetadata(z.boolean(), schema);
       case "null":
-        return addMetadata(z$1.null(), schema);
+        return addMetadata(z.null(), schema);
       case "object":
         if (schema.properties) {
           const shape = {};
@@ -20430,19 +20499,19 @@ function convertJsonSchemaToZod2(schema) {
           }
           let zodSchema5;
           if (schema.additionalProperties !== false) {
-            zodSchema5 = z$1.object(shape).passthrough();
+            zodSchema5 = z.object(shape).passthrough();
           } else {
-            zodSchema5 = z$1.object(shape);
+            zodSchema5 = z.object(shape);
           }
           return addMetadata(zodSchema5, schema);
         }
-        return addMetadata(z$1.object({}), schema);
+        return addMetadata(z.object({}), schema);
       case "array": {
         let arraySchema;
         if (schema.items) {
-          arraySchema = z$1.array(convertJsonSchemaToZod2(schema.items));
+          arraySchema = z.array(convertJsonSchemaToZod2(schema.items));
         } else {
-          arraySchema = z$1.array(z$1.any());
+          arraySchema = z.array(z.any());
         }
         if (schema.minItems !== void 0) {
           arraySchema = arraySchema.min(schema.minItems);
@@ -20475,18 +20544,18 @@ function convertJsonSchemaToZod2(schema) {
   }
   if (schema.enum) {
     if (schema.enum.length === 0) {
-      return addMetadata(z$1.never(), schema);
+      return addMetadata(z.never(), schema);
     }
     const allStrings = schema.enum.every((val) => typeof val === "string");
     if (allStrings) {
-      return addMetadata(z$1.enum(schema.enum), schema);
+      return addMetadata(z.enum(schema.enum), schema);
     } else {
-      const options = schema.enum.map((val) => z$1.literal(val));
+      const options = schema.enum.map((val) => z.literal(val));
       if (options.length === 1) {
         return addMetadata(options[0], schema);
       }
       if (options.length >= 2) {
-        const unionSchema = z$1.union([options[0], options[1], ...options.slice(2)]);
+        const unionSchema = z.union([options[0], options[1], ...options.slice(2)]);
         return addMetadata(unionSchema, schema);
       }
     }
@@ -20494,15 +20563,15 @@ function convertJsonSchemaToZod2(schema) {
   if (schema.anyOf && schema.anyOf.length >= 2) {
     const schemas = schema.anyOf.map(convertJsonSchemaToZod2);
     return addMetadata(
-      z$1.union([schemas[0], schemas[1], ...schemas.slice(2)]),
+      z.union([schemas[0], schemas[1], ...schemas.slice(2)]),
       schema
     );
   }
   if (schema.allOf) {
     return addMetadata(
       schema.allOf.reduce(
-        (acc, s) => z$1.intersection(acc, convertJsonSchemaToZod2(s)),
-        z$1.object({})
+        (acc, s) => z.intersection(acc, convertJsonSchemaToZod2(s)),
+        z.object({})
       ),
       schema
     );
@@ -20510,11 +20579,11 @@ function convertJsonSchemaToZod2(schema) {
   if (schema.oneOf && schema.oneOf.length >= 2) {
     const schemas = schema.oneOf.map(convertJsonSchemaToZod2);
     return addMetadata(
-      z$1.union([schemas[0], schemas[1], ...schemas.slice(2)]),
+      z.union([schemas[0], schemas[1], ...schemas.slice(2)]),
       schema
     );
   }
-  return addMetadata(z$1.any(), schema);
+  return addMetadata(z.any(), schema);
 }
 var __create = Object.create;
 var __defProp3 = Object.defineProperty;
@@ -23457,11 +23526,11 @@ var NoObjectGeneratedError3 = class extends AISDKError3 {
   }
 };
 _a422 = symbol422;
-var dataContentSchema3 = z$1.union([
-  z$1.string(),
-  z$1.instanceof(Uint8Array),
-  z$1.instanceof(ArrayBuffer),
-  z$1.custom(
+var dataContentSchema3 = z.union([
+  z.string(),
+  z.instanceof(Uint8Array),
+  z.instanceof(ArrayBuffer),
+  z.custom(
     // Buffer might not be available in some environments such as CloudFlare:
     (value) => {
       var _a172, _b8;
@@ -23470,102 +23539,102 @@ var dataContentSchema3 = z$1.union([
     { message: "Must be a Buffer" }
   )
 ]);
-var jsonValueSchema3 = z$1.lazy(
-  () => z$1.union([
-    z$1.null(),
-    z$1.string(),
-    z$1.number(),
-    z$1.boolean(),
-    z$1.record(z$1.string(), jsonValueSchema3),
-    z$1.array(jsonValueSchema3)
+var jsonValueSchema3 = z.lazy(
+  () => z.union([
+    z.null(),
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.record(z.string(), jsonValueSchema3),
+    z.array(jsonValueSchema3)
   ])
 );
-var providerMetadataSchema3 = z$1.record(
-  z$1.string(),
-  z$1.record(z$1.string(), jsonValueSchema3)
+var providerMetadataSchema3 = z.record(
+  z.string(),
+  z.record(z.string(), jsonValueSchema3)
 );
-var toolResultContentSchema2 = z$1.array(
-  z$1.union([
-    z$1.object({ type: z$1.literal("text"), text: z$1.string() }),
-    z$1.object({
-      type: z$1.literal("image"),
-      data: z$1.string(),
-      mimeType: z$1.string().optional()
+var toolResultContentSchema2 = z.array(
+  z.union([
+    z.object({ type: z.literal("text"), text: z.string() }),
+    z.object({
+      type: z.literal("image"),
+      data: z.string(),
+      mimeType: z.string().optional()
     })
   ])
 );
-var textPartSchema3 = z$1.object({
-  type: z$1.literal("text"),
-  text: z$1.string(),
+var textPartSchema3 = z.object({
+  type: z.literal("text"),
+  text: z.string(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var imagePartSchema3 = z$1.object({
-  type: z$1.literal("image"),
-  image: z$1.union([dataContentSchema3, z$1.instanceof(URL)]),
-  mimeType: z$1.string().optional(),
+var imagePartSchema3 = z.object({
+  type: z.literal("image"),
+  image: z.union([dataContentSchema3, z.instanceof(URL)]),
+  mimeType: z.string().optional(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var filePartSchema3 = z$1.object({
-  type: z$1.literal("file"),
-  data: z$1.union([dataContentSchema3, z$1.instanceof(URL)]),
-  filename: z$1.string().optional(),
-  mimeType: z$1.string(),
+var filePartSchema3 = z.object({
+  type: z.literal("file"),
+  data: z.union([dataContentSchema3, z.instanceof(URL)]),
+  filename: z.string().optional(),
+  mimeType: z.string(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var reasoningPartSchema3 = z$1.object({
-  type: z$1.literal("reasoning"),
-  text: z$1.string(),
+var reasoningPartSchema3 = z.object({
+  type: z.literal("reasoning"),
+  text: z.string(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var redactedReasoningPartSchema2 = z$1.object({
-  type: z$1.literal("redacted-reasoning"),
-  data: z$1.string(),
+var redactedReasoningPartSchema2 = z.object({
+  type: z.literal("redacted-reasoning"),
+  data: z.string(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var toolCallPartSchema3 = z$1.object({
-  type: z$1.literal("tool-call"),
-  toolCallId: z$1.string(),
-  toolName: z$1.string(),
-  args: z$1.unknown(),
+var toolCallPartSchema3 = z.object({
+  type: z.literal("tool-call"),
+  toolCallId: z.string(),
+  toolName: z.string(),
+  args: z.unknown(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var toolResultPartSchema3 = z$1.object({
-  type: z$1.literal("tool-result"),
-  toolCallId: z$1.string(),
-  toolName: z$1.string(),
-  result: z$1.unknown(),
+var toolResultPartSchema3 = z.object({
+  type: z.literal("tool-result"),
+  toolCallId: z.string(),
+  toolName: z.string(),
+  result: z.unknown(),
   content: toolResultContentSchema2.optional(),
-  isError: z$1.boolean().optional(),
+  isError: z.boolean().optional(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var coreSystemMessageSchema2 = z$1.object({
-  role: z$1.literal("system"),
-  content: z$1.string(),
+var coreSystemMessageSchema2 = z.object({
+  role: z.literal("system"),
+  content: z.string(),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var coreUserMessageSchema2 = z$1.object({
-  role: z$1.literal("user"),
-  content: z$1.union([
-    z$1.string(),
-    z$1.array(z$1.union([textPartSchema3, imagePartSchema3, filePartSchema3]))
+var coreUserMessageSchema2 = z.object({
+  role: z.literal("user"),
+  content: z.union([
+    z.string(),
+    z.array(z.union([textPartSchema3, imagePartSchema3, filePartSchema3]))
   ]),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var coreAssistantMessageSchema2 = z$1.object({
-  role: z$1.literal("assistant"),
-  content: z$1.union([
-    z$1.string(),
-    z$1.array(
-      z$1.union([
+var coreAssistantMessageSchema2 = z.object({
+  role: z.literal("assistant"),
+  content: z.union([
+    z.string(),
+    z.array(
+      z.union([
         textPartSchema3,
         filePartSchema3,
         reasoningPartSchema3,
@@ -23577,13 +23646,13 @@ var coreAssistantMessageSchema2 = z$1.object({
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-var coreToolMessageSchema2 = z$1.object({
-  role: z$1.literal("tool"),
-  content: z$1.array(toolResultPartSchema3),
+var coreToolMessageSchema2 = z.object({
+  role: z.literal("tool"),
+  content: z.array(toolResultPartSchema3),
   providerOptions: providerMetadataSchema3.optional(),
   experimental_providerMetadata: providerMetadataSchema3.optional()
 });
-z$1.union([
+z.union([
   coreSystemMessageSchema2,
   coreUserMessageSchema2,
   coreAssistantMessageSchema2,
@@ -23793,125 +23862,125 @@ createIdGenerator3({
   prefix: "msg",
   size: 24
 });
-var ClientOrServerImplementationSchema3 = z$1.object({
-  name: z$1.string(),
-  version: z$1.string()
+var ClientOrServerImplementationSchema3 = z.object({
+  name: z.string(),
+  version: z.string()
 }).passthrough();
-var BaseParamsSchema3 = z$1.object({
-  _meta: z$1.optional(z$1.object({}).passthrough())
+var BaseParamsSchema3 = z.object({
+  _meta: z.optional(z.object({}).passthrough())
 }).passthrough();
 var ResultSchema3 = BaseParamsSchema3;
-var RequestSchema3 = z$1.object({
-  method: z$1.string(),
-  params: z$1.optional(BaseParamsSchema3)
+var RequestSchema3 = z.object({
+  method: z.string(),
+  params: z.optional(BaseParamsSchema3)
 });
-var ServerCapabilitiesSchema3 = z$1.object({
-  experimental: z$1.optional(z$1.object({}).passthrough()),
-  logging: z$1.optional(z$1.object({}).passthrough()),
-  prompts: z$1.optional(
-    z$1.object({
-      listChanged: z$1.optional(z$1.boolean())
+var ServerCapabilitiesSchema3 = z.object({
+  experimental: z.optional(z.object({}).passthrough()),
+  logging: z.optional(z.object({}).passthrough()),
+  prompts: z.optional(
+    z.object({
+      listChanged: z.optional(z.boolean())
     }).passthrough()
   ),
-  resources: z$1.optional(
-    z$1.object({
-      subscribe: z$1.optional(z$1.boolean()),
-      listChanged: z$1.optional(z$1.boolean())
+  resources: z.optional(
+    z.object({
+      subscribe: z.optional(z.boolean()),
+      listChanged: z.optional(z.boolean())
     }).passthrough()
   ),
-  tools: z$1.optional(
-    z$1.object({
-      listChanged: z$1.optional(z$1.boolean())
+  tools: z.optional(
+    z.object({
+      listChanged: z.optional(z.boolean())
     }).passthrough()
   )
 }).passthrough();
 ResultSchema3.extend({
-  protocolVersion: z$1.string(),
+  protocolVersion: z.string(),
   capabilities: ServerCapabilitiesSchema3,
   serverInfo: ClientOrServerImplementationSchema3,
-  instructions: z$1.optional(z$1.string())
+  instructions: z.optional(z.string())
 });
 var PaginatedResultSchema3 = ResultSchema3.extend({
-  nextCursor: z$1.optional(z$1.string())
+  nextCursor: z.optional(z.string())
 });
-var ToolSchema3 = z$1.object({
-  name: z$1.string(),
-  description: z$1.optional(z$1.string()),
-  inputSchema: z$1.object({
-    type: z$1.literal("object"),
-    properties: z$1.optional(z$1.object({}).passthrough())
+var ToolSchema3 = z.object({
+  name: z.string(),
+  description: z.optional(z.string()),
+  inputSchema: z.object({
+    type: z.literal("object"),
+    properties: z.optional(z.object({}).passthrough())
   }).passthrough()
 }).passthrough();
 PaginatedResultSchema3.extend({
-  tools: z$1.array(ToolSchema3)
+  tools: z.array(ToolSchema3)
 });
-var TextContentSchema3 = z$1.object({
-  type: z$1.literal("text"),
-  text: z$1.string()
+var TextContentSchema3 = z.object({
+  type: z.literal("text"),
+  text: z.string()
 }).passthrough();
-var ImageContentSchema3 = z$1.object({
-  type: z$1.literal("image"),
-  data: z$1.string().base64(),
-  mimeType: z$1.string()
+var ImageContentSchema3 = z.object({
+  type: z.literal("image"),
+  data: z.string().base64(),
+  mimeType: z.string()
 }).passthrough();
-var ResourceContentsSchema3 = z$1.object({
+var ResourceContentsSchema3 = z.object({
   /**
    * The URI of this resource.
    */
-  uri: z$1.string(),
+  uri: z.string(),
   /**
    * The MIME type of this resource, if known.
    */
-  mimeType: z$1.optional(z$1.string())
+  mimeType: z.optional(z.string())
 }).passthrough();
 var TextResourceContentsSchema3 = ResourceContentsSchema3.extend({
-  text: z$1.string()
+  text: z.string()
 });
 var BlobResourceContentsSchema3 = ResourceContentsSchema3.extend({
-  blob: z$1.string().base64()
+  blob: z.string().base64()
 });
-var EmbeddedResourceSchema3 = z$1.object({
-  type: z$1.literal("resource"),
-  resource: z$1.union([TextResourceContentsSchema3, BlobResourceContentsSchema3])
+var EmbeddedResourceSchema3 = z.object({
+  type: z.literal("resource"),
+  resource: z.union([TextResourceContentsSchema3, BlobResourceContentsSchema3])
 }).passthrough();
 ResultSchema3.extend({
-  content: z$1.array(
-    z$1.union([TextContentSchema3, ImageContentSchema3, EmbeddedResourceSchema3])
+  content: z.array(
+    z.union([TextContentSchema3, ImageContentSchema3, EmbeddedResourceSchema3])
   ),
-  isError: z$1.boolean().default(false).optional()
+  isError: z.boolean().default(false).optional()
 }).or(
   ResultSchema3.extend({
-    toolResult: z$1.unknown()
+    toolResult: z.unknown()
   })
 );
 var JSONRPC_VERSION3 = "2.0";
-var JSONRPCRequestSchema3 = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION3),
-  id: z$1.union([z$1.string(), z$1.number().int()])
+var JSONRPCRequestSchema3 = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION3),
+  id: z.union([z.string(), z.number().int()])
 }).merge(RequestSchema3).strict();
-var JSONRPCResponseSchema3 = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION3),
-  id: z$1.union([z$1.string(), z$1.number().int()]),
+var JSONRPCResponseSchema3 = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION3),
+  id: z.union([z.string(), z.number().int()]),
   result: ResultSchema3
 }).strict();
-var JSONRPCErrorSchema3 = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION3),
-  id: z$1.union([z$1.string(), z$1.number().int()]),
-  error: z$1.object({
-    code: z$1.number().int(),
-    message: z$1.string(),
-    data: z$1.optional(z$1.unknown())
+var JSONRPCErrorSchema3 = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION3),
+  id: z.union([z.string(), z.number().int()]),
+  error: z.object({
+    code: z.number().int(),
+    message: z.string(),
+    data: z.optional(z.unknown())
   })
 }).strict();
-var JSONRPCNotificationSchema3 = z$1.object({
-  jsonrpc: z$1.literal(JSONRPC_VERSION3)
+var JSONRPCNotificationSchema3 = z.object({
+  jsonrpc: z.literal(JSONRPC_VERSION3)
 }).merge(
-  z$1.object({
-    method: z$1.string(),
-    params: z$1.optional(BaseParamsSchema3)
+  z.object({
+    method: z.string(),
+    params: z.optional(BaseParamsSchema3)
   })
 ).strict();
-z$1.union([
+z.union([
   JSONRPCRequestSchema3,
   JSONRPCNotificationSchema3,
   JSONRPCResponseSchema3,
@@ -24083,7 +24152,7 @@ function convertSchemaToZod(schema) {
   } else {
     const jsonSchemaToConvert = "jsonSchema" in schema ? schema.jsonSchema : schema;
     try {
-      if ("toJSONSchema" in z$1) {
+      if ("toJSONSchema" in z) {
         return convertJsonSchemaToZod(jsonSchemaToConvert);
       } else {
         return convertJsonSchemaToZod2(jsonSchemaToConvert);
@@ -24121,11 +24190,11 @@ function deepMergeWorkingMemory(existing, update) {
 }
 var updateWorkingMemoryTool = (memoryConfig) => {
   const schema = memoryConfig?.workingMemory?.schema;
-  let inputSchema = z$1.object({
-    memory: z$1.string().describe(`The Markdown formatted working memory content to store. This MUST be a string. Never pass an object.`)
+  let inputSchema = z.object({
+    memory: z.string().describe(`The Markdown formatted working memory content to store. This MUST be a string. Never pass an object.`)
   });
   if (schema) {
-    inputSchema = z$1.object({
+    inputSchema = z.object({
       memory: schema instanceof ZodObject ? schema : convertSchemaToZod({ jsonSchema: schema }).describe(
         `The JSON formatted working memory content to store.`
       )
@@ -24202,14 +24271,14 @@ var __experimental_updateWorkingMemoryToolVNext = (config) => {
   return createTool({
     id: "update-working-memory",
     description: "Update the working memory with new information.",
-    inputSchema: z$1.object({
-      newMemory: z$1.string().optional().describe(
+    inputSchema: z.object({
+      newMemory: z.string().optional().describe(
         `The ${config.workingMemory?.schema ? "JSON" : "Markdown"} formatted working memory content to store`
       ),
-      searchString: z$1.string().optional().describe(
+      searchString: z.string().optional().describe(
         "The working memory string to find. Will be replaced with the newMemory string. If this is omitted or doesn't exist, the newMemory string will be appended to the end of your working memory. Replacing single lines at a time is encouraged for greater accuracy. If updateReason is not 'append-new-memory', this search string must be provided or the tool call will be rejected."
       ),
-      updateReason: z$1.enum(["append-new-memory", "clarify-existing-memory", "replace-irrelevant-memory"]).optional().describe(
+      updateReason: z.enum(["append-new-memory", "clarify-existing-memory", "replace-irrelevant-memory"]).optional().describe(
         "The reason you're updating working memory. Passing any value other than 'append-new-memory' requires a searchString to be provided. Defaults to append-new-memory"
       )
     }),
@@ -26969,192 +27038,192 @@ z$2.union([
 
 // ../agent-builder/dist/index.js
 var UNIT_KINDS = ["mcp-server", "tool", "workflow", "agent", "integration", "network", "other"];
-var TemplateUnitSchema = z$1.object({
-  kind: z$1.enum(UNIT_KINDS),
-  id: z$1.string(),
-  file: z$1.string()
+var TemplateUnitSchema = z.object({
+  kind: z.enum(UNIT_KINDS),
+  id: z.string(),
+  file: z.string()
 });
-z$1.object({
-  slug: z$1.string(),
-  ref: z$1.string().optional(),
-  description: z$1.string().optional(),
-  units: z$1.array(TemplateUnitSchema)
+z.object({
+  slug: z.string(),
+  ref: z.string().optional(),
+  description: z.string().optional(),
+  units: z.array(TemplateUnitSchema)
 });
-var AgentBuilderInputSchema = z$1.object({
-  repo: z$1.string().describe("Git URL or local path of the template repo"),
-  ref: z$1.string().optional().describe("Tag/branch/commit to checkout (defaults to main/master)"),
-  slug: z$1.string().optional().describe("Slug for branch/scripts; defaults to inferred from repo"),
-  targetPath: z$1.string().optional().describe("Project path to merge into; defaults to current directory"),
-  variables: z$1.record(z$1.string()).optional().describe("Environment variables to set in .env file")
+var AgentBuilderInputSchema = z.object({
+  repo: z.string().describe("Git URL or local path of the template repo"),
+  ref: z.string().optional().describe("Tag/branch/commit to checkout (defaults to main/master)"),
+  slug: z.string().optional().describe("Slug for branch/scripts; defaults to inferred from repo"),
+  targetPath: z.string().optional().describe("Project path to merge into; defaults to current directory"),
+  variables: z.record(z.string()).optional().describe("Environment variables to set in .env file")
 });
-z$1.object({
-  slug: z$1.string(),
-  commitSha: z$1.string(),
-  templateDir: z$1.string(),
-  units: z$1.array(TemplateUnitSchema)
+z.object({
+  slug: z.string(),
+  commitSha: z.string(),
+  templateDir: z.string(),
+  units: z.array(TemplateUnitSchema)
 });
-var CopiedFileSchema = z$1.object({
-  source: z$1.string(),
-  destination: z$1.string(),
-  unit: z$1.object({
-    kind: z$1.enum(UNIT_KINDS),
-    id: z$1.string()
+var CopiedFileSchema = z.object({
+  source: z.string(),
+  destination: z.string(),
+  unit: z.object({
+    kind: z.enum(UNIT_KINDS),
+    id: z.string()
   })
 });
-var ConflictSchema = z$1.object({
-  unit: z$1.object({
-    kind: z$1.enum(UNIT_KINDS),
-    id: z$1.string()
+var ConflictSchema = z.object({
+  unit: z.object({
+    kind: z.enum(UNIT_KINDS),
+    id: z.string()
   }),
-  issue: z$1.string(),
-  sourceFile: z$1.string(),
-  targetFile: z$1.string()
+  issue: z.string(),
+  sourceFile: z.string(),
+  targetFile: z.string()
 });
-var FileCopyInputSchema = z$1.object({
-  orderedUnits: z$1.array(TemplateUnitSchema),
-  templateDir: z$1.string(),
-  commitSha: z$1.string(),
-  slug: z$1.string(),
-  targetPath: z$1.string().optional(),
-  variables: z$1.record(z$1.string()).optional()
+var FileCopyInputSchema = z.object({
+  orderedUnits: z.array(TemplateUnitSchema),
+  templateDir: z.string(),
+  commitSha: z.string(),
+  slug: z.string(),
+  targetPath: z.string().optional(),
+  variables: z.record(z.string()).optional()
 });
-var FileCopyResultSchema = z$1.object({
-  success: z$1.boolean(),
-  copiedFiles: z$1.array(CopiedFileSchema),
-  conflicts: z$1.array(ConflictSchema),
-  message: z$1.string(),
-  error: z$1.string().optional()
+var FileCopyResultSchema = z.object({
+  success: z.boolean(),
+  copiedFiles: z.array(CopiedFileSchema),
+  conflicts: z.array(ConflictSchema),
+  message: z.string(),
+  error: z.string().optional()
 });
-var ConflictResolutionSchema = z$1.object({
-  unit: z$1.object({
-    kind: z$1.enum(UNIT_KINDS),
-    id: z$1.string()
+var ConflictResolutionSchema = z.object({
+  unit: z.object({
+    kind: z.enum(UNIT_KINDS),
+    id: z.string()
   }),
-  issue: z$1.string(),
-  resolution: z$1.string()
+  issue: z.string(),
+  resolution: z.string()
 });
-var IntelligentMergeInputSchema = z$1.object({
-  conflicts: z$1.array(ConflictSchema),
-  copiedFiles: z$1.array(CopiedFileSchema),
-  templateDir: z$1.string(),
-  commitSha: z$1.string(),
-  slug: z$1.string(),
-  targetPath: z$1.string().optional(),
-  branchName: z$1.string().optional()
+var IntelligentMergeInputSchema = z.object({
+  conflicts: z.array(ConflictSchema),
+  copiedFiles: z.array(CopiedFileSchema),
+  templateDir: z.string(),
+  commitSha: z.string(),
+  slug: z.string(),
+  targetPath: z.string().optional(),
+  branchName: z.string().optional()
 });
-var IntelligentMergeResultSchema = z$1.object({
-  success: z$1.boolean(),
-  applied: z$1.boolean(),
-  message: z$1.string(),
-  conflictsResolved: z$1.array(ConflictResolutionSchema),
-  error: z$1.string().optional()
+var IntelligentMergeResultSchema = z.object({
+  success: z.boolean(),
+  applied: z.boolean(),
+  message: z.string(),
+  conflictsResolved: z.array(ConflictResolutionSchema),
+  error: z.string().optional()
 });
-var ValidationResultsSchema = z$1.object({
-  valid: z$1.boolean(),
-  errorsFixed: z$1.number(),
-  remainingErrors: z$1.number(),
-  errors: z$1.array(z$1.any()).optional()
+var ValidationResultsSchema = z.object({
+  valid: z.boolean(),
+  errorsFixed: z.number(),
+  remainingErrors: z.number(),
+  errors: z.array(z.any()).optional()
   // Include specific validation errors
 });
-var ValidationFixInputSchema = z$1.object({
-  commitSha: z$1.string(),
-  slug: z$1.string(),
-  targetPath: z$1.string().optional(),
-  templateDir: z$1.string(),
-  orderedUnits: z$1.array(TemplateUnitSchema),
-  copiedFiles: z$1.array(CopiedFileSchema),
-  conflictsResolved: z$1.array(ConflictResolutionSchema).optional(),
-  maxIterations: z$1.number().optional().default(5)
+var ValidationFixInputSchema = z.object({
+  commitSha: z.string(),
+  slug: z.string(),
+  targetPath: z.string().optional(),
+  templateDir: z.string(),
+  orderedUnits: z.array(TemplateUnitSchema),
+  copiedFiles: z.array(CopiedFileSchema),
+  conflictsResolved: z.array(ConflictResolutionSchema).optional(),
+  maxIterations: z.number().optional().default(5)
 });
-var ValidationFixResultSchema = z$1.object({
-  success: z$1.boolean(),
-  applied: z$1.boolean(),
-  message: z$1.string(),
+var ValidationFixResultSchema = z.object({
+  success: z.boolean(),
+  applied: z.boolean(),
+  message: z.string(),
   validationResults: ValidationResultsSchema,
-  error: z$1.string().optional()
+  error: z.string().optional()
 });
-var ApplyResultSchema = z$1.object({
-  success: z$1.boolean(),
-  applied: z$1.boolean(),
-  branchName: z$1.string().optional(),
-  message: z$1.string(),
+var ApplyResultSchema = z.object({
+  success: z.boolean(),
+  applied: z.boolean(),
+  branchName: z.string().optional(),
+  message: z.string(),
   validationResults: ValidationResultsSchema.optional(),
-  error: z$1.string().optional(),
-  errors: z$1.array(z$1.string()).optional(),
-  stepResults: z$1.object({
-    cloneSuccess: z$1.boolean().optional(),
-    analyzeSuccess: z$1.boolean().optional(),
-    discoverSuccess: z$1.boolean().optional(),
-    orderSuccess: z$1.boolean().optional(),
-    prepareBranchSuccess: z$1.boolean().optional(),
-    packageMergeSuccess: z$1.boolean().optional(),
-    installSuccess: z$1.boolean().optional(),
-    copySuccess: z$1.boolean().optional(),
-    mergeSuccess: z$1.boolean().optional(),
-    validationSuccess: z$1.boolean().optional(),
-    filesCopied: z$1.number(),
-    conflictsSkipped: z$1.number(),
-    conflictsResolved: z$1.number()
+  error: z.string().optional(),
+  errors: z.array(z.string()).optional(),
+  stepResults: z.object({
+    cloneSuccess: z.boolean().optional(),
+    analyzeSuccess: z.boolean().optional(),
+    discoverSuccess: z.boolean().optional(),
+    orderSuccess: z.boolean().optional(),
+    prepareBranchSuccess: z.boolean().optional(),
+    packageMergeSuccess: z.boolean().optional(),
+    installSuccess: z.boolean().optional(),
+    copySuccess: z.boolean().optional(),
+    mergeSuccess: z.boolean().optional(),
+    validationSuccess: z.boolean().optional(),
+    filesCopied: z.number(),
+    conflictsSkipped: z.number(),
+    conflictsResolved: z.number()
   }).optional()
 });
-var CloneTemplateResultSchema = z$1.object({
-  templateDir: z$1.string(),
-  commitSha: z$1.string(),
-  slug: z$1.string(),
-  success: z$1.boolean().optional(),
-  error: z$1.string().optional(),
-  targetPath: z$1.string().optional()
+var CloneTemplateResultSchema = z.object({
+  templateDir: z.string(),
+  commitSha: z.string(),
+  slug: z.string(),
+  success: z.boolean().optional(),
+  error: z.string().optional(),
+  targetPath: z.string().optional()
 });
-var PackageAnalysisSchema = z$1.object({
-  name: z$1.string().optional(),
-  version: z$1.string().optional(),
-  description: z$1.string().optional(),
-  dependencies: z$1.record(z$1.string()).optional(),
-  devDependencies: z$1.record(z$1.string()).optional(),
-  peerDependencies: z$1.record(z$1.string()).optional(),
-  scripts: z$1.record(z$1.string()).optional(),
-  success: z$1.boolean().optional(),
-  error: z$1.string().optional()
+var PackageAnalysisSchema = z.object({
+  name: z.string().optional(),
+  version: z.string().optional(),
+  description: z.string().optional(),
+  dependencies: z.record(z.string()).optional(),
+  devDependencies: z.record(z.string()).optional(),
+  peerDependencies: z.record(z.string()).optional(),
+  scripts: z.record(z.string()).optional(),
+  success: z.boolean().optional(),
+  error: z.string().optional()
 });
-var DiscoveryResultSchema = z$1.object({
-  units: z$1.array(TemplateUnitSchema),
-  success: z$1.boolean().optional(),
-  error: z$1.string().optional()
+var DiscoveryResultSchema = z.object({
+  units: z.array(TemplateUnitSchema),
+  success: z.boolean().optional(),
+  error: z.string().optional()
 });
-var OrderedUnitsSchema = z$1.object({
-  orderedUnits: z$1.array(TemplateUnitSchema),
-  success: z$1.boolean().optional(),
-  error: z$1.string().optional()
+var OrderedUnitsSchema = z.object({
+  orderedUnits: z.array(TemplateUnitSchema),
+  success: z.boolean().optional(),
+  error: z.string().optional()
 });
-var PackageMergeInputSchema = z$1.object({
-  commitSha: z$1.string(),
-  slug: z$1.string(),
-  targetPath: z$1.string().optional(),
+var PackageMergeInputSchema = z.object({
+  commitSha: z.string(),
+  slug: z.string(),
+  targetPath: z.string().optional(),
   packageInfo: PackageAnalysisSchema
 });
-var PackageMergeResultSchema = z$1.object({
-  success: z$1.boolean(),
-  applied: z$1.boolean(),
-  message: z$1.string(),
-  error: z$1.string().optional()
+var PackageMergeResultSchema = z.object({
+  success: z.boolean(),
+  applied: z.boolean(),
+  message: z.string(),
+  error: z.string().optional()
 });
-var InstallInputSchema = z$1.object({
-  targetPath: z$1.string().optional().describe("Path to the project to install packages in")
+var InstallInputSchema = z.object({
+  targetPath: z.string().optional().describe("Path to the project to install packages in")
 });
-var InstallResultSchema = z$1.object({
-  success: z$1.boolean(),
-  error: z$1.string().optional()
+var InstallResultSchema = z.object({
+  success: z.boolean(),
+  error: z.string().optional()
 });
-var PrepareBranchInputSchema = z$1.object({
-  slug: z$1.string(),
-  commitSha: z$1.string().optional(),
+var PrepareBranchInputSchema = z.object({
+  slug: z.string(),
+  commitSha: z.string().optional(),
   // from clone-template if relevant
-  targetPath: z$1.string().optional()
+  targetPath: z.string().optional()
 });
-var PrepareBranchResultSchema = z$1.object({
-  branchName: z$1.string(),
-  success: z$1.boolean().optional(),
-  error: z$1.string().optional()
+var PrepareBranchResultSchema = z.object({
+  branchName: z.string(),
+  success: z.boolean().optional(),
+  error: z.string().optional()
 });
 var exec = promisify(exec$1);
 var execFile = promisify(execFile$1);
@@ -28037,23 +28106,23 @@ export const mastra = new Mastra({
       readFile: createTool({
         id: "read-file",
         description: "Read contents of a file with optional line range selection.",
-        inputSchema: z$1.object({
-          filePath: z$1.string().describe("Path to the file to read"),
-          startLine: z$1.number().optional().describe("Starting line number (1-indexed)"),
-          endLine: z$1.number().optional().describe("Ending line number (1-indexed, inclusive)"),
-          encoding: z$1.string().default("utf-8").describe("File encoding")
+        inputSchema: z.object({
+          filePath: z.string().describe("Path to the file to read"),
+          startLine: z.number().optional().describe("Starting line number (1-indexed)"),
+          endLine: z.number().optional().describe("Ending line number (1-indexed, inclusive)"),
+          encoding: z.string().default("utf-8").describe("File encoding")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          content: z$1.string().optional(),
-          lines: z$1.array(z$1.string()).optional(),
-          metadata: z$1.object({
-            size: z$1.number(),
-            totalLines: z$1.number(),
-            encoding: z$1.string(),
-            lastModified: z$1.string()
+        outputSchema: z.object({
+          success: z.boolean(),
+          content: z.string().optional(),
+          lines: z.array(z.string()).optional(),
+          metadata: z.object({
+            size: z.number(),
+            totalLines: z.number(),
+            encoding: z.string(),
+            lastModified: z.string()
           }).optional(),
-          error: z$1.string().optional()
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.readFile({ ...inputData, projectPath });
@@ -28062,18 +28131,18 @@ export const mastra = new Mastra({
       writeFile: createTool({
         id: "write-file",
         description: "Write content to a file, with options for creating directories.",
-        inputSchema: z$1.object({
-          filePath: z$1.string().describe("Path to the file to write"),
-          content: z$1.string().describe("Content to write to the file"),
-          createDirs: z$1.boolean().default(true).describe("Create parent directories if they don't exist"),
-          encoding: z$1.string().default("utf-8").describe("File encoding")
+        inputSchema: z.object({
+          filePath: z.string().describe("Path to the file to write"),
+          content: z.string().describe("Content to write to the file"),
+          createDirs: z.boolean().default(true).describe("Create parent directories if they don't exist"),
+          encoding: z.string().default("utf-8").describe("File encoding")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          filePath: z$1.string(),
-          bytesWritten: z$1.number().optional(),
-          message: z$1.string(),
-          error: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          filePath: z.string(),
+          bytesWritten: z.number().optional(),
+          message: z.string(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.writeFile({ ...inputData, projectPath });
@@ -28082,30 +28151,30 @@ export const mastra = new Mastra({
       listDirectory: createTool({
         id: "list-directory",
         description: "List contents of a directory with filtering and metadata options.",
-        inputSchema: z$1.object({
-          path: z$1.string().describe("Directory path to list"),
-          recursive: z$1.boolean().default(false).describe("List subdirectories recursively"),
-          includeHidden: z$1.boolean().default(false).describe("Include hidden files and directories"),
-          pattern: z$1.string().default("*").describe("Glob pattern to filter files"),
-          maxDepth: z$1.number().default(10).describe("Maximum recursion depth"),
-          includeMetadata: z$1.boolean().default(true).describe("Include file metadata")
+        inputSchema: z.object({
+          path: z.string().describe("Directory path to list"),
+          recursive: z.boolean().default(false).describe("List subdirectories recursively"),
+          includeHidden: z.boolean().default(false).describe("Include hidden files and directories"),
+          pattern: z.string().default("*").describe("Glob pattern to filter files"),
+          maxDepth: z.number().default(10).describe("Maximum recursion depth"),
+          includeMetadata: z.boolean().default(true).describe("Include file metadata")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          items: z$1.array(
-            z$1.object({
-              name: z$1.string(),
-              path: z$1.string(),
-              type: z$1.enum(["file", "directory", "symlink"]),
-              size: z$1.number().optional(),
-              lastModified: z$1.string().optional(),
-              permissions: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          items: z.array(
+            z.object({
+              name: z.string(),
+              path: z.string(),
+              type: z.enum(["file", "directory", "symlink"]),
+              size: z.number().optional(),
+              lastModified: z.string().optional(),
+              permissions: z.string().optional()
             })
           ),
-          totalItems: z$1.number(),
-          path: z$1.string(),
-          message: z$1.string(),
-          error: z$1.string().optional()
+          totalItems: z.number(),
+          path: z.string(),
+          message: z.string(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.listDirectory({ ...inputData, projectPath });
@@ -28114,23 +28183,23 @@ export const mastra = new Mastra({
       executeCommand: createTool({
         id: "execute-command",
         description: "Execute shell commands with proper error handling and output capture.",
-        inputSchema: z$1.object({
-          command: z$1.string().describe("Shell command to execute"),
-          workingDirectory: z$1.string().optional().describe("Working directory for command execution"),
-          timeout: z$1.number().default(3e4).describe("Timeout in milliseconds"),
-          captureOutput: z$1.boolean().default(true).describe("Capture command output"),
-          shell: z$1.string().optional().describe("Shell to use (defaults to system shell)"),
-          env: z$1.record(z$1.string()).optional().describe("Environment variables")
+        inputSchema: z.object({
+          command: z.string().describe("Shell command to execute"),
+          workingDirectory: z.string().optional().describe("Working directory for command execution"),
+          timeout: z.number().default(3e4).describe("Timeout in milliseconds"),
+          captureOutput: z.boolean().default(true).describe("Capture command output"),
+          shell: z.string().optional().describe("Shell to use (defaults to system shell)"),
+          env: z.record(z.string()).optional().describe("Environment variables")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          exitCode: z$1.number().optional(),
-          stdout: z$1.string().optional(),
-          stderr: z$1.string().optional(),
-          command: z$1.string(),
-          workingDirectory: z$1.string().optional(),
-          executionTime: z$1.number().optional(),
-          error: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          exitCode: z.number().optional(),
+          stdout: z.string().optional(),
+          stderr: z.string().optional(),
+          command: z.string(),
+          workingDirectory: z.string().optional(),
+          executionTime: z.number().optional(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.executeCommand({
@@ -28143,35 +28212,35 @@ export const mastra = new Mastra({
       taskManager: createTool({
         id: "task-manager",
         description: "Create and manage structured task lists for coding sessions. Use this for complex multi-step tasks to track progress and ensure thoroughness.",
-        inputSchema: z$1.object({
-          action: z$1.enum(["create", "update", "list", "complete", "remove"]).describe("Task management action"),
-          tasks: z$1.array(
-            z$1.object({
-              id: z$1.string().describe("Unique task identifier"),
-              content: z$1.string().describe("Task description, optional if just updating the status").optional(),
-              status: z$1.enum(["pending", "in_progress", "completed", "blocked"]).describe("Task status"),
-              priority: z$1.enum(["high", "medium", "low"]).default("medium").describe("Task priority"),
-              dependencies: z$1.array(z$1.string()).optional().describe("IDs of tasks this depends on"),
-              notes: z$1.string().optional().describe("Additional notes or context")
+        inputSchema: z.object({
+          action: z.enum(["create", "update", "list", "complete", "remove"]).describe("Task management action"),
+          tasks: z.array(
+            z.object({
+              id: z.string().describe("Unique task identifier"),
+              content: z.string().describe("Task description, optional if just updating the status").optional(),
+              status: z.enum(["pending", "in_progress", "completed", "blocked"]).describe("Task status"),
+              priority: z.enum(["high", "medium", "low"]).default("medium").describe("Task priority"),
+              dependencies: z.array(z.string()).optional().describe("IDs of tasks this depends on"),
+              notes: z.string().optional().describe("Additional notes or context")
             })
           ).optional().describe("Tasks to create or update"),
-          taskId: z$1.string().optional().describe("Specific task ID for single task operations")
+          taskId: z.string().optional().describe("Specific task ID for single task operations")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          tasks: z$1.array(
-            z$1.object({
-              id: z$1.string(),
-              content: z$1.string(),
-              status: z$1.string(),
-              priority: z$1.string(),
-              dependencies: z$1.array(z$1.string()).optional(),
-              notes: z$1.string().optional(),
-              createdAt: z$1.string(),
-              updatedAt: z$1.string()
+        outputSchema: z.object({
+          success: z.boolean(),
+          tasks: z.array(
+            z.object({
+              id: z.string(),
+              content: z.string(),
+              status: z.string(),
+              priority: z.string(),
+              dependencies: z.array(z.string()).optional(),
+              notes: z.string().optional(),
+              createdAt: z.string(),
+              updatedAt: z.string()
             })
           ),
-          message: z$1.string()
+          message: z.string()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.manageTaskList(inputData);
@@ -28181,32 +28250,32 @@ export const mastra = new Mastra({
       multiEdit: createTool({
         id: "multi-edit",
         description: "Perform multiple search-replace operations on one or more files in a single atomic operation.",
-        inputSchema: z$1.object({
-          operations: z$1.array(
-            z$1.object({
-              filePath: z$1.string().describe("Path to the file to edit"),
-              edits: z$1.array(
-                z$1.object({
-                  oldString: z$1.string().describe("Exact text to replace"),
-                  newString: z$1.string().describe("Replacement text"),
-                  replaceAll: z$1.boolean().default(false).describe("Replace all occurrences")
+        inputSchema: z.object({
+          operations: z.array(
+            z.object({
+              filePath: z.string().describe("Path to the file to edit"),
+              edits: z.array(
+                z.object({
+                  oldString: z.string().describe("Exact text to replace"),
+                  newString: z.string().describe("Replacement text"),
+                  replaceAll: z.boolean().default(false).describe("Replace all occurrences")
                 })
               ).describe("List of edit operations for this file")
             })
           ).describe("File edit operations to perform"),
-          createBackup: z$1.boolean().default(false).describe("Create backup files before editing")
+          createBackup: z.boolean().default(false).describe("Create backup files before editing")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          results: z$1.array(
-            z$1.object({
-              filePath: z$1.string(),
-              editsApplied: z$1.number(),
-              errors: z$1.array(z$1.string()),
-              backup: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          results: z.array(
+            z.object({
+              filePath: z.string(),
+              editsApplied: z.number(),
+              errors: z.array(z.string()),
+              backup: z.string().optional()
             })
           ),
-          message: z$1.string()
+          message: z.string()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.performMultiEdit({ ...inputData, projectPath });
@@ -28215,23 +28284,23 @@ export const mastra = new Mastra({
       replaceLines: createTool({
         id: "replace-lines",
         description: "Replace specific line ranges in files with new content. IMPORTANT: This tool replaces ENTIRE lines, not partial content within lines. Lines are 1-indexed.",
-        inputSchema: z$1.object({
-          filePath: z$1.string().describe("Path to the file to edit"),
-          startLine: z$1.number().describe("Starting line number to replace (1-indexed, inclusive). Count from the first line = 1"),
-          endLine: z$1.number().describe(
+        inputSchema: z.object({
+          filePath: z.string().describe("Path to the file to edit"),
+          startLine: z.number().describe("Starting line number to replace (1-indexed, inclusive). Count from the first line = 1"),
+          endLine: z.number().describe(
             "Ending line number to replace (1-indexed, inclusive). To replace single line, use same number as startLine"
           ),
-          newContent: z$1.string().describe(
+          newContent: z.string().describe(
             'New content to replace the lines with. Use empty string "" to delete lines completely. For multiline content, include \\n characters'
           ),
-          createBackup: z$1.boolean().default(false).describe("Create backup file before editing")
+          createBackup: z.boolean().default(false).describe("Create backup file before editing")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          message: z$1.string(),
-          linesReplaced: z$1.number().optional(),
-          backup: z$1.string().optional(),
-          error: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          message: z.string(),
+          linesReplaced: z.number().optional(),
+          backup: z.string().optional(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.replaceLines({ ...inputData, projectPath });
@@ -28241,26 +28310,26 @@ export const mastra = new Mastra({
       showFileLines: createTool({
         id: "show-file-lines",
         description: "Show specific lines from a file with line numbers. Useful for debugging before using replaceLines.",
-        inputSchema: z$1.object({
-          filePath: z$1.string().describe("Path to the file to examine"),
-          startLine: z$1.number().optional().describe("Starting line number to show (1-indexed). If not provided, shows all lines"),
-          endLine: z$1.number().optional().describe(
+        inputSchema: z.object({
+          filePath: z.string().describe("Path to the file to examine"),
+          startLine: z.number().optional().describe("Starting line number to show (1-indexed). If not provided, shows all lines"),
+          endLine: z.number().optional().describe(
             "Ending line number to show (1-indexed, inclusive). If not provided but startLine is, shows only that line"
           ),
-          context: z$1.number().default(2).describe("Number of context lines to show before and after the range")
+          context: z.number().default(2).describe("Number of context lines to show before and after the range")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          lines: z$1.array(
-            z$1.object({
-              lineNumber: z$1.number(),
-              content: z$1.string(),
-              isTarget: z$1.boolean().describe("Whether this line is in the target range")
+        outputSchema: z.object({
+          success: z.boolean(),
+          lines: z.array(
+            z.object({
+              lineNumber: z.number(),
+              content: z.string(),
+              isTarget: z.boolean().describe("Whether this line is in the target range")
             })
           ),
-          totalLines: z$1.number(),
-          message: z$1.string(),
-          error: z$1.string().optional()
+          totalLines: z.number(),
+          message: z.string(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.showFileLines({ ...inputData, projectPath });
@@ -28270,40 +28339,40 @@ export const mastra = new Mastra({
       smartSearch: createTool({
         id: "smart-search",
         description: "Intelligent search across codebase with context awareness and pattern matching.",
-        inputSchema: z$1.object({
-          query: z$1.string().describe("Search query or pattern"),
-          type: z$1.enum(["text", "regex", "fuzzy", "semantic"]).default("text").describe("Type of search to perform"),
-          scope: z$1.object({
-            paths: z$1.array(z$1.string()).optional().describe("Specific paths to search"),
-            fileTypes: z$1.array(z$1.string()).optional().describe("File extensions to include"),
-            excludePaths: z$1.array(z$1.string()).optional().describe("Paths to exclude"),
-            maxResults: z$1.number().default(50).describe("Maximum number of results")
+        inputSchema: z.object({
+          query: z.string().describe("Search query or pattern"),
+          type: z.enum(["text", "regex", "fuzzy", "semantic"]).default("text").describe("Type of search to perform"),
+          scope: z.object({
+            paths: z.array(z.string()).optional().describe("Specific paths to search"),
+            fileTypes: z.array(z.string()).optional().describe("File extensions to include"),
+            excludePaths: z.array(z.string()).optional().describe("Paths to exclude"),
+            maxResults: z.number().default(50).describe("Maximum number of results")
           }).optional(),
-          context: z$1.object({
-            beforeLines: z$1.number().default(2).describe("Lines of context before match"),
-            afterLines: z$1.number().default(2).describe("Lines of context after match"),
-            includeDefinitions: z$1.boolean().default(false).describe("Include function/class definitions")
+          context: z.object({
+            beforeLines: z.number().default(2).describe("Lines of context before match"),
+            afterLines: z.number().default(2).describe("Lines of context after match"),
+            includeDefinitions: z.boolean().default(false).describe("Include function/class definitions")
           }).optional()
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          matches: z$1.array(
-            z$1.object({
-              file: z$1.string(),
-              line: z$1.number(),
-              column: z$1.number().optional(),
-              match: z$1.string(),
-              context: z$1.object({
-                before: z$1.array(z$1.string()),
-                after: z$1.array(z$1.string())
+        outputSchema: z.object({
+          success: z.boolean(),
+          matches: z.array(
+            z.object({
+              file: z.string(),
+              line: z.number(),
+              column: z.number().optional(),
+              match: z.string(),
+              context: z.object({
+                before: z.array(z.string()),
+                after: z.array(z.string())
               }),
-              relevance: z$1.number().optional()
+              relevance: z.number().optional()
             })
           ),
-          summary: z$1.object({
-            totalMatches: z$1.number(),
-            filesSearched: z$1.number(),
-            patterns: z$1.array(z$1.string())
+          summary: z.object({
+            totalMatches: z.number(),
+            filesSearched: z.number(),
+            patterns: z.array(z.string())
           })
         }),
         execute: async (inputData) => {
@@ -28313,31 +28382,31 @@ export const mastra = new Mastra({
       validateCode: createTool({
         id: "validate-code",
         description: "Validates code using a fast hybrid approach: syntax \u2192 semantic \u2192 lint. RECOMMENDED: Always provide specific files for optimal performance and accuracy.",
-        inputSchema: z$1.object({
-          projectPath: z$1.string().optional().describe("Path to the project to validate (defaults to current project)"),
-          validationType: z$1.array(z$1.enum(["types", "lint", "schemas", "tests", "build"])).describe('Types of validation to perform. Recommended: ["types", "lint"] for code quality'),
-          files: z$1.array(z$1.string()).optional().describe(
+        inputSchema: z.object({
+          projectPath: z.string().optional().describe("Path to the project to validate (defaults to current project)"),
+          validationType: z.array(z.enum(["types", "lint", "schemas", "tests", "build"])).describe('Types of validation to perform. Recommended: ["types", "lint"] for code quality'),
+          files: z.array(z.string()).optional().describe(
             "RECOMMENDED: Specific files to validate (e.g., files you created/modified). Uses hybrid validation: fast syntax check \u2192 semantic types \u2192 ESLint. Without files, falls back to slower CLI validation."
           )
         }),
-        outputSchema: z$1.object({
-          valid: z$1.boolean(),
-          errors: z$1.array(
-            z$1.object({
-              type: z$1.enum(["typescript", "eslint", "schema", "test", "build"]),
-              severity: z$1.enum(["error", "warning", "info"]),
-              message: z$1.string(),
-              file: z$1.string().optional(),
-              line: z$1.number().optional(),
-              column: z$1.number().optional(),
-              code: z$1.string().optional()
+        outputSchema: z.object({
+          valid: z.boolean(),
+          errors: z.array(
+            z.object({
+              type: z.enum(["typescript", "eslint", "schema", "test", "build"]),
+              severity: z.enum(["error", "warning", "info"]),
+              message: z.string(),
+              file: z.string().optional(),
+              line: z.number().optional(),
+              column: z.number().optional(),
+              code: z.string().optional()
             })
           ),
-          summary: z$1.object({
-            totalErrors: z$1.number(),
-            totalWarnings: z$1.number(),
-            validationsPassed: z$1.array(z$1.string()),
-            validationsFailed: z$1.array(z$1.string())
+          summary: z.object({
+            totalErrors: z.number(),
+            totalWarnings: z.number(),
+            validationsPassed: z.array(z.string()),
+            validationsFailed: z.array(z.string())
           })
         }),
         execute: async (inputData) => {
@@ -28354,31 +28423,31 @@ export const mastra = new Mastra({
       webSearch: createTool({
         id: "web-search",
         description: "Search the web for current information and return structured results.",
-        inputSchema: z$1.object({
-          query: z$1.string().describe("Search query"),
-          maxResults: z$1.number().default(10).describe("Maximum number of results to return"),
-          region: z$1.string().default("us").describe("Search region/country code"),
-          language: z$1.string().default("en").describe("Search language"),
-          includeImages: z$1.boolean().default(false).describe("Include image results"),
-          dateRange: z$1.enum(["day", "week", "month", "year", "all"]).default("all").describe("Date range filter")
+        inputSchema: z.object({
+          query: z.string().describe("Search query"),
+          maxResults: z.number().default(10).describe("Maximum number of results to return"),
+          region: z.string().default("us").describe("Search region/country code"),
+          language: z.string().default("en").describe("Search language"),
+          includeImages: z.boolean().default(false).describe("Include image results"),
+          dateRange: z.enum(["day", "week", "month", "year", "all"]).default("all").describe("Date range filter")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          query: z$1.string(),
-          results: z$1.array(
-            z$1.object({
-              title: z$1.string(),
-              url: z$1.string(),
-              snippet: z$1.string(),
-              domain: z$1.string(),
-              publishDate: z$1.string().optional(),
-              relevanceScore: z$1.number().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          query: z.string(),
+          results: z.array(
+            z.object({
+              title: z.string(),
+              url: z.string(),
+              snippet: z.string(),
+              domain: z.string(),
+              publishDate: z.string().optional(),
+              relevanceScore: z.number().optional()
             })
           ),
-          totalResults: z$1.number(),
-          searchTime: z$1.number(),
-          suggestions: z$1.array(z$1.string()).optional(),
-          error: z$1.string().optional()
+          totalResults: z.number(),
+          searchTime: z.number(),
+          suggestions: z.array(z.string()).optional(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.webSearch(inputData);
@@ -28388,27 +28457,27 @@ export const mastra = new Mastra({
       attemptCompletion: createTool({
         id: "attempt-completion",
         description: "Signal that you believe the requested task has been completed and provide a summary.",
-        inputSchema: z$1.object({
-          summary: z$1.string().describe("Summary of what was accomplished"),
-          changes: z$1.array(
-            z$1.object({
-              type: z$1.enum(["file_created", "file_modified", "file_deleted", "command_executed", "dependency_added"]),
-              description: z$1.string(),
-              path: z$1.string().optional()
+        inputSchema: z.object({
+          summary: z.string().describe("Summary of what was accomplished"),
+          changes: z.array(
+            z.object({
+              type: z.enum(["file_created", "file_modified", "file_deleted", "command_executed", "dependency_added"]),
+              description: z.string(),
+              path: z.string().optional()
             })
           ).describe("List of changes made"),
-          validation: z$1.object({
-            testsRun: z$1.boolean().default(false),
-            buildsSuccessfully: z$1.boolean().default(false),
-            manualTestingRequired: z$1.boolean().default(false)
+          validation: z.object({
+            testsRun: z.boolean().default(false),
+            buildsSuccessfully: z.boolean().default(false),
+            manualTestingRequired: z.boolean().default(false)
           }).describe("Validation status"),
-          nextSteps: z$1.array(z$1.string()).optional().describe("Suggested next steps or follow-up actions")
+          nextSteps: z.array(z.string()).optional().describe("Suggested next steps or follow-up actions")
         }),
-        outputSchema: z$1.object({
-          completionId: z$1.string(),
-          status: z$1.enum(["completed", "needs_review", "needs_testing"]),
-          summary: z$1.string(),
-          confidence: z$1.number().min(0).max(100)
+        outputSchema: z.object({
+          completionId: z.string(),
+          status: z.enum(["completed", "needs_review", "needs_testing"]),
+          summary: z.string(),
+          confidence: z.number().min(0).max(100)
         }),
         execute: async (inputData) => {
           return await _AgentBuilderDefaults.signalCompletion(inputData);
@@ -28417,24 +28486,24 @@ export const mastra = new Mastra({
       manageProject: createTool({
         id: "manage-project",
         description: "Handles project management including creating project structures, managing dependencies, and package operations.",
-        inputSchema: z$1.object({
-          action: z$1.enum(["create", "install", "upgrade"]).describe("The action to perform"),
-          features: z$1.array(z$1.string()).optional().describe('Mastra features to include (e.g., ["agents", "memory", "workflows"])'),
-          packages: z$1.array(
-            z$1.object({
-              name: z$1.string(),
-              version: z$1.string().optional()
+        inputSchema: z.object({
+          action: z.enum(["create", "install", "upgrade"]).describe("The action to perform"),
+          features: z.array(z.string()).optional().describe('Mastra features to include (e.g., ["agents", "memory", "workflows"])'),
+          packages: z.array(
+            z.object({
+              name: z.string(),
+              version: z.string().optional()
             })
           ).optional().describe("Packages to install/upgrade")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          installed: z$1.array(z$1.string()).optional(),
-          upgraded: z$1.array(z$1.string()).optional(),
-          warnings: z$1.array(z$1.string()).optional(),
-          message: z$1.string().optional(),
-          details: z$1.string().optional(),
-          error: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          installed: z.array(z.string()).optional(),
+          upgraded: z.array(z.string()).optional(),
+          warnings: z.array(z.string()).optional(),
+          message: z.string().optional(),
+          details: z.string().optional(),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           const { action, features, packages } = inputData;
@@ -28484,19 +28553,19 @@ export const mastra = new Mastra({
       manageServer: createTool({
         id: "manage-server",
         description: "Manages the Mastra server - start, stop, restart, and check status, use the terminal tool to make curl requests to the server. There is an openapi spec for the server at http://localhost:{port}/openapi.json",
-        inputSchema: z$1.object({
-          action: z$1.enum(["start", "stop", "restart", "status"]).describe("Server management action"),
-          port: z$1.number().optional().default(4200).describe("Port to run the server on")
+        inputSchema: z.object({
+          action: z.enum(["start", "stop", "restart", "status"]).describe("Server management action"),
+          port: z.number().optional().default(4200).describe("Port to run the server on")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          status: z$1.enum(["running", "stopped", "starting", "stopping", "unknown"]),
-          pid: z$1.number().optional(),
-          port: z$1.number().optional(),
-          url: z$1.string().optional(),
-          message: z$1.string().optional(),
-          stdout: z$1.array(z$1.string()).optional().describe("Server output lines captured during startup"),
-          error: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          status: z.enum(["running", "stopped", "starting", "stopping", "unknown"]),
+          pid: z.number().optional(),
+          port: z.number().optional(),
+          url: z.string().optional(),
+          message: z.string().optional(),
+          stdout: z.array(z.string()).optional().describe("Server output lines captured during startup"),
+          error: z.string().optional()
         }),
         execute: async (inputData) => {
           const { action, port } = inputData;
@@ -28566,23 +28635,23 @@ export const mastra = new Mastra({
       httpRequest: createTool({
         id: "http-request",
         description: "Makes HTTP requests to the Mastra server or external APIs for testing and integration",
-        inputSchema: z$1.object({
-          method: z$1.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).describe("HTTP method"),
-          url: z$1.string().describe("Full URL or path (if baseUrl provided)"),
-          baseUrl: z$1.string().optional().describe("Base URL for the server (e.g., http://localhost:4200)"),
-          headers: z$1.record(z$1.string()).optional().describe("HTTP headers"),
-          body: z$1.any().optional().describe("Request body (will be JSON stringified if object)"),
-          timeout: z$1.number().optional().default(3e4).describe("Request timeout in milliseconds")
+        inputSchema: z.object({
+          method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).describe("HTTP method"),
+          url: z.string().describe("Full URL or path (if baseUrl provided)"),
+          baseUrl: z.string().optional().describe("Base URL for the server (e.g., http://localhost:4200)"),
+          headers: z.record(z.string()).optional().describe("HTTP headers"),
+          body: z.any().optional().describe("Request body (will be JSON stringified if object)"),
+          timeout: z.number().optional().default(3e4).describe("Request timeout in milliseconds")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          status: z$1.number().optional(),
-          statusText: z$1.string().optional(),
-          headers: z$1.record(z$1.string()).optional(),
-          data: z$1.any().optional(),
-          error: z$1.string().optional(),
-          url: z$1.string(),
-          method: z$1.string()
+        outputSchema: z.object({
+          success: z.boolean(),
+          status: z.number().optional(),
+          statusText: z.string().optional(),
+          headers: z.record(z.string()).optional(),
+          data: z.any().optional(),
+          error: z.string().optional(),
+          url: z.string(),
+          method: z.string()
         }),
         execute: async (inputData) => {
           const { method, url, baseUrl, headers, body, timeout } = inputData;
@@ -30416,13 +30485,13 @@ Return the actual exported names of the units, as well as the file names.`,
       - If a directory doesn't exist or has no files, return an empty array
 
       Return the analysis in the exact format specified in the output schema.`;
-      const output = z$1.object({
-        agents: z$1.array(z$1.object({ name: z$1.string(), file: z$1.string() })).optional(),
-        workflows: z$1.array(z$1.object({ name: z$1.string(), file: z$1.string() })).optional(),
-        tools: z$1.array(z$1.object({ name: z$1.string(), file: z$1.string() })).optional(),
-        mcp: z$1.array(z$1.object({ name: z$1.string(), file: z$1.string() })).optional(),
-        networks: z$1.array(z$1.object({ name: z$1.string(), file: z$1.string() })).optional(),
-        other: z$1.array(z$1.object({ name: z$1.string(), file: z$1.string() })).optional()
+      const output = z.object({
+        agents: z.array(z.object({ name: z.string(), file: z.string() })).optional(),
+        workflows: z.array(z.object({ name: z.string(), file: z.string() })).optional(),
+        tools: z.array(z.object({ name: z.string(), file: z.string() })).optional(),
+        mcp: z.array(z.object({ name: z.string(), file: z.string() })).optional(),
+        networks: z.array(z.object({ name: z.string(), file: z.string() })).optional(),
+        other: z.array(z.object({ name: z.string(), file: z.string() })).optional()
       });
       const result = isV2 ? await tryGenerateWithJsonFallback(agent, prompt, {
         structuredOutput: {
@@ -30994,14 +31063,14 @@ var intelligentMergeStep = createStep({
       const copyFileTool = createTool({
         id: "copy-file",
         description: "Copy a file from template to target project (use only for edge cases - most files are already copied programmatically).",
-        inputSchema: z$1.object({
-          sourcePath: z$1.string().describe("Path to the source file relative to template directory"),
-          destinationPath: z$1.string().describe("Path to the destination file relative to target project")
+        inputSchema: z.object({
+          sourcePath: z.string().describe("Path to the source file relative to template directory"),
+          destinationPath: z.string().describe("Path to the destination file relative to target project")
         }),
-        outputSchema: z$1.object({
-          success: z$1.boolean(),
-          message: z$1.string(),
-          error: z$1.string().optional()
+        outputSchema: z.object({
+          success: z.boolean(),
+          message: z.string(),
+          error: z.string().optional()
         }),
         execute: async (input) => {
           try {
@@ -31417,7 +31486,7 @@ Start by running validateCode with all validation types to get a complete pictur
 
 Previous iterations may have fixed some issues, so start by re-running validateCode to see the current state, then fix any remaining issues.`;
         const isV2 = model.specificationVersion === "v2";
-        const output = z$1.object({ success: z$1.boolean() });
+        const output = z.object({ success: z.boolean() });
         const result = isV2 ? await tryStreamWithJsonFallback(validationAgent, iterationPrompt, {
           structuredOutput: {
             schema: output
@@ -31687,35 +31756,35 @@ var determineConflictStrategy = (_unit, _targetFile) => {
 var shouldAbortWorkflow = (stepResult) => {
   return stepResult?.success === false || stepResult?.error;
 };
-var TaskSchema = z$1.array(
-  z$1.object({
-    id: z$1.string().describe("Unique task ID using kebab-case"),
-    content: z$1.string().describe("Specific, actionable task description"),
-    status: z$1.enum(["pending", "in_progress", "completed", "blocked"]).default("pending"),
-    priority: z$1.enum(["high", "medium", "low"]).describe("Task priority"),
-    dependencies: z$1.array(z$1.string()).optional().describe("IDs of tasks this depends on"),
-    notes: z$1.string().describe("Detailed implementation notes and specifics")
+var TaskSchema = z.array(
+  z.object({
+    id: z.string().describe("Unique task ID using kebab-case"),
+    content: z.string().describe("Specific, actionable task description"),
+    status: z.enum(["pending", "in_progress", "completed", "blocked"]).default("pending"),
+    priority: z.enum(["high", "medium", "low"]).describe("Task priority"),
+    dependencies: z.array(z.string()).optional().describe("IDs of tasks this depends on"),
+    notes: z.string().describe("Detailed implementation notes and specifics")
   })
 );
-var QuestionSchema = z$1.array(
-  z$1.object({
-    id: z$1.string().describe("Unique question ID"),
-    question: z$1.string().describe("Clear, specific question for the user"),
-    type: z$1.enum(["choice", "text", "boolean"]).describe("Type of answer expected"),
-    options: z$1.array(z$1.string()).optional().describe("Options for choice questions"),
-    context: z$1.string().optional().describe("Additional context or explanation")
+var QuestionSchema = z.array(
+  z.object({
+    id: z.string().describe("Unique question ID"),
+    question: z.string().describe("Clear, specific question for the user"),
+    type: z.enum(["choice", "text", "boolean"]).describe("Type of answer expected"),
+    options: z.array(z.string()).optional().describe("Options for choice questions"),
+    context: z.string().optional().describe("Additional context or explanation")
   })
 );
-var PlanningIterationResultSchema = z$1.object({
-  success: z$1.boolean(),
+var PlanningIterationResultSchema = z.object({
+  success: z.boolean(),
   tasks: TaskSchema,
   questions: QuestionSchema,
-  reasoning: z$1.string(),
-  planComplete: z$1.boolean(),
-  message: z$1.string(),
-  error: z$1.string().optional(),
-  allPreviousQuestions: z$1.array(z$1.any()).optional(),
-  allPreviousAnswers: z$1.record(z$1.string()).optional()
+  reasoning: z.string(),
+  planComplete: z.boolean(),
+  message: z.string(),
+  error: z.string().optional(),
+  allPreviousQuestions: z.array(z.any()).optional(),
+  allPreviousAnswers: z.record(z.string()).optional()
 });
 var taskPlanningPrompts = {
   planningAgent: {
@@ -31791,180 +31860,180 @@ Create specific tasks and identify any questions that need user clarification.`
     approvalMessage: (tasksCount) => `Please review and approve the ${tasksCount} task(s) for execution:`
   }
 };
-var WorkflowBuilderInputSchema = z$1.object({
-  workflowName: z$1.string().optional().describe("Name of the workflow to create or edit"),
-  action: z$1.enum(["create", "edit"]).describe("Action to perform: create new or edit existing workflow"),
-  description: z$1.string().optional().describe("Description of what the workflow should do"),
-  requirements: z$1.string().optional().describe("Detailed requirements for the workflow"),
-  projectPath: z$1.string().optional().describe("Path to the Mastra project (defaults to current directory)")
+var WorkflowBuilderInputSchema = z.object({
+  workflowName: z.string().optional().describe("Name of the workflow to create or edit"),
+  action: z.enum(["create", "edit"]).describe("Action to perform: create new or edit existing workflow"),
+  description: z.string().optional().describe("Description of what the workflow should do"),
+  requirements: z.string().optional().describe("Detailed requirements for the workflow"),
+  projectPath: z.string().optional().describe("Path to the Mastra project (defaults to current directory)")
 });
-var DiscoveredWorkflowSchema = z$1.object({
-  name: z$1.string(),
-  file: z$1.string(),
-  description: z$1.string().optional(),
-  inputSchema: z$1.any().optional(),
-  outputSchema: z$1.any().optional(),
-  steps: z$1.array(z$1.string()).optional()
+var DiscoveredWorkflowSchema = z.object({
+  name: z.string(),
+  file: z.string(),
+  description: z.string().optional(),
+  inputSchema: z.any().optional(),
+  outputSchema: z.any().optional(),
+  steps: z.array(z.string()).optional()
 });
-var WorkflowDiscoveryResultSchema = z$1.object({
-  success: z$1.boolean(),
-  workflows: z$1.array(DiscoveredWorkflowSchema),
-  mastraIndexExists: z$1.boolean(),
-  message: z$1.string(),
-  error: z$1.string().optional()
+var WorkflowDiscoveryResultSchema = z.object({
+  success: z.boolean(),
+  workflows: z.array(DiscoveredWorkflowSchema),
+  mastraIndexExists: z.boolean(),
+  message: z.string(),
+  error: z.string().optional()
 });
-var ProjectDiscoveryResultSchema = z$1.object({
-  success: z$1.boolean(),
-  structure: z$1.object({
-    hasWorkflowsDir: z$1.boolean(),
-    hasAgentsDir: z$1.boolean(),
-    hasToolsDir: z$1.boolean(),
-    hasMastraIndex: z$1.boolean(),
-    existingWorkflows: z$1.array(z$1.string()),
-    existingAgents: z$1.array(z$1.string()),
-    existingTools: z$1.array(z$1.string())
+var ProjectDiscoveryResultSchema = z.object({
+  success: z.boolean(),
+  structure: z.object({
+    hasWorkflowsDir: z.boolean(),
+    hasAgentsDir: z.boolean(),
+    hasToolsDir: z.boolean(),
+    hasMastraIndex: z.boolean(),
+    existingWorkflows: z.array(z.string()),
+    existingAgents: z.array(z.string()),
+    existingTools: z.array(z.string())
   }),
-  dependencies: z$1.record(z$1.string()),
-  message: z$1.string(),
-  error: z$1.string().optional()
+  dependencies: z.record(z.string()),
+  message: z.string(),
+  error: z.string().optional()
 });
-var WorkflowResearchResultSchema = z$1.object({
-  success: z$1.boolean(),
-  documentation: z$1.object({
-    workflowPatterns: z$1.array(z$1.string()),
-    stepExamples: z$1.array(z$1.string()),
-    bestPractices: z$1.array(z$1.string())
+var WorkflowResearchResultSchema = z.object({
+  success: z.boolean(),
+  documentation: z.object({
+    workflowPatterns: z.array(z.string()),
+    stepExamples: z.array(z.string()),
+    bestPractices: z.array(z.string())
   }),
-  webResources: z$1.array(
-    z$1.object({
-      title: z$1.string(),
-      url: z$1.string(),
-      snippet: z$1.string(),
-      relevance: z$1.number()
+  webResources: z.array(
+    z.object({
+      title: z.string(),
+      url: z.string(),
+      snippet: z.string(),
+      relevance: z.number()
     })
   ),
-  message: z$1.string(),
-  error: z$1.string().optional()
+  message: z.string(),
+  error: z.string().optional()
 });
-var TaskManagementResultSchema = z$1.object({
-  success: z$1.boolean(),
+var TaskManagementResultSchema = z.object({
+  success: z.boolean(),
   tasks: TaskSchema,
-  message: z$1.string(),
-  error: z$1.string().optional()
+  message: z.string(),
+  error: z.string().optional()
 });
-var TaskExecutionInputSchema = z$1.object({
-  action: z$1.enum(["create", "edit"]),
-  workflowName: z$1.string().optional(),
-  description: z$1.string().optional(),
-  requirements: z$1.string().optional(),
+var TaskExecutionInputSchema = z.object({
+  action: z.enum(["create", "edit"]),
+  workflowName: z.string().optional(),
+  description: z.string().optional(),
+  requirements: z.string().optional(),
   tasks: TaskSchema,
-  discoveredWorkflows: z$1.array(z$1.any()),
-  projectStructure: z$1.any(),
-  research: z$1.any(),
-  projectPath: z$1.string().optional()
+  discoveredWorkflows: z.array(z.any()),
+  projectStructure: z.any(),
+  research: z.any(),
+  projectPath: z.string().optional()
 });
-var TaskExecutionSuspendSchema = z$1.object({
+var TaskExecutionSuspendSchema = z.object({
   questions: QuestionSchema,
-  currentProgress: z$1.string(),
-  completedTasks: z$1.array(z$1.string()),
-  message: z$1.string()
+  currentProgress: z.string(),
+  completedTasks: z.array(z.string()),
+  message: z.string()
 });
-var TaskExecutionResumeSchema = z$1.object({
-  answers: z$1.array(
-    z$1.object({
-      questionId: z$1.string(),
-      answer: z$1.string()
+var TaskExecutionResumeSchema = z.object({
+  answers: z.array(
+    z.object({
+      questionId: z.string(),
+      answer: z.string()
     })
   )
 });
-var TaskExecutionResultSchema = z$1.object({
-  success: z$1.boolean(),
-  filesModified: z$1.array(z$1.string()),
-  validationResults: z$1.object({
-    passed: z$1.boolean(),
-    errors: z$1.array(z$1.string()),
-    warnings: z$1.array(z$1.string())
+var TaskExecutionResultSchema = z.object({
+  success: z.boolean(),
+  filesModified: z.array(z.string()),
+  validationResults: z.object({
+    passed: z.boolean(),
+    errors: z.array(z.string()),
+    warnings: z.array(z.string())
   }),
-  completedTasks: z$1.array(z$1.string()),
-  message: z$1.string(),
-  error: z$1.string().optional()
+  completedTasks: z.array(z.string()),
+  message: z.string(),
+  error: z.string().optional()
 });
-z$1.object({
+z.object({
   questions: QuestionSchema
 });
-z$1.object({
-  answers: z$1.record(z$1.string()),
-  hasAnswers: z$1.boolean()
+z.object({
+  answers: z.record(z.string()),
+  hasAnswers: z.boolean()
 });
-var WorkflowBuilderResultSchema = z$1.object({
-  success: z$1.boolean(),
-  action: z$1.enum(["create", "edit"]),
-  workflowName: z$1.string().optional(),
-  workflowFile: z$1.string().optional(),
+var WorkflowBuilderResultSchema = z.object({
+  success: z.boolean(),
+  action: z.enum(["create", "edit"]),
+  workflowName: z.string().optional(),
+  workflowFile: z.string().optional(),
   discovery: WorkflowDiscoveryResultSchema.optional(),
   projectStructure: ProjectDiscoveryResultSchema.optional(),
   research: WorkflowResearchResultSchema.optional(),
   planning: PlanningIterationResultSchema.optional(),
   taskManagement: TaskManagementResultSchema.optional(),
   execution: TaskExecutionResultSchema.optional(),
-  needsUserInput: z$1.boolean().optional(),
+  needsUserInput: z.boolean().optional(),
   questions: QuestionSchema.optional(),
-  message: z$1.string(),
-  nextSteps: z$1.array(z$1.string()).optional(),
-  error: z$1.string().optional()
+  message: z.string(),
+  nextSteps: z.array(z.string()).optional(),
+  error: z.string().optional()
 });
-var TaskExecutionIterationInputSchema = (taskLength) => z$1.object({
-  status: z$1.enum(["in_progress", "completed", "needs_clarification"]).describe('Status - only use "completed" when ALL remaining tasks are finished'),
-  progress: z$1.string().describe("Current progress description"),
-  completedTasks: z$1.array(z$1.string()).describe("List of ALL completed task IDs (including previously completed ones)"),
-  totalTasksRequired: z$1.number().describe(`Total number of tasks that must be completed (should be ${taskLength})`),
-  tasksRemaining: z$1.array(z$1.string()).describe("List of task IDs that still need to be completed"),
-  filesModified: z$1.array(z$1.string()).describe("List of files that were created or modified - use these exact paths for validateCode tool"),
+var TaskExecutionIterationInputSchema = (taskLength) => z.object({
+  status: z.enum(["in_progress", "completed", "needs_clarification"]).describe('Status - only use "completed" when ALL remaining tasks are finished'),
+  progress: z.string().describe("Current progress description"),
+  completedTasks: z.array(z.string()).describe("List of ALL completed task IDs (including previously completed ones)"),
+  totalTasksRequired: z.number().describe(`Total number of tasks that must be completed (should be ${taskLength})`),
+  tasksRemaining: z.array(z.string()).describe("List of task IDs that still need to be completed"),
+  filesModified: z.array(z.string()).describe("List of files that were created or modified - use these exact paths for validateCode tool"),
   questions: QuestionSchema.optional().describe("Questions for user if clarification is needed"),
-  message: z$1.string().describe("Summary of work completed or current status"),
-  error: z$1.string().optional().describe("Any errors encountered")
+  message: z.string().describe("Summary of work completed or current status"),
+  error: z.string().optional().describe("Any errors encountered")
 });
-var PlanningIterationInputSchema = z$1.object({
-  action: z$1.enum(["create", "edit"]),
-  workflowName: z$1.string().optional(),
-  description: z$1.string().optional(),
-  requirements: z$1.string().optional(),
-  discoveredWorkflows: z$1.array(DiscoveredWorkflowSchema),
+var PlanningIterationInputSchema = z.object({
+  action: z.enum(["create", "edit"]),
+  workflowName: z.string().optional(),
+  description: z.string().optional(),
+  requirements: z.string().optional(),
+  discoveredWorkflows: z.array(DiscoveredWorkflowSchema),
   projectStructure: ProjectDiscoveryResultSchema,
   research: WorkflowResearchResultSchema,
-  userAnswers: z$1.record(z$1.string()).optional()
+  userAnswers: z.record(z.string()).optional()
 });
-var PlanningIterationSuspendSchema = z$1.object({
+var PlanningIterationSuspendSchema = z.object({
   questions: QuestionSchema,
-  message: z$1.string(),
-  currentPlan: z$1.object({
+  message: z.string(),
+  currentPlan: z.object({
     tasks: TaskSchema,
-    reasoning: z$1.string()
+    reasoning: z.string()
   })
 });
-var PlanningIterationResumeSchema = z$1.object({
-  answers: z$1.record(z$1.string())
+var PlanningIterationResumeSchema = z.object({
+  answers: z.record(z.string())
 });
-var PlanningAgentOutputSchema = z$1.object({
+var PlanningAgentOutputSchema = z.object({
   tasks: TaskSchema,
   questions: QuestionSchema.optional(),
-  reasoning: z$1.string().describe("Explanation of the plan and any questions"),
-  planComplete: z$1.boolean().describe("Whether the plan is ready for execution (no more questions)")
+  reasoning: z.string().describe("Explanation of the plan and any questions"),
+  planComplete: z.boolean().describe("Whether the plan is ready for execution (no more questions)")
 });
-var TaskApprovalOutputSchema = z$1.object({
-  approved: z$1.boolean(),
+var TaskApprovalOutputSchema = z.object({
+  approved: z.boolean(),
   tasks: TaskSchema,
-  message: z$1.string(),
-  userFeedback: z$1.string().optional()
+  message: z.string(),
+  userFeedback: z.string().optional()
 });
-var TaskApprovalSuspendSchema = z$1.object({
+var TaskApprovalSuspendSchema = z.object({
   taskList: TaskSchema,
-  summary: z$1.string(),
-  message: z$1.string()
+  summary: z.string(),
+  message: z.string()
 });
-var TaskApprovalResumeSchema = z$1.object({
-  approved: z$1.boolean(),
-  modifications: z$1.string().optional()
+var TaskApprovalResumeSchema = z.object({
+  approved: z.boolean(),
+  modifications: z.string().optional()
 });
 var planningIterationStep = createStep({
   id: "planning-iteration",
@@ -32558,35 +32627,35 @@ ${context.resumeData ? `USER PROVIDED ANSWERS: ${JSON.stringify(context.resumeDa
 var restrictedTaskManager = createTool({
   id: "task-manager",
   description: "View and update your pre-loaded task list. You can only mark tasks as in_progress or completed, not create new tasks.",
-  inputSchema: z$1.object({
-    action: z$1.enum(["list", "update", "complete"]).describe("List tasks, update status, or mark complete - tasks are pre-loaded"),
-    tasks: z$1.array(
-      z$1.object({
-        id: z$1.string().describe("Task ID - must match existing task"),
-        content: z$1.string().optional().describe("Task content (read-only)"),
-        status: z$1.enum(["pending", "in_progress", "completed", "blocked"]).describe("Task status"),
-        priority: z$1.enum(["high", "medium", "low"]).optional().describe("Task priority (read-only)"),
-        dependencies: z$1.array(z$1.string()).optional().describe("Task dependencies (read-only)"),
-        notes: z$1.string().optional().describe("Additional notes or progress updates")
+  inputSchema: z.object({
+    action: z.enum(["list", "update", "complete"]).describe("List tasks, update status, or mark complete - tasks are pre-loaded"),
+    tasks: z.array(
+      z.object({
+        id: z.string().describe("Task ID - must match existing task"),
+        content: z.string().optional().describe("Task content (read-only)"),
+        status: z.enum(["pending", "in_progress", "completed", "blocked"]).describe("Task status"),
+        priority: z.enum(["high", "medium", "low"]).optional().describe("Task priority (read-only)"),
+        dependencies: z.array(z.string()).optional().describe("Task dependencies (read-only)"),
+        notes: z.string().optional().describe("Additional notes or progress updates")
       })
     ).optional().describe("Tasks to update (status and notes only)"),
-    taskId: z$1.string().optional().describe("Specific task ID for single task operations")
+    taskId: z.string().optional().describe("Specific task ID for single task operations")
   }),
-  outputSchema: z$1.object({
-    success: z$1.boolean(),
-    tasks: z$1.array(
-      z$1.object({
-        id: z$1.string(),
-        content: z$1.string(),
-        status: z$1.string(),
-        priority: z$1.string(),
-        dependencies: z$1.array(z$1.string()).optional(),
-        notes: z$1.string().optional(),
-        createdAt: z$1.string(),
-        updatedAt: z$1.string()
+  outputSchema: z.object({
+    success: z.boolean(),
+    tasks: z.array(
+      z.object({
+        id: z.string(),
+        content: z.string(),
+        status: z.string(),
+        priority: z.string(),
+        dependencies: z.array(z.string()).optional(),
+        notes: z.string().optional(),
+        createdAt: z.string(),
+        updatedAt: z.string()
       })
     ),
-    message: z$1.string()
+    message: z.string()
   }),
   execute: async (input) => {
     const adaptedContext = {
@@ -33052,12 +33121,12 @@ var agentBuilderWorkflows = {
   "merge-template": agentBuilderTemplateWorkflow,
   "workflow-builder": workflowBuilderWorkflow
 };
-var actionIdPathParams = z.object({
-  actionId: z.string().describe("Unique identifier for the agent-builder action")
+var actionIdPathParams = z$1.object({
+  actionId: z$1.string().describe("Unique identifier for the agent-builder action")
 });
-var actionRunPathParams = z.object({
-  actionId: z.string().describe("Unique identifier for the agent-builder action"),
-  runId: z.string().describe("Unique identifier for the action run")
+var actionRunPathParams = z$1.object({
+  actionId: z$1.string().describe("Unique identifier for the agent-builder action"),
+  runId: z$1.string().describe("Unique identifier for the action run")
 });
 var streamAgentBuilderBodySchema = streamWorkflowBodySchema;
 var streamLegacyAgentBuilderBodySchema = streamLegacyWorkflowBodySchema;
@@ -33913,8 +33982,8 @@ var LIST_AGENTS_ROUTE = createRoute({
   method: "GET",
   path: "/api/agents",
   responseType: "json",
-  queryParamSchema: z$1.object({
-    partial: z$1.string().optional()
+  queryParamSchema: z.object({
+    partial: z.string().optional()
   }),
   responseSchema: listAgentsResponseSchema,
   summary: "List all agents",
@@ -34222,7 +34291,7 @@ var STREAM_NETWORK_ROUTE = createRoute({
   responseType: "stream",
   streamFormat: "sse",
   pathParamSchema: agentIdPathParams,
-  bodySchema: agentExecutionBodySchema$1.extend({ thread: z$1.string().optional() }),
+  bodySchema: agentExecutionBodySchema$1.extend({ thread: z.string().optional() }),
   responseSchema: streamResponseSchema,
   summary: "Stream agent network",
   description: "Executes an agent network with multiple agents and streams the response",
