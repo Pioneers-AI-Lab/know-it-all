@@ -260,6 +260,89 @@ const queryLogger = createTool({
   }
 });
 
+const queryRouter = createTool({
+  id: "query-router",
+  description: "Routes a query to the appropriate specialized agent based on the question type",
+  inputSchema: z.object({
+    query: z.string().describe("The query to route to a specialized agent"),
+    questionType: z.enum([
+      "startups",
+      "events",
+      "workshops",
+      "timeline",
+      "founders",
+      "guests",
+      "general"
+    ]).describe(
+      "The type of question determining which agent to route to"
+    )
+  }),
+  outputSchema: z.object({
+    success: z.boolean().describe("Whether the query was successfully routed"),
+    agentName: z.string().describe("The name of the agent that handled the query"),
+    response: z.string().describe("The response from the specialized agent")
+  }),
+  execute: async ({
+    query,
+    questionType
+  }) => {
+    const agentMapping = {
+      startups: {
+        agentName: "startupsAgent",
+        displayName: "Startups Agent"
+      },
+      events: {
+        agentName: "eventAgent",
+        displayName: "Event Agent"
+      },
+      workshops: {
+        agentName: "workshopsAgent",
+        displayName: "Workshops Agent"
+      },
+      timeline: {
+        agentName: "timelineAgent",
+        displayName: "Timeline Agent"
+      },
+      founders: {
+        agentName: "startupsAgent",
+        // Founders are handled by startups agent
+        displayName: "Startups Agent"
+      },
+      guests: {
+        agentName: "eventGuestsAgent",
+        displayName: "Event Guests Agent"
+      },
+      general: {
+        agentName: "generalQuestionsAgent",
+        displayName: "General Questions Agent"
+      }
+    };
+    const mapping = agentMapping[questionType];
+    if (!mapping) {
+      throw new Error(
+        `No agent mapping found for question type: ${questionType}`
+      );
+    }
+    const specializedAgent = mastra.getAgent(
+      mapping.agentName
+    );
+    if (!specializedAgent) {
+      throw new Error(
+        `Specialized agent "${mapping.agentName}" not found`
+      );
+    }
+    const message = `Question Type: ${questionType}
+
+Query: ${query}`;
+    const response = await specializedAgent.generate(message);
+    return {
+      success: true,
+      agentName: mapping.displayName,
+      response: response.text || JSON.stringify(response)
+    };
+  }
+});
+
 const orchestratorAgent = new Agent({
   id: "orchestrator-agent",
   name: "orchestrator-agent",
@@ -268,12 +351,14 @@ const orchestratorAgent = new Agent({
 
 		When you receive a query from the lucie-agent:
 		1. First, use the query-logger tool to log the received query and its formatted object
-		2. Then, process the query and route it to the appropriate specialized agents
-		3. Return the response from the specialized agents
+		2. Extract the questionType from the formatted object
+		3. Use the query-router tool to route the query to the appropriate specialized agent based on the questionType
+		4. Return the response from the specialized agent
 
-		Always use the query-logger tool first when you receive a query to ensure proper logging.`,
+		The questionType can be one of: startups, events, workshops, timeline, founders, guests, or general.
+		Always use the query-logger tool first, then use the query-router tool to route the query.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryLogger },
+  tools: { queryLogger, queryRouter },
   memory: new Memory$1({
     options: {
       lastMessages: 20
@@ -281,12 +366,55 @@ const orchestratorAgent = new Agent({
   })
 });
 
+const queryReceiver = createTool({
+  id: "query-receiver",
+  description: "Logs the received query when a specialized agent receives a query from the orchestrator",
+  inputSchema: z.object({
+    query: z.string().describe("The query string received from the orchestrator"),
+    questionType: z.enum([
+      "startups",
+      "events",
+      "workshops",
+      "timeline",
+      "founders",
+      "guests",
+      "general"
+    ]).describe("The type of question"),
+    agentName: z.string().describe("The name of the specialized agent receiving the query")
+  }),
+  outputSchema: z.object({
+    logged: z.boolean().describe("Whether the query was successfully logged")
+  }),
+  execute: async ({ query, questionType, agentName }) => {
+    console.log("=".repeat(60));
+    console.log(`\u{1F4E8} ${agentName.toUpperCase()} - Received Query`);
+    console.log("=".repeat(60));
+    console.log("Query:", query);
+    console.log("Question Type:", questionType);
+    console.log("Received at:", (/* @__PURE__ */ new Date()).toISOString());
+    console.log("=".repeat(60));
+    return { logged: true };
+  }
+});
+
 const generalQuestionsAgent = new Agent({
   id: "general-questions-agent",
   name: "general-questions-agent",
   description: "General Questions Agent is responsible for answering general questions",
-  instructions: `You are a general questions agent. You are responsible for answering general questions.`,
+  instructions: `You are a general questions agent. You are responsible for answering general questions.
+
+When you receive a query from the orchestrator, the message will be in the format:
+"Question Type: {questionType}
+
+Query: {query}"
+
+1. First, extract the questionType and query from the message
+2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="General Questions Agent"
+3. Then, process the query and provide a response
+
+Always use the query-receiver tool first when you receive a query.`,
   model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryReceiver },
   memory: new Memory$1({
     options: {
       lastMessages: 20
@@ -298,40 +426,125 @@ const eventGuestsAgent = new Agent({
   id: "event-guests-agent",
   name: "event-guests-agent",
   description: "Event Guests Agent is responsible for managing event guests",
-  instructions: `You are a event guests agent. You are responsible for managing event guests.`,
-  model: "anthropic/claude-sonnet-4-20250514"
+  instructions: `You are an event guests agent. You are responsible for managing event guests.
+
+When you receive a query from the orchestrator, the message will be in the format:
+"Question Type: {questionType}
+
+Query: {query}"
+
+1. First, extract the questionType and query from the message
+2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Guests Agent"
+3. Then, process the query and provide a response
+
+Always use the query-receiver tool first when you receive a query.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryReceiver },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 const eventAgent = new Agent({
   id: "event-agent",
   name: "event-agent",
   description: "Event Agent is responsible for managing events",
-  instructions: `You are a event agent. You are responsible for managing events.`,
-  model: "anthropic/claude-sonnet-4-20250514"
+  instructions: `You are an event agent. You are responsible for managing events.
+
+When you receive a query from the orchestrator, the message will be in the format:
+"Question Type: {questionType}
+
+Query: {query}"
+
+1. First, extract the questionType and query from the message
+2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Agent"
+3. Then, process the query and provide a response
+
+Always use the query-receiver tool first when you receive a query.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryReceiver },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 const startupsAgent = new Agent({
   id: "startups-agent",
   name: "startups-agent",
   description: "Startups Agent is responsible for the startups of the Pioneer.vc accelerator.",
-  instructions: "You are a startups agent. You are responsible for the startups of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
-  model: "anthropic/claude-sonnet-4-20250514"
+  instructions: `You are a startups agent. You are responsible for the startups of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.
+
+When you receive a query from the orchestrator, the message will be in the format:
+"Question Type: {questionType}
+
+Query: {query}"
+
+1. First, extract the questionType and query from the message
+2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Startups Agent"
+3. Then, process the query and provide a response
+
+Always use the query-receiver tool first when you receive a query.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryReceiver },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 const timelineAgent = new Agent({
   id: "timeline-agent",
   name: "timeline-agent",
   description: "Timeline Agent is responsible for the timeline of the Pioneer.vc accelerator.",
-  instructions: "You are a timeline agent. You are responsible for the timeline of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
-  model: "anthropic/claude-sonnet-4-20250514"
+  instructions: `You are a timeline agent. You are responsible for the timeline of the Pioneer.vc accelerator.
+
+When you receive a query from the orchestrator, the message will be in the format:
+"Question Type: {questionType}
+
+Query: {query}"
+
+1. First, extract the questionType and query from the message
+2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Timeline Agent"
+3. Then, process the query and provide a response
+
+Always use the query-receiver tool first when you receive a query.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryReceiver },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 const workshopsAgent = new Agent({
   id: "workshops-agent",
   name: "workshops-agent",
   description: "Workshops Agent is responsible for the workshops of the Pioneer.vc accelerator.",
-  instructions: "You are a workshops agent. You are responsible for the workshops of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
-  model: "anthropic/claude-sonnet-4-20250514"
+  instructions: `You are a workshops agent. You are responsible for the workshops of the Pioneer.vc accelerator.
+
+When you receive a query from the orchestrator, the message will be in the format:
+"Question Type: {questionType}
+
+Query: {query}"
+
+1. First, extract the questionType and query from the message
+2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Workshops Agent"
+3. Then, process the query and provide a response
+
+Always use the query-receiver tool first when you receive a query.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: { queryReceiver },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
 });
 
 function verifySlackRequest(signingSecret, requestSignature, timestamp, body) {
