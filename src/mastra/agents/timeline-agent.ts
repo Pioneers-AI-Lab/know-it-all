@@ -19,11 +19,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Timeline Agent"
-3. Use the timeline-query tool to search for timeline information including phases and events
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Timeline Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the timeline-query tool with: query={extracted query} to search for timeline information
+4. IMPORTANT: The timeline-query tool returns an object with "phases", "events", and "found" keys. Pass the ENTIRE result object (not just the arrays) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from timeline-query}, agentName="Timeline Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver → timeline-query → data-formatter → response-sender.`,
+Always follow this sequence: query-receiver → timeline-query → data-formatter → response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
 	tools: { queryReceiver, timelineQuery, dataFormatter, responseSender },
 	memory: new Memory({

@@ -19,11 +19,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="General Questions Agent"
-3. Use the general-questions-query tool to search the knowledge base for answers to the query
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="General Questions Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the general-questions-query tool with: query={extracted query} to search the knowledge base
+4. IMPORTANT: The general-questions-query tool returns an object with "answers" and "found" keys. Pass the ENTIRE result object (not just the answers array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from general-questions-query}, agentName="General Questions Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver → general-questions-query → data-formatter → response-sender.`,
+Always follow this sequence: query-receiver → general-questions-query → data-formatter → response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
 	tools: {
 		queryReceiver,

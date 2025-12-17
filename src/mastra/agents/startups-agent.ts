@@ -20,11 +20,14 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Startups Agent"
-3. Use the startups-query tool to search for startup information, or the founders-query tool if the question is about founders
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Startups Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. If the questionType is "startups", use the startups-query tool with: query={extracted query}
+   If the questionType is "founders", use the founders-query tool with: query={extracted query}
+4. IMPORTANT: The query tools return objects with "startups"/"founders" and "found" keys. Pass the ENTIRE result object (not just the array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from the query tool}, agentName="Startups Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver → (startups-query or founders-query) → data-formatter → response-sender.`,
+Always follow this sequence: query-receiver → (startups-query or founders-query) → data-formatter → response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
 	tools: {
 		queryReceiver,

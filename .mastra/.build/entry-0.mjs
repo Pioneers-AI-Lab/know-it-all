@@ -159,6 +159,7 @@ const orchestratorSender = createTool({
     query,
     formatted
   }) => {
+    const { mastra } = await Promise.resolve().then(function () { return index; });
     const orchestratorAgent = mastra.getAgent("orchestratorAgent");
     if (!orchestratorAgent) {
       throw new Error("Orchestrator agent not found");
@@ -295,6 +296,7 @@ const queryRouter = createTool({
         `No agent mapping found for question type: ${questionType}`
       );
     }
+    const { mastra } = await Promise.resolve().then(function () { return index; });
     const specializedAgent = mastra.getAgent(
       mapping.agentName
     );
@@ -510,8 +512,47 @@ const dataFormatter = createTool({
   }),
   execute: async ({ query, questionType, data, agentName }) => {
     let summary = "";
-    let relevantData = data;
-    if (Array.isArray(data)) {
+    let relevantData = [];
+    if (data && typeof data === "object") {
+      if (data.answers && Array.isArray(data.answers)) {
+        summary = `Found ${data.answers.length} matching answer(s) in the knowledge base.`;
+        relevantData = data.answers;
+      } else if (data.startups && Array.isArray(data.startups)) {
+        summary = `Found ${data.startups.length} matching startup(s).`;
+        relevantData = data.startups;
+      } else if (data.founders && Array.isArray(data.founders)) {
+        summary = `Found ${data.founders.length} matching founder(s).`;
+        relevantData = data.founders;
+      } else if (data.workshops && Array.isArray(data.workshops)) {
+        summary = `Found ${data.workshops.length} matching workshop(s).`;
+        relevantData = data.workshops;
+      } else if (data.phases && Array.isArray(data.phases)) {
+        const phaseCount = data.phases.length;
+        const eventCount = data.events?.length || 0;
+        summary = `Found ${phaseCount} matching phase(s) and ${eventCount} matching event(s).`;
+        relevantData = {
+          phases: data.phases,
+          events: data.events || []
+        };
+      } else if (data.events && Array.isArray(data.events)) {
+        summary = `Found ${data.events.length} matching event(s).`;
+        relevantData = data.events;
+      } else if (data.timeline && Array.isArray(data.timeline)) {
+        summary = `Found ${data.timeline.length} timeline phase(s).`;
+        relevantData = data.timeline;
+      } else if (Array.isArray(data)) {
+        if (data.length > 0) {
+          summary = `Found ${data.length} matching result(s) for the query.`;
+          relevantData = data;
+        } else {
+          summary = "No matching results found for the query.";
+          relevantData = [];
+        }
+      } else {
+        summary = "Retrieved data from the knowledge base.";
+        relevantData = data;
+      }
+    } else if (Array.isArray(data)) {
       if (data.length > 0) {
         summary = `Found ${data.length} matching result(s) for the query.`;
         relevantData = data;
@@ -519,31 +560,9 @@ const dataFormatter = createTool({
         summary = "No matching results found for the query.";
         relevantData = [];
       }
-    } else if (data && typeof data === "object") {
-      if (data.answers && Array.isArray(data.answers)) {
-        summary = `Found ${data.answers.length} matching answer(s) in the knowledge base.`;
-        relevantData = data.answers;
-      } else if (data.startups && Array.isArray(data.startups)) {
-        summary = `Found ${data.startups.length} matching startup(s).`;
-        relevantData = data.startups;
-      } else if (data.events && Array.isArray(data.events)) {
-        summary = `Found ${data.events.length} matching event(s).`;
-        relevantData = data.events;
-      } else if (data.founders && Array.isArray(data.founders)) {
-        summary = `Found ${data.founders.length} matching founder(s).`;
-        relevantData = data.founders;
-      } else if (data.phases || data.events) {
-        const phaseCount = data.phases?.length || 0;
-        const eventCount = data.events?.length || 0;
-        summary = `Found ${phaseCount} phase(s) and ${eventCount} event(s).`;
-        relevantData = data;
-      } else {
-        summary = "Retrieved data from the knowledge base.";
-        relevantData = data;
-      }
     } else {
       summary = "Data retrieved successfully.";
-      relevantData = data;
+      relevantData = data || [];
     }
     const formatted = {
       query,
@@ -580,6 +599,7 @@ const responseSender = createTool({
   execute: async ({
     formatted
   }) => {
+    const { mastra } = await Promise.resolve().then(function () { return index; });
     const responseGeneratorAgent = mastra.getAgent(
       "responseGeneratorAgent"
     );
@@ -616,11 +636,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="General Questions Agent"
-3. Use the general-questions-query tool to search the knowledge base for answers to the query
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="General Questions Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the general-questions-query tool with: query={extracted query} to search the knowledge base
+4. IMPORTANT: The general-questions-query tool returns an object with "answers" and "found" keys. Pass the ENTIRE result object (not just the answers array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from general-questions-query}, agentName="General Questions Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver \u2192 general-questions-query \u2192 data-formatter \u2192 response-sender.`,
+Always follow this sequence: query-receiver \u2192 general-questions-query \u2192 data-formatter \u2192 response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
   model: "anthropic/claude-sonnet-4-20250514",
   tools: {
     queryReceiver,
@@ -678,11 +700,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Guests Agent"
-3. Use the guests-query tool to search for information about guest speakers and their events
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Event Guests Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the guests-query tool with: query={extracted query} to search for guest event information
+4. IMPORTANT: The guests-query tool returns an object with "events" and "found" keys. Pass the ENTIRE result object (not just the events array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from guests-query}, agentName="Event Guests Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver \u2192 guests-query \u2192 data-formatter \u2192 response-sender.`,
+Always follow this sequence: query-receiver \u2192 guests-query \u2192 data-formatter \u2192 response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
   model: "anthropic/claude-sonnet-4-20250514",
   tools: { queryReceiver, guestsQuery, dataFormatter, responseSender },
   memory: new Memory({
@@ -735,11 +759,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Event Agent"
-3. Use the events-query tool to search for event information in the calendar
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Event Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the events-query tool with: query={extracted query} to search for event information
+4. IMPORTANT: The events-query tool returns an object with "events" and "found" keys. Pass the ENTIRE result object (not just the events array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from events-query}, agentName="Event Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver \u2192 events-query \u2192 data-formatter \u2192 response-sender.`,
+Always follow this sequence: query-receiver \u2192 events-query \u2192 data-formatter \u2192 response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
   model: "anthropic/claude-sonnet-4-20250514",
   tools: { queryReceiver, eventsQuery, dataFormatter, responseSender },
   memory: new Memory({
@@ -821,11 +847,14 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Startups Agent"
-3. Use the startups-query tool to search for startup information, or the founders-query tool if the question is about founders
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Startups Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. If the questionType is "startups", use the startups-query tool with: query={extracted query}
+   If the questionType is "founders", use the founders-query tool with: query={extracted query}
+4. IMPORTANT: The query tools return objects with "startups"/"founders" and "found" keys. Pass the ENTIRE result object (not just the array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from the query tool}, agentName="Startups Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver \u2192 (startups-query or founders-query) \u2192 data-formatter \u2192 response-sender.`,
+Always follow this sequence: query-receiver \u2192 (startups-query or founders-query) \u2192 data-formatter \u2192 response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
   model: "anthropic/claude-sonnet-4-20250514",
   tools: {
     queryReceiver,
@@ -897,11 +926,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Timeline Agent"
-3. Use the timeline-query tool to search for timeline information including phases and events
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Timeline Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the timeline-query tool with: query={extracted query} to search for timeline information
+4. IMPORTANT: The timeline-query tool returns an object with "phases", "events", and "found" keys. Pass the ENTIRE result object (not just the arrays) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from timeline-query}, agentName="Timeline Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver \u2192 timeline-query \u2192 data-formatter \u2192 response-sender.`,
+Always follow this sequence: query-receiver \u2192 timeline-query \u2192 data-formatter \u2192 response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
   model: "anthropic/claude-sonnet-4-20250514",
   tools: { queryReceiver, timelineQuery, dataFormatter, responseSender },
   memory: new Memory({
@@ -965,11 +996,13 @@ Query: {query}"
 
 1. First, extract the questionType and query from the message
 2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Workshops Agent"
-3. Use the workshops-query tool to search for workshop information in the timeline
-4. Use the data-formatter tool to format the retrieved data: query={extracted query}, questionType={extracted questionType}, data={results from query tool}, agentName="Workshops Agent"
-5. Use the response-sender tool to send the formatted data to the response-generator-agent
+3. Use the workshops-query tool with: query={extracted query} to search for workshop information
+4. IMPORTANT: The workshops-query tool returns an object with "workshops" and "found" keys. Pass the ENTIRE result object (not just the workshops array) to the data-formatter tool.
+5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from workshops-query}, agentName="Workshops Agent"
+6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
 
-Always follow this sequence: query-receiver \u2192 workshops-query \u2192 data-formatter \u2192 response-sender.`,
+Always follow this sequence: query-receiver \u2192 workshops-query \u2192 data-formatter \u2192 response-sender.
+Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
   model: "anthropic/claude-sonnet-4-20250514",
   tools: { queryReceiver, workshopsQuery, dataFormatter, responseSender },
   memory: new Memory({
@@ -1335,6 +1368,11 @@ const mastra = new Mastra({
   bundler: {
     externals: ["supports-color"]
   }
+});
+
+var index = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	mastra: mastra
 });
 
 export { mastra };
