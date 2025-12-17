@@ -213,10 +213,10 @@ function createSlackEventsRoute(config: SlackAppConfig) {
  */
 const slackApps: SlackAppConfig[] = [
 	{
-		name: 'timmy',
+		name: 'maxime',
 		botToken: process.env.SLACK_BOT_TOKEN!,
 		signingSecret: process.env.SLACK_SIGNING_SECRET!,
-		agentName: 'timmy',
+		agentName: 'maxime',
 	},
 ];
 
