@@ -106,13 +106,71 @@ const queryExtractor = createTool({
   }
 });
 
+const orchestratorSender = createTool({
+  id: "orchestrator-sender",
+  description: "Sends an extracted query to the orchestrator-agent for routing and processing",
+  inputSchema: z.object({
+    query: z.string().describe("The extracted query to send to the orchestrator"),
+    formatted: z.object({
+      question: z.string(),
+      type: z.string(),
+      timestamp: z.string()
+    }).describe("The formatted JSON object containing the question")
+  }),
+  outputSchema: z.object({
+    success: z.boolean().describe("Whether the query was successfully sent"),
+    response: z.string().describe("The response from the orchestrator-agent")
+  }),
+  execute: async ({
+    query,
+    formatted
+  }) => {
+    const orchestratorAgent = mastra.getAgent("orchestratorAgent");
+    if (!orchestratorAgent) {
+      throw new Error("Orchestrator agent not found");
+    }
+    const message = `Process this query: ${query}
+
+Formatted query object: ${JSON.stringify(
+      formatted,
+      null,
+      2
+    )}`;
+    const response = await orchestratorAgent.generate(message);
+    return {
+      success: true,
+      response: response.text || JSON.stringify(response)
+    };
+  }
+});
+
 const lucie = new Agent({
   id: "lucie-agent",
   name: "lucie-agent",
   description: "Lucie is the CEO of the the Pioneer.vc accelerator.",
-  instructions: "You are Lucie. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
+  instructions: `You are Lucie. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.
+
+When a user asks you a question:
+1. First, use the query-extractor tool to extract and format the user's question
+2. Then, use the orchestrator-sender tool to send the extracted query to the orchestrator-agent for processing
+3. Return the orchestrator-agent's response to the user
+
+IMPORTANT: Always use both tools in sequence - first extract the query, then send it to the orchestrator.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryExtractor },
+  tools: { queryExtractor, orchestratorSender },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
+});
+
+const orchestratorAgent = new Agent({
+  id: "orchestrator-agent",
+  name: "orchestrator-agent",
+  description: "Orchestrates the flow of information between the different agents",
+  instructions: "You are an orchestrator agent. You are responsible for the flow of information between the different agents. You are responsible for the flow of information between the different agents.",
+  model: "anthropic/claude-sonnet-4-20250514",
   memory: new Memory$1({
     options: {
       lastMessages: 20
@@ -379,7 +437,8 @@ const slackRoutes = slackApps.map(createSlackEventsRoute);
 const mastra = new Mastra({
   // Registered agents - keys must match agentName in slack/routes.ts
   agents: {
-    lucie
+    lucie,
+    orchestratorAgent
   },
   // Registered workflows - available to agents via their workflows config
   workflows: {},
