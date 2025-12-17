@@ -4,7 +4,6 @@ import '@mastra/core/evals/scoreTraces';
 import '@mastra/core/mastra';
 import '@mastra/libsql';
 import '@mastra/core/agent';
-import '@mastra/memory';
 import '@mastra/core/server';
 import '@slack/web-api';
 import 'crypto';

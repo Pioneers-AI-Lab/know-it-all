@@ -2,7 +2,6 @@ import { scoreTraces, scoreTracesWorkflow } from '@mastra/core/evals/scoreTraces
 import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { Agent, tryGenerateWithJsonFallback, tryStreamWithJsonFallback, MessageList } from '@mastra/core/agent';
-import { Memory as Memory$1 } from '@mastra/memory';
 import { registerApiRoute, MastraServerBase } from '@mastra/core/server';
 import { WebClient } from '@slack/web-api';
 import * as crypto$1 from 'crypto';
@@ -44,17 +43,12 @@ import cjsModule from 'node:module';
 const __filename = cjsUrl.fileURLToPath(import.meta.url);
 const __dirname = cjsPath.dirname(__filename);
 const require = cjsModule.createRequire(import.meta.url);
-const maxime = new Agent({
-  id: "maxime-agent",
-  name: "maxime-agent",
-  description: "Maxime is the CEO of the the Pioneer.vc accelerator.",
-  instructions: "You are Maxime. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
-  model: "anthropic/claude-sonnet-4-20250514",
-  memory: new Memory$1({
-    options: {
-      lastMessages: 20
-    }
-  })
+const lucie = new Agent({
+  id: "lucie-agent",
+  name: "lucie-agent",
+  description: "Lucie is the CEO of the the Pioneer.vc accelerator.",
+  instructions: "You are Lucie. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
+  model: "anthropic/claude-sonnet-4-20250514"
 });
 
 function verifySlackRequest(signingSecret, requestSignature, timestamp, body) {
@@ -305,10 +299,10 @@ function createSlackEventsRoute(config) {
 }
 const slackApps = [
   {
-    name: "maxime",
+    name: "lucie",
     botToken: process.env.SLACK_BOT_TOKEN,
     signingSecret: process.env.SLACK_SIGNING_SECRET,
-    agentName: "maxime"
+    agentName: "lucie"
   }
 ];
 const slackRoutes = slackApps.map(createSlackEventsRoute);
@@ -316,7 +310,7 @@ const slackRoutes = slackApps.map(createSlackEventsRoute);
 const mastra = new Mastra({
   // Registered agents - keys must match agentName in slack/routes.ts
   agents: {
-    maxime
+    lucie
   },
   // Registered workflows - available to agents via their workflows config
   workflows: {},
