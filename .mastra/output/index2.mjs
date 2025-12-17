@@ -3,12 +3,13 @@ import { LibSQLStore } from '@mastra/libsql';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryExtractor } from './tools/c6624bbb-e77b-40be-bdf5-edb983c0bc23.mjs';
-import { createTool } from '@mastra/core/tools';
-import { z } from 'zod';
+import { orchestratorSender } from './tools/12db01b9-ed45-40cc-8d21-f3fb9c94931e.mjs';
 import { queryLogger } from './tools/b3451a70-0920-4e5b-95ba-cc72541e9ff6.mjs';
+import { queryRouter } from './tools/10228dce-fb8c-4bbe-8d85-b135ee7a8299.mjs';
 import { queryReceiver } from './tools/9b0bb18a-30a4-4868-805a-367d88f1a492.mjs';
 import { generalQuestionsQuery } from './tools/e63b6e35-d0a6-4859-b3aa-e2f4f6f824aa.mjs';
 import { dataFormatter } from './tools/16ca8126-45c0-4782-82f6-b0a367bdf5a0.mjs';
+import { responseSender } from './tools/bdd5d588-2419-4ae9-98e6-c57ef1e3f105.mjs';
 import { guestsQuery } from './tools/d1755d12-6d6a-4e3c-a589-b4ad495f20d8.mjs';
 import { eventsQuery } from './tools/53a022e3-b462-4a61-b6ac-c2359722dcb5.mjs';
 import { startupsQuery } from './tools/3ab41eef-05b1-4931-b527-daf71cdc7a29.mjs';
@@ -19,44 +20,12 @@ import { formattedDataReceiver } from './tools/a15bb39b-f08f-415d-9290-f5e661f61
 import { registerApiRoute } from '@mastra/core/server';
 import { WebClient } from '@slack/web-api';
 import * as crypto from 'crypto';
-
-const orchestratorSender = createTool({
-  id: "orchestrator-sender",
-  description: "Sends an extracted query to the orchestrator-agent for routing and processing",
-  inputSchema: z.object({
-    query: z.string().describe("The extracted query to send to the orchestrator"),
-    formatted: z.object({
-      question: z.string(),
-      type: z.string(),
-      timestamp: z.string()
-    }).describe("The formatted JSON object containing the question")
-  }),
-  outputSchema: z.object({
-    success: z.boolean().describe("Whether the query was successfully sent"),
-    response: z.string().describe("The response from the orchestrator-agent")
-  }),
-  execute: async ({
-    query,
-    formatted
-  }) => {
-    const orchestratorAgent = mastra.getAgent("orchestratorAgent");
-    if (!orchestratorAgent) {
-      throw new Error("Orchestrator agent not found");
-    }
-    const message = `Process this query: ${query}
-
-Formatted query object: ${JSON.stringify(
-      formatted,
-      null,
-      2
-    )}`;
-    const response = await orchestratorAgent.generate(message);
-    return {
-      success: true,
-      response: response.text || JSON.stringify(response)
-    };
-  }
-});
+import '@mastra/core/tools';
+import 'zod';
+import './tools/112df47d-a03d-48a7-b77b-8c58354d9e08.mjs';
+import 'fs';
+import 'path';
+import 'url';
 
 const lucie = new Agent({
   id: "lucie-agent",
@@ -77,89 +46,6 @@ const lucie = new Agent({
       lastMessages: 20
     }
   })
-});
-
-const queryRouter = createTool({
-  id: "query-router",
-  description: "Routes a query to the appropriate specialized agent based on the question type",
-  inputSchema: z.object({
-    query: z.string().describe("The query to route to a specialized agent"),
-    questionType: z.enum([
-      "startups",
-      "events",
-      "workshops",
-      "timeline",
-      "founders",
-      "guests",
-      "general"
-    ]).describe(
-      "The type of question determining which agent to route to"
-    )
-  }),
-  outputSchema: z.object({
-    success: z.boolean().describe("Whether the query was successfully routed"),
-    agentName: z.string().describe("The name of the agent that handled the query"),
-    response: z.string().describe("The response from the specialized agent")
-  }),
-  execute: async ({
-    query,
-    questionType
-  }) => {
-    const agentMapping = {
-      startups: {
-        agentName: "startupsAgent",
-        displayName: "Startups Agent"
-      },
-      events: {
-        agentName: "eventAgent",
-        displayName: "Event Agent"
-      },
-      workshops: {
-        agentName: "workshopsAgent",
-        displayName: "Workshops Agent"
-      },
-      timeline: {
-        agentName: "timelineAgent",
-        displayName: "Timeline Agent"
-      },
-      founders: {
-        agentName: "startupsAgent",
-        // Founders are handled by startups agent
-        displayName: "Startups Agent"
-      },
-      guests: {
-        agentName: "eventGuestsAgent",
-        displayName: "Event Guests Agent"
-      },
-      general: {
-        agentName: "generalQuestionsAgent",
-        displayName: "General Questions Agent"
-      }
-    };
-    const mapping = agentMapping[questionType];
-    if (!mapping) {
-      throw new Error(
-        `No agent mapping found for question type: ${questionType}`
-      );
-    }
-    const specializedAgent = mastra.getAgent(
-      mapping.agentName
-    );
-    if (!specializedAgent) {
-      throw new Error(
-        `Specialized agent "${mapping.agentName}" not found`
-      );
-    }
-    const message = `Question Type: ${questionType}
-
-Query: ${query}`;
-    const response = await specializedAgent.generate(message);
-    return {
-      success: true,
-      agentName: mapping.displayName,
-      response: response.text || JSON.stringify(response)
-    };
-  }
 });
 
 const orchestratorAgent = new Agent({
@@ -183,50 +69,6 @@ const orchestratorAgent = new Agent({
       lastMessages: 20
     }
   })
-});
-
-const responseSender = createTool({
-  id: "response-sender",
-  description: "Sends formatted data to the response-generator-agent for final response generation",
-  inputSchema: z.object({
-    formatted: z.object({
-      query: z.string(),
-      questionType: z.string(),
-      agentName: z.string(),
-      summary: z.string(),
-      relevantData: z.any(),
-      timestamp: z.string()
-    }).describe("The formatted data to send to the response generator")
-  }),
-  outputSchema: z.object({
-    success: z.boolean().describe("Whether the data was successfully sent"),
-    response: z.string().describe(
-      "The generated response from the response-generator-agent"
-    )
-  }),
-  execute: async ({
-    formatted
-  }) => {
-    const responseGeneratorAgent = mastra.getAgent(
-      "responseGeneratorAgent"
-    );
-    if (!responseGeneratorAgent) {
-      throw new Error("Response generator agent not found");
-    }
-    const message = `You have received formatted data from a specialized agent.
-
-First, extract the formatted data from this message and use the formatted-data-receiver tool to log it.
-
-Formatted Data JSON:
-${JSON.stringify(formatted, null, 2)}
-
-After logging, generate a clear, helpful, and comprehensive response to the user's query using the relevant data provided.`;
-    const response = await responseGeneratorAgent.generate(message);
-    return {
-      success: true,
-      response: response.text || JSON.stringify(response)
-    };
-  }
 });
 
 const generalQuestionsAgent = new Agent({
@@ -717,4 +559,4 @@ const mastra = new Mastra({
   }
 });
 
-export { mastra as m, orchestratorSender as o, queryRouter as q, responseSender as r };
+export { mastra };

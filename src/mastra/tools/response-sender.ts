@@ -1,6 +1,5 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { mastra } from '../index';
 
 /**
  * Tool for sending formatted data to the response-generator-agent
@@ -35,6 +34,8 @@ export const responseSender = createTool({
 		success: boolean;
 		response: string;
 	}> => {
+		// Lazy import to avoid circular dependency
+		const { mastra } = await import('../index');
 		// Get the response-generator-agent from the mastra instance
 		const responseGeneratorAgent = mastra.getAgent(
 			'responseGeneratorAgent' as 'responseGeneratorAgent',

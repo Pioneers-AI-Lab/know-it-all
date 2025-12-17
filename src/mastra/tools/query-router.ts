@@ -1,6 +1,5 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { mastra } from '../index';
 
 /**
  * Routes queries to the appropriate specialized agent based on question type.
@@ -90,6 +89,8 @@ export const queryRouter = createTool({
 			);
 		}
 
+		// Lazy import to avoid circular dependency
+		const { mastra } = await import('../index');
 		// Get the specialized agent from the mastra instance
 		const specializedAgent = mastra.getAgent(
 			mapping.agentName as

@@ -1,6 +1,5 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { mastra } from '../index';
 
 /**
  * Sends an extracted query to the orchestrator-agent for processing.
@@ -39,6 +38,8 @@ export const orchestratorSender = createTool({
 		success: boolean;
 		response: string;
 	}> => {
+		// Lazy import to avoid circular dependency
+		const { mastra } = await import('../index');
 		// Get the orchestrator-agent from the mastra instance
 		const orchestratorAgent = mastra.getAgent('orchestratorAgent');
 		if (!orchestratorAgent) {

@@ -1,26 +1,88 @@
-import '@mastra/core/tools';
-import 'zod';
-export { q as queryRouter } from '../index2.mjs';
-import '@mastra/core/mastra';
-import '@mastra/libsql';
-import '@mastra/core/agent';
-import '@mastra/memory';
-import './c6624bbb-e77b-40be-bdf5-edb983c0bc23.mjs';
-import './b3451a70-0920-4e5b-95ba-cc72541e9ff6.mjs';
-import './9b0bb18a-30a4-4868-805a-367d88f1a492.mjs';
-import './e63b6e35-d0a6-4859-b3aa-e2f4f6f824aa.mjs';
-import './112df47d-a03d-48a7-b77b-8c58354d9e08.mjs';
-import 'fs';
-import 'path';
-import 'url';
-import './16ca8126-45c0-4782-82f6-b0a367bdf5a0.mjs';
-import './d1755d12-6d6a-4e3c-a589-b4ad495f20d8.mjs';
-import './53a022e3-b462-4a61-b6ac-c2359722dcb5.mjs';
-import './3ab41eef-05b1-4931-b527-daf71cdc7a29.mjs';
-import './88cac526-862e-43c6-bee5-70b88194845b.mjs';
-import './1376488f-92ea-42d4-b9af-b1400d1f55f7.mjs';
-import './bed0da49-7b8d-4874-9632-681a335feede.mjs';
-import './a15bb39b-f08f-415d-9290-f5e661f61697.mjs';
-import '@mastra/core/server';
-import '@slack/web-api';
-import 'crypto';
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+
+const queryRouter = createTool({
+  id: "query-router",
+  description: "Routes a query to the appropriate specialized agent based on the question type",
+  inputSchema: z.object({
+    query: z.string().describe("The query to route to a specialized agent"),
+    questionType: z.enum([
+      "startups",
+      "events",
+      "workshops",
+      "timeline",
+      "founders",
+      "guests",
+      "general"
+    ]).describe(
+      "The type of question determining which agent to route to"
+    )
+  }),
+  outputSchema: z.object({
+    success: z.boolean().describe("Whether the query was successfully routed"),
+    agentName: z.string().describe("The name of the agent that handled the query"),
+    response: z.string().describe("The response from the specialized agent")
+  }),
+  execute: async ({
+    query,
+    questionType
+  }) => {
+    const agentMapping = {
+      startups: {
+        agentName: "startupsAgent",
+        displayName: "Startups Agent"
+      },
+      events: {
+        agentName: "eventAgent",
+        displayName: "Event Agent"
+      },
+      workshops: {
+        agentName: "workshopsAgent",
+        displayName: "Workshops Agent"
+      },
+      timeline: {
+        agentName: "timelineAgent",
+        displayName: "Timeline Agent"
+      },
+      founders: {
+        agentName: "startupsAgent",
+        // Founders are handled by startups agent
+        displayName: "Startups Agent"
+      },
+      guests: {
+        agentName: "eventGuestsAgent",
+        displayName: "Event Guests Agent"
+      },
+      general: {
+        agentName: "generalQuestionsAgent",
+        displayName: "General Questions Agent"
+      }
+    };
+    const mapping = agentMapping[questionType];
+    if (!mapping) {
+      throw new Error(
+        `No agent mapping found for question type: ${questionType}`
+      );
+    }
+    const { mastra } = await import('../index2.mjs');
+    const specializedAgent = mastra.getAgent(
+      mapping.agentName
+    );
+    if (!specializedAgent) {
+      throw new Error(
+        `Specialized agent "${mapping.agentName}" not found`
+      );
+    }
+    const message = `Question Type: ${questionType}
+
+Query: ${query}`;
+    const response = await specializedAgent.generate(message);
+    return {
+      success: true,
+      agentName: mapping.displayName,
+      response: response.text || JSON.stringify(response)
+    };
+  }
+});
+
+export { queryRouter };
