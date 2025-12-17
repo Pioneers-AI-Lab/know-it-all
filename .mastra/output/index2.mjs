@@ -2,143 +2,22 @@ import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
+import { queryExtractor } from './tools/b4da184b-c8d0-4644-bd9e-958f8af51ae2.mjs';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { queryLogger } from './tools/aed65319-01f6-40fe-a263-8d29822d61c9.mjs';
+import { queryReceiver } from './tools/9743a6c0-887f-4694-a419-5baa6c1336cd.mjs';
+import { generalQuestionsQuery } from './tools/f77c6fd7-b753-423b-9e16-25bf45909d37.mjs';
+import { guestsQuery } from './tools/d6a90b68-f5d0-4617-b935-0817f3e39613.mjs';
+import { eventsQuery } from './tools/13cb3865-76ef-4c5d-895d-601a1ced1085.mjs';
+import { startupsQuery } from './tools/60e767b6-a2e9-4af6-8ad3-f194508ffc0f.mjs';
+import { foundersQuery } from './tools/6b88e06a-0ee6-4c99-ab6f-acbae57057bd.mjs';
+import { timelineQuery } from './tools/dc8c5950-810c-4c08-b93a-b492570e3dd8.mjs';
+import { workshopsQuery } from './tools/1e41e65e-23b2-43f9-ab43-745f4a31aa77.mjs';
 import { registerApiRoute } from '@mastra/core/server';
 import { WebClient } from '@slack/web-api';
 import * as crypto from 'crypto';
 
-"use strict";
-const queryExtractor = createTool({
-  id: "query-extractor",
-  description: "Extracts the user's question from their message and formats it into a structured JSON object",
-  inputSchema: z.object({
-    message: z.string().describe("The user's message containing a question")
-  }),
-  outputSchema: z.object({
-    query: z.string().describe("The extracted question"),
-    questionType: z.enum([
-      "startups",
-      "events",
-      "workshops",
-      "timeline",
-      "founders",
-      "guests",
-      "general"
-    ]).describe("The type of question based on data categories"),
-    formatted: z.object({
-      question: z.string(),
-      type: z.string(),
-      timestamp: z.string()
-    }).describe("The formatted JSON object containing the question")
-  }),
-  execute: async ({ message: message2 }) => {
-    const cleanedMessage = message2.trim().replace(/\s+/g, " ");
-    let query = cleanedMessage.replace(
-      /^(can you|could you|would you|please|tell me|i want to know|i need to know|i'm asking|i ask)\s+/i,
-      ""
-    ).trim();
-    if (!query.endsWith("?") && !query.endsWith(".")) {
-      query += "?";
-    }
-    const dataTypeKeywords = {
-      startups: [
-        /startup/i,
-        /company/i,
-        /companies/i,
-        /business/i,
-        /venture/i,
-        /portfolio/i,
-        /funding/i,
-        /investment/i,
-        /raised/i,
-        /traction/i,
-        /mrr/i,
-        /revenue/i
-      ],
-      events: [
-        /event/i,
-        /events/i,
-        /calendar/i,
-        /schedule/i,
-        /scheduled/i,
-        /meeting/i,
-        /meetings/i,
-        /session/i,
-        /sessions/i,
-        /fireside/i,
-        /ama/i
-      ],
-      workshops: [
-        /workshop/i,
-        /workshops/i,
-        /training/i,
-        /seminar/i,
-        /learning/i,
-        /curriculum/i
-      ],
-      timeline: [
-        /timeline/i,
-        /phase/i,
-        /phases/i,
-        /program/i,
-        /cohort/i,
-        /schedule/i,
-        /duration/i,
-        /week/i,
-        /weeks/i,
-        /milestone/i,
-        /milestones/i
-      ],
-      founders: [
-        /founder/i,
-        /founders/i,
-        /entrepreneur/i,
-        /entrepreneurs/i,
-        /ceo/i,
-        /cto/i,
-        /co-founder/i,
-        /team/i,
-        /background/i,
-        /experience/i
-      ],
-      guests: [
-        /guest/i,
-        /guests/i,
-        /speaker/i,
-        /speakers/i,
-        /invited/i,
-        /special guest/i,
-        /visiting/i
-      ]
-    };
-    const queryLower = query.toLowerCase();
-    let questionType = "general";
-    for (const [type, patterns] of Object.entries(dataTypeKeywords)) {
-      for (const pattern of patterns) {
-        if (pattern.test(queryLower)) {
-          questionType = type;
-          break;
-        }
-      }
-      if (questionType !== "general") break;
-    }
-    const formatted = {
-      question: query,
-      type: questionType,
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    return {
-      query,
-      questionType,
-      formatted
-    };
-  }
-});
-
-"use strict";
 const orchestratorSender = createTool({
   id: "orchestrator-sender",
   description: "Sends an extracted query to the orchestrator-agent for routing and processing",
@@ -177,7 +56,6 @@ Formatted query object: ${JSON.stringify(
   }
 });
 
-"use strict";
 const lucie = new Agent({
   id: "lucie-agent",
   name: "lucie-agent",
@@ -199,38 +77,6 @@ const lucie = new Agent({
   })
 });
 
-"use strict";
-const queryLogger = createTool({
-  id: "query-logger",
-  description: "Logs the received query and formatted query object to the console for debugging and monitoring",
-  inputSchema: z.object({
-    query: z.string().describe("The extracted query string"),
-    formatted: z.object({
-      question: z.string(),
-      type: z.string(),
-      timestamp: z.string()
-    }).describe("The formatted JSON object containing the question")
-  }),
-  outputSchema: z.object({
-    logged: z.boolean().describe("Whether the query was successfully logged")
-  }),
-  execute: async ({ query, formatted }) => {
-    console.log("=".repeat(60));
-    console.log("\u{1F4E5} ORCHESTRATOR AGENT - Received Query");
-    console.log("=".repeat(60));
-    console.log("Query:", query);
-    console.log(
-      "Formatted Query Object:",
-      JSON.stringify(formatted, null, 2)
-    );
-    console.log("Timestamp:", formatted.timestamp);
-    console.log("Question Type:", formatted.type);
-    console.log("=".repeat(60));
-    return { logged: true };
-  }
-});
-
-"use strict";
 const queryRouter = createTool({
   id: "query-router",
   description: "Routes a query to the appropriate specialized agent based on the question type",
@@ -314,7 +160,6 @@ Query: ${query}`;
   }
 });
 
-"use strict";
 const orchestratorAgent = new Agent({
   id: "orchestrator-agent",
   name: "orchestrator-agent",
@@ -338,113 +183,6 @@ const orchestratorAgent = new Agent({
   })
 });
 
-"use strict";
-const queryReceiver = createTool({
-  id: "query-receiver",
-  description: "Logs the received query when a specialized agent receives a query from the orchestrator",
-  inputSchema: z.object({
-    query: z.string().describe("The query string received from the orchestrator"),
-    questionType: z.enum([
-      "startups",
-      "events",
-      "workshops",
-      "timeline",
-      "founders",
-      "guests",
-      "general"
-    ]).describe("The type of question"),
-    agentName: z.string().describe("The name of the specialized agent receiving the query")
-  }),
-  outputSchema: z.object({
-    logged: z.boolean().describe("Whether the query was successfully logged")
-  }),
-  execute: async ({ query, questionType, agentName }) => {
-    console.log("=".repeat(60));
-    console.log(`\u{1F4E8} ${agentName.toUpperCase()} - Received Query`);
-    console.log("=".repeat(60));
-    console.log("Query:", query);
-    console.log("Question Type:", questionType);
-    console.log("Received at:", (/* @__PURE__ */ new Date()).toISOString());
-    console.log("=".repeat(60));
-    return { logged: true };
-  }
-});
-
-"use strict";
-function loadJsonData(filename) {
-  try {
-    const filePath = join(process.cwd(), "data", filename);
-    const fileContent = readFileSync(filePath, "utf-8");
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error(`Error loading ${filename}:`, error);
-    throw new Error(`Failed to load data file: ${filename}`);
-  }
-}
-function searchInText(text, query) {
-  const normalizedText = text.toLowerCase();
-  const normalizedQuery = query.toLowerCase();
-  return normalizedText.includes(normalizedQuery);
-}
-function searchInObject(obj, query) {
-  if (typeof obj === "string") {
-    return searchInText(obj, query);
-  }
-  if (Array.isArray(obj)) {
-    return obj.some((item) => searchInObject(item, query));
-  }
-  if (obj && typeof obj === "object") {
-    return Object.values(obj).some((value) => searchInObject(value, query));
-  }
-  return false;
-}
-
-"use strict";
-const generalQuestionsQuery = createTool({
-  id: "general-questions-query",
-  description: "Queries the general questions knowledge base to find answers to questions about the Pioneers accelerator program",
-  inputSchema: z.object({
-    query: z.string().describe("The question to search for in the knowledge base")
-  }),
-  outputSchema: z.object({
-    answers: z.array(
-      z.object({
-        question: z.string(),
-        answer: z.string(),
-        category: z.string()
-      })
-    ).describe("Matching questions and answers from the knowledge base"),
-    found: z.boolean().describe("Whether matching answers were found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("general-questions.json");
-    const results = [];
-    if (data.knowledge_base) {
-      for (const [category, items] of Object.entries(
-        data.knowledge_base
-      )) {
-        if (Array.isArray(items)) {
-          for (const item of items) {
-            if (item.question && item.answer && (searchInText(item.question, query) || searchInText(item.answer, query))) {
-              results.push({
-                question: item.question,
-                answer: item.answer,
-                category: category.replace(/_/g, " ")
-              });
-            }
-          }
-        }
-      }
-    }
-    return {
-      answers: results.slice(0, 5),
-      // Limit to top 5 results
-      found: results.length > 0
-    };
-  }
-});
-
-"use strict";
 const generalQuestionsAgent = new Agent({
   id: "general-questions-agent",
   name: "general-questions-agent",
@@ -471,36 +209,6 @@ Always use the query-receiver tool first, then use the general-questions-query t
   })
 });
 
-"use strict";
-const guestsQuery = createTool({
-  id: "guests-query",
-  description: "Queries the special events with guests database to find information about guest speakers and their events",
-  inputSchema: z.object({
-    query: z.string().describe("The search query to find relevant guest events")
-  }),
-  outputSchema: z.object({
-    events: z.array(z.any()).describe("Matching guest events from the database"),
-    found: z.boolean().describe("Whether matching guest events were found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("special-events-with-guests.json");
-    const results = [];
-    if (data.events && Array.isArray(data.events)) {
-      for (const event of data.events) {
-        if (searchInObject(event, query)) {
-          results.push(event);
-        }
-      }
-    }
-    return {
-      events: results.slice(0, 10),
-      // Limit to top 10 results
-      found: results.length > 0
-    };
-  }
-});
-
-"use strict";
 const eventGuestsAgent = new Agent({
   id: "event-guests-agent",
   name: "event-guests-agent",
@@ -527,36 +235,6 @@ Always use the query-receiver tool first, then use the guests-query tool to find
   })
 });
 
-"use strict";
-const eventsQuery = createTool({
-  id: "events-query",
-  description: "Queries the calendar events database to find information about events in the accelerator",
-  inputSchema: z.object({
-    query: z.string().describe("The search query to find relevant events")
-  }),
-  outputSchema: z.object({
-    events: z.array(z.any()).describe("Matching events from the database"),
-    found: z.boolean().describe("Whether matching events were found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("calendar-events.json");
-    const results = [];
-    if (data.events && Array.isArray(data.events)) {
-      for (const event of data.events) {
-        if (searchInObject(event, query)) {
-          results.push(event);
-        }
-      }
-    }
-    return {
-      events: results.slice(0, 10),
-      // Limit to top 10 results
-      found: results.length > 0
-    };
-  }
-});
-
-"use strict";
 const eventAgent = new Agent({
   id: "event-agent",
   name: "event-agent",
@@ -583,65 +261,6 @@ Always use the query-receiver tool first, then use the events-query tool to find
   })
 });
 
-"use strict";
-const startupsQuery = createTool({
-  id: "startups-query",
-  description: "Queries the startups database to find information about startups in the accelerator",
-  inputSchema: z.object({
-    query: z.string().describe("The search query to find relevant startups")
-  }),
-  outputSchema: z.object({
-    startups: z.array(z.any()).describe("Matching startup information from the database"),
-    found: z.boolean().describe("Whether matching startups were found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("startups.json");
-    const results = [];
-    if (data.startups && Array.isArray(data.startups)) {
-      for (const startup of data.startups) {
-        if (searchInObject(startup, query)) {
-          results.push(startup);
-        }
-      }
-    }
-    return {
-      startups: results.slice(0, 10),
-      // Limit to top 10 results
-      found: results.length > 0
-    };
-  }
-});
-
-"use strict";
-const foundersQuery = createTool({
-  id: "founders-query",
-  description: "Queries the founders database to find information about founders in the accelerator",
-  inputSchema: z.object({
-    query: z.string().describe("The search query to find relevant founders")
-  }),
-  outputSchema: z.object({
-    founders: z.array(z.any()).describe("Matching founders from the database"),
-    found: z.boolean().describe("Whether matching founders were found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("founders.json");
-    const results = [];
-    if (data.founders && Array.isArray(data.founders)) {
-      for (const founder of data.founders) {
-        if (searchInObject(founder, query)) {
-          results.push(founder);
-        }
-      }
-    }
-    return {
-      founders: results.slice(0, 10),
-      // Limit to top 10 results
-      found: results.length > 0
-    };
-  }
-});
-
-"use strict";
 const startupsAgent = new Agent({
   id: "startups-agent",
   name: "startups-agent",
@@ -668,49 +287,6 @@ Always use the query-receiver tool first, then use the appropriate query tool (s
   })
 });
 
-"use strict";
-const timelineQuery = createTool({
-  id: "timeline-query",
-  description: "Queries the timeline database to find information about program phases, events, and milestones",
-  inputSchema: z.object({
-    query: z.string().describe("The search query to find relevant timeline information")
-  }),
-  outputSchema: z.object({
-    phases: z.array(z.any()).describe("Matching phases from the timeline"),
-    events: z.array(z.any()).describe("Matching events from the timeline"),
-    found: z.boolean().describe("Whether matching timeline information was found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("timeline.json");
-    const phaseResults = [];
-    const eventResults = [];
-    if (data.timeline && Array.isArray(data.timeline)) {
-      for (const phase of data.timeline) {
-        if (searchInObject(phase, query)) {
-          phaseResults.push(phase);
-        }
-        if (phase.key_events && Array.isArray(phase.key_events)) {
-          for (const event of phase.key_events) {
-            if (searchInObject(event, query)) {
-              eventResults.push({
-                ...event,
-                phase_name: phase.phase_name,
-                phase_id: phase.phase_id
-              });
-            }
-          }
-        }
-      }
-    }
-    return {
-      phases: phaseResults.slice(0, 5),
-      events: eventResults.slice(0, 10),
-      found: phaseResults.length > 0 || eventResults.length > 0
-    };
-  }
-});
-
-"use strict";
 const timelineAgent = new Agent({
   id: "timeline-agent",
   name: "timeline-agent",
@@ -737,47 +313,6 @@ Always use the query-receiver tool first, then use the timeline-query tool to fi
   })
 });
 
-"use strict";
-const workshopsQuery = createTool({
-  id: "workshops-query",
-  description: "Queries the timeline database to find information about workshops in the accelerator program",
-  inputSchema: z.object({
-    query: z.string().describe("The search query to find relevant workshops")
-  }),
-  outputSchema: z.object({
-    workshops: z.array(z.any()).describe("Matching workshop events from the timeline"),
-    found: z.boolean().describe("Whether matching workshops were found")
-  }),
-  execute: async ({ query }) => {
-    const data = loadJsonData("timeline.json");
-    const results = [];
-    if (data.timeline && Array.isArray(data.timeline)) {
-      for (const phase of data.timeline) {
-        if (phase.key_events && Array.isArray(phase.key_events)) {
-          for (const event of phase.key_events) {
-            const isWorkshop = event.name && event.name.toLowerCase().includes("workshop");
-            const matchesQuery = searchInObject(event, query);
-            if (isWorkshop && matchesQuery) {
-              results.push({
-                ...event,
-                phase_name: phase.phase_name,
-                phase_id: phase.phase_id,
-                duration_weeks: phase.duration_weeks
-              });
-            }
-          }
-        }
-      }
-    }
-    return {
-      workshops: results.slice(0, 10),
-      // Limit to top 10 results
-      found: results.length > 0
-    };
-  }
-});
-
-"use strict";
 const workshopsAgent = new Agent({
   id: "workshops-agent",
   name: "workshops-agent",
@@ -804,7 +339,6 @@ Always use the query-receiver tool first, then use the workshops-query tool to f
   })
 });
 
-"use strict";
 function verifySlackRequest(signingSecret, requestSignature, timestamp, body) {
   const fiveMinutesAgo = Math.floor(Date.now() / 1e3) - 60 * 5;
   if (parseInt(timestamp) < fiveMinutesAgo) {
@@ -818,7 +352,6 @@ function verifySlackRequest(signingSecret, requestSignature, timestamp, body) {
   return crypto.timingSafeEqual(Buffer.from(mySignature, "utf8"), Buffer.from(requestSignature, "utf8"));
 }
 
-"use strict";
 const SPINNER = ["\u280B", "\u2819", "\u2839", "\u2838", "\u283C", "\u2834", "\u2826", "\u2827", "\u2807", "\u280F"];
 const TOOL_ICONS = ["\u{1F504}", "\u2699\uFE0F", "\u{1F527}", "\u26A1"];
 const WORKFLOW_ICONS = ["\u{1F4CB}", "\u26A1", "\u{1F504}", "\u2728"];
@@ -826,7 +359,6 @@ const ANIMATION_INTERVAL = 300;
 const TOOL_DISPLAY_DELAY = 300;
 const STEP_DISPLAY_DELAY = 300;
 
-"use strict";
 function formatChunkType(type) {
   return type.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
@@ -848,11 +380,9 @@ function getStatusText(state, frame) {
   return `${spinner} ${label}...`;
 }
 
-"use strict";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const formatName = (id) => id.replace(/([a-z])([A-Z])/g, "$1 $2").split(/[-_]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
-"use strict";
 async function streamToSlack(options) {
   const { mastra, slackClient, channel, threadTs, agentName, message, resourceId, threadId } = options;
   const state = { text: "", chunkType: "start" };
@@ -873,7 +403,7 @@ async function streamToSlack(options) {
       await slackClient.chat.update({
         channel,
         ts: messageTs,
-        text: text ?? getStatusText(state, frame)
+        text: getStatusText(state, frame)
       });
     } catch {
     }
@@ -963,7 +493,6 @@ async function retrySlackUpdate(client, channel, ts, text, maxAttempts = 3) {
   console.error(`\u274C Failed to send final message after ${maxAttempts} attempts`);
 }
 
-"use strict";
 function createSlackEventsRoute(config) {
   return registerApiRoute(`/slack/${config.name}/events`, {
     method: "POST",
@@ -1066,7 +595,6 @@ const slackApps = [
 ];
 const slackRoutes = slackApps.map(createSlackEventsRoute);
 
-"use strict";
 const mastra = new Mastra({
   // Registered agents - keys must match agentName in slack/routes.ts
   agents: {
@@ -1096,4 +624,4 @@ const mastra = new Mastra({
   }
 });
 
-export { mastra };
+export { mastra as m, orchestratorSender as o, queryRouter as q };
