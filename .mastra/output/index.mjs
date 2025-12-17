@@ -44,11 +44,11 @@ import cjsModule from 'node:module';
 const __filename = cjsUrl.fileURLToPath(import.meta.url);
 const __dirname = cjsPath.dirname(__filename);
 const require = cjsModule.createRequire(import.meta.url);
-const timmy = new Agent({
-  id: "timmy-agent",
-  name: "timmy-agent",
-  description: "Timmy is a helpful assistant that can help with tasks",
-  instructions: "You are Timmy. You are a helpful assistant that can help with tasks",
+const maxime = new Agent({
+  id: "maxime-agent",
+  name: "maxime-agent",
+  description: "Maxime is the CEO of the the Pioneer.vc accelerator.",
+  instructions: "You are Maxime. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
   model: "anthropic/claude-sonnet-4-20250514",
   memory: new Memory$1({
     options: {
@@ -316,7 +316,7 @@ const slackRoutes = slackApps.map(createSlackEventsRoute);
 const mastra = new Mastra({
   // Registered agents - keys must match agentName in slack/routes.ts
   agents: {
-    timmy
+    maxime
   },
   // Registered workflows - available to agents via their workflows config
   workflows: {},
