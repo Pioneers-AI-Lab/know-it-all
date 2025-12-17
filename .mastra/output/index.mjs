@@ -216,6 +216,59 @@ const orchestratorAgent = new Agent({
   })
 });
 
+const generalQuestionsAgent = new Agent({
+  id: "general-questions-agent",
+  name: "general-questions-agent",
+  description: "General Questions Agent is responsible for answering general questions",
+  instructions: `You are a general questions agent. You are responsible for answering general questions.`,
+  model: "anthropic/claude-sonnet-4-20250514",
+  memory: new Memory$1({
+    options: {
+      lastMessages: 20
+    }
+  })
+});
+
+const eventGuestsAgent = new Agent({
+  id: "event-guests-agent",
+  name: "event-guests-agent",
+  description: "Event Guests Agent is responsible for managing event guests",
+  instructions: `You are a event guests agent. You are responsible for managing event guests.`,
+  model: "anthropic/claude-sonnet-4-20250514"
+});
+
+const eventAgent = new Agent({
+  id: "event-agent",
+  name: "event-agent",
+  description: "Event Agent is responsible for managing events",
+  instructions: `You are a event agent. You are responsible for managing events.`,
+  model: "anthropic/claude-sonnet-4-20250514"
+});
+
+const startupsAgent = new Agent({
+  id: "startups-agent",
+  name: "startups-agent",
+  description: "Startups Agent is responsible for the startups of the Pioneer.vc accelerator.",
+  instructions: "You are a startups agent. You are responsible for the startups of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
+  model: "anthropic/claude-sonnet-4-20250514"
+});
+
+const timelineAgent = new Agent({
+  id: "timeline-agent",
+  name: "timeline-agent",
+  description: "Timeline Agent is responsible for the timeline of the Pioneer.vc accelerator.",
+  instructions: "You are a timeline agent. You are responsible for the timeline of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
+  model: "anthropic/claude-sonnet-4-20250514"
+});
+
+const workshopsAgent = new Agent({
+  id: "workshops-agent",
+  name: "workshops-agent",
+  description: "Workshops Agent is responsible for the workshops of the Pioneer.vc accelerator.",
+  instructions: "You are a workshops agent. You are responsible for the workshops of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.",
+  model: "anthropic/claude-sonnet-4-20250514"
+});
+
 function verifySlackRequest(signingSecret, requestSignature, timestamp, body) {
   const fiveMinutesAgo = Math.floor(Date.now() / 1e3) - 60 * 5;
   if (parseInt(timestamp) < fiveMinutesAgo) {
@@ -476,7 +529,13 @@ const mastra = new Mastra({
   // Registered agents - keys must match agentName in slack/routes.ts
   agents: {
     lucie,
-    orchestratorAgent
+    orchestratorAgent,
+    generalQuestionsAgent,
+    eventGuestsAgent,
+    eventAgent,
+    startupsAgent,
+    timelineAgent,
+    workshopsAgent
   },
   // Registered workflows - available to agents via their workflows config
   workflows: {},
