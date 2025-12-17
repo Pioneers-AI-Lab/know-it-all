@@ -23,12 +23,12 @@
 
 import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
-import { timmy } from './agents/timmy-agent';
+import { maxime } from './agents/maxime-agent';
 import { slackRoutes } from './slack/routes';
 
 export const mastra = new Mastra({
 	// Registered agents - keys must match agentName in slack/routes.ts
-	agents: { timmy },
+	agents: { maxime },
 
 	// Registered workflows - available to agents via their workflows config
 	workflows: {},
