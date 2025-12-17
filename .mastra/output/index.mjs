@@ -53,15 +53,14 @@ const queryExtractor = createTool({
   outputSchema: z.object({
     query: z.string().describe("The extracted question"),
     questionType: z.enum([
-      "who",
-      "what",
-      "when",
-      "where",
-      "why",
-      "how",
-      "which",
+      "startups",
+      "events",
+      "workshops",
+      "timeline",
+      "founders",
+      "guests",
       "general"
-    ]).describe("The type of question"),
+    ]).describe("The type of question based on data categories"),
     formatted: z.object({
       question: z.string(),
       type: z.string(),
@@ -77,21 +76,87 @@ const queryExtractor = createTool({
     if (!query.endsWith("?") && !query.endsWith(".")) {
       query += "?";
     }
-    const questionWords = {
-      who: /^who\s/i,
-      what: /^what\s/i,
-      when: /^when\s/i,
-      where: /^where\s/i,
-      why: /^why\s/i,
-      how: /^how\s/i,
-      which: /^which\s/i
+    const dataTypeKeywords = {
+      startups: [
+        /startup/i,
+        /company/i,
+        /companies/i,
+        /business/i,
+        /venture/i,
+        /portfolio/i,
+        /funding/i,
+        /investment/i,
+        /raised/i,
+        /traction/i,
+        /mrr/i,
+        /revenue/i
+      ],
+      events: [
+        /event/i,
+        /events/i,
+        /calendar/i,
+        /schedule/i,
+        /scheduled/i,
+        /meeting/i,
+        /meetings/i,
+        /session/i,
+        /sessions/i,
+        /fireside/i,
+        /ama/i
+      ],
+      workshops: [
+        /workshop/i,
+        /workshops/i,
+        /training/i,
+        /seminar/i,
+        /learning/i,
+        /curriculum/i
+      ],
+      timeline: [
+        /timeline/i,
+        /phase/i,
+        /phases/i,
+        /program/i,
+        /cohort/i,
+        /schedule/i,
+        /duration/i,
+        /week/i,
+        /weeks/i,
+        /milestone/i,
+        /milestones/i
+      ],
+      founders: [
+        /founder/i,
+        /founders/i,
+        /entrepreneur/i,
+        /entrepreneurs/i,
+        /ceo/i,
+        /cto/i,
+        /co-founder/i,
+        /team/i,
+        /background/i,
+        /experience/i
+      ],
+      guests: [
+        /guest/i,
+        /guests/i,
+        /speaker/i,
+        /speakers/i,
+        /invited/i,
+        /special guest/i,
+        /visiting/i
+      ]
     };
+    const queryLower = query.toLowerCase();
     let questionType = "general";
-    for (const [type, pattern] of Object.entries(questionWords)) {
-      if (pattern.test(query)) {
-        questionType = type;
-        break;
+    for (const [type, patterns] of Object.entries(dataTypeKeywords)) {
+      for (const pattern of patterns) {
+        if (pattern.test(queryLower)) {
+          questionType = type;
+          break;
+        }
       }
+      if (questionType !== "general") break;
     }
     const formatted = {
       question: query,

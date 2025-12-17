@@ -6,9 +6,10 @@ import { log, message, error } from '../../lib/print-helpers';
  * Extracts the user's question from their message and formats it as a structured JSON object.
  *
  * This tool intelligently identifies questions by:
- * - Looking for question words (who, what, when, where, why, how, etc.)
+ * - Looking for keywords related to data categories (startups, events, workshops, timeline, founders, guests)
  * - Detecting question marks
  * - Extracting the core question from conversational context
+ * - Classifying the question type based on available data files
  */
 export const queryExtractor = createTool({
 	id: 'query-extractor',
@@ -23,16 +24,15 @@ export const queryExtractor = createTool({
 		query: z.string().describe('The extracted question'),
 		questionType: z
 			.enum([
-				'who',
-				'what',
-				'when',
-				'where',
-				'why',
-				'how',
-				'which',
+				'startups',
+				'events',
+				'workshops',
+				'timeline',
+				'founders',
+				'guests',
 				'general',
 			])
-			.describe('The type of question'),
+			.describe('The type of question based on data categories'),
 		formatted: z
 			.object({
 				question: z.string(),
@@ -59,31 +59,100 @@ export const queryExtractor = createTool({
 			query += '?';
 		}
 
-		// Determine question type based on starting words
-		const questionWords = {
-			who: /^who\s/i,
-			what: /^what\s/i,
-			when: /^when\s/i,
-			where: /^where\s/i,
-			why: /^why\s/i,
-			how: /^how\s/i,
-			which: /^which\s/i,
+		// Determine question type based on keywords related to data files
+		// Keywords for each data type (case-insensitive matching)
+		const dataTypeKeywords = {
+			startups: [
+				/startup/i,
+				/company/i,
+				/companies/i,
+				/business/i,
+				/venture/i,
+				/portfolio/i,
+				/funding/i,
+				/investment/i,
+				/raised/i,
+				/traction/i,
+				/mrr/i,
+				/revenue/i,
+			],
+			events: [
+				/event/i,
+				/events/i,
+				/calendar/i,
+				/schedule/i,
+				/scheduled/i,
+				/meeting/i,
+				/meetings/i,
+				/session/i,
+				/sessions/i,
+				/fireside/i,
+				/ama/i,
+			],
+			workshops: [
+				/workshop/i,
+				/workshops/i,
+				/training/i,
+				/seminar/i,
+				/learning/i,
+				/curriculum/i,
+			],
+			timeline: [
+				/timeline/i,
+				/phase/i,
+				/phases/i,
+				/program/i,
+				/cohort/i,
+				/schedule/i,
+				/duration/i,
+				/week/i,
+				/weeks/i,
+				/milestone/i,
+				/milestones/i,
+			],
+			founders: [
+				/founder/i,
+				/founders/i,
+				/entrepreneur/i,
+				/entrepreneurs/i,
+				/ceo/i,
+				/cto/i,
+				/co-founder/i,
+				/team/i,
+				/background/i,
+				/experience/i,
+			],
+			guests: [
+				/guest/i,
+				/guests/i,
+				/speaker/i,
+				/speakers/i,
+				/invited/i,
+				/special guest/i,
+				/visiting/i,
+			],
 		};
 
+		// Check for keywords in the query (case-insensitive)
+		const queryLower = query.toLowerCase();
 		let questionType:
-			| 'who'
-			| 'what'
-			| 'when'
-			| 'where'
-			| 'why'
-			| 'how'
-			| 'which'
+			| 'startups'
+			| 'events'
+			| 'workshops'
+			| 'timeline'
+			| 'founders'
+			| 'guests'
 			| 'general' = 'general';
-		for (const [type, pattern] of Object.entries(questionWords)) {
-			if (pattern.test(query)) {
-				questionType = type as typeof questionType;
-				break;
+
+		// Check each data type's keywords
+		for (const [type, patterns] of Object.entries(dataTypeKeywords)) {
+			for (const pattern of patterns) {
+				if (pattern.test(queryLower)) {
+					questionType = type as typeof questionType;
+					break;
+				}
 			}
+			if (questionType !== 'general') break;
 		}
 
 		// Format as JSON object
