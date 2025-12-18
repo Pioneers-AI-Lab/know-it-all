@@ -38,7 +38,6 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { log, message, error } from '../../lib/print-helpers';
 export const queryExtractor = createTool({
 	id: 'query-extractor',
 	description:

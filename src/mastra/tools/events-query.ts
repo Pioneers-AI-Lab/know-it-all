@@ -38,6 +38,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+
 export const eventsQuery = createTool({
 	id: 'events-query',
 	description:
