@@ -1,3 +1,28 @@
+/**
+ * Workshops Agent - Handles Workshop and Training Session Queries
+ *
+ * This specialized agent manages queries about workshops, training sessions, and learning
+ * activities in the Pioneer.vc accelerator. It provides information about educational
+ * content, sessions, and learning opportunities available to participants.
+ *
+ * Responsibilities:
+ * - Receives queries routed by orchestrator with questionType "workshops"
+ * - Searches workshop database using workshopsQuery tool
+ * - Formats workshop data with contextual metadata
+ * - Sends formatted results to response-generator-agent for final user response
+ *
+ * Tool Execution Sequence:
+ * 1. query-receiver: Logs incoming query and metadata
+ * 2. workshops-query: Searches workshop data, returns {workshops, found}
+ * 3. data-formatter: Formats complete result object with metadata
+ * 4. response-sender: Forwards formatted data to response-generator-agent
+ *
+ * Important Notes:
+ * - Must pass ENTIRE result object (not just workshops array) to data-formatter
+ * - Part of multi-agent pipeline: orchestrator → specialized agent → response generator
+ * - Follows standard query processing pattern used across all specialized agents
+ */
+
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';

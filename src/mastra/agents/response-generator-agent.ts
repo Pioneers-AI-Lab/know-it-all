@@ -1,3 +1,34 @@
+/**
+ * Response Generator Agent - Final Response Synthesis and Formatting
+ *
+ * This agent serves as the final step in the multi-agent pipeline, receiving formatted data
+ * from specialized agents and generating clear, comprehensive, user-facing responses.
+ * It transforms structured data into natural language responses for Slack users.
+ *
+ * Responsibilities:
+ * - Receives formatted data objects from specialized agents via response-sender tool
+ * - Extracts and processes JSON data containing query results and metadata
+ * - Logs received data using formatted-data-receiver tool
+ * - Generates natural language responses based on relevantData field
+ * - Returns final user-facing message to complete the query pipeline
+ *
+ * Input Data Structure:
+ * - query: Original user query
+ * - questionType: Type of question (events, startups, workshops, etc.)
+ * - agentName: Name of specialized agent that processed the query
+ * - summary: Brief summary of retrieved data
+ * - relevantData: Actual data retrieved from JSON knowledge base
+ * - timestamp: When data was formatted
+ *
+ * Architecture Flow:
+ * Specialized Agent → response-sender → Response Generator → User Response
+ *
+ * Important Notes:
+ * - Always uses formatted-data-receiver tool first to log incoming data
+ * - Synthesizes responses from relevantData field, not just summary
+ * - Final agent in the pipeline - output goes directly to user
+ */
+
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { formattedDataReceiver } from '../tools/formatted-data-receiver';

@@ -1,10 +1,44 @@
+/**
+ * Founders Query Tool - Founder Profile Information Retrieval
+ *
+ * This tool searches the founders.json knowledge base to find information about founders
+ * in the Pioneer.vc accelerator. Used by the startups-agent for founder-specific queries.
+ *
+ * Purpose:
+ * - Loads and searches founders.json data file
+ * - Performs semantic search across founder profiles
+ * - Returns matching founders with metadata
+ * - Indicates whether results were found
+ *
+ * Data Source:
+ * File: data/founders.json
+ * Content: Founder objects with names, backgrounds, startups, expertise, etc.
+ *
+ * Search Strategy:
+ * - Uses searchInObject helper for deep object searching
+ * - Searches all founder fields (name, bio, startup, experience, etc.)
+ * - Returns founders that match search terms
+ * - Provides found flag for empty result handling
+ *
+ * Pipeline Position:
+ * Startups Agent → Query Receiver → [Founders Query] → Data Formatter → Response Sender
+ *
+ * Output Format:
+ * {
+ *   founders: Array of matching founder objects,
+ *   found: boolean (true if founders.length > 0)
+ * }
+ *
+ * Important Notes:
+ * - Returns COMPLETE object with both founders array and found flag
+ * - Data formatter expects this complete structure
+ * - Works in tandem with startups-query for company-specific queries
+ * - Both tools are available to startups-agent
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
-
-/**
- * Tool for querying founders information
- */
 export const foundersQuery = createTool({
 	id: 'founders-query',
 	description:

@@ -1,3 +1,28 @@
+/**
+ * General Questions Agent - Handles General Accelerator Inquiries
+ *
+ * This specialized agent processes general questions about the Pioneer.vc accelerator program
+ * that don't fit into specific categories like events, startups, or workshops. It searches
+ * a knowledge base and formats responses for end users.
+ *
+ * Responsibilities:
+ * - Receives queries routed by orchestrator with questionType "general"
+ * - Searches general knowledge base using generalQuestionsQuery tool
+ * - Formats retrieved data with query context
+ * - Sends formatted results to response-generator-agent for final user response
+ *
+ * Tool Execution Sequence:
+ * 1. query-receiver: Logs incoming query and metadata
+ * 2. general-questions-query: Searches knowledge base, returns {answers, found}
+ * 3. data-formatter: Formats complete result object with metadata
+ * 4. response-sender: Forwards formatted data to response-generator-agent
+ *
+ * Important Notes:
+ * - Must pass ENTIRE result object (not just answers array) to data-formatter
+ * - Part of multi-agent pipeline: orchestrator → specialized agent → response generator
+ * - Follows standard query processing pattern used across all specialized agents
+ */
+
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';

@@ -1,9 +1,42 @@
+/**
+ * Response Sender Tool - Formatted Data Delivery to Response Generator
+ *
+ * This tool completes the specialized agent's processing by forwarding formatted data
+ * to the response-generator-agent, which synthesizes the final user-facing response.
+ *
+ * Purpose:
+ * - Acts as the bridge between specialized agents and response-generator-agent
+ * - Sends formatted data objects via agent-to-agent communication
+ * - Invokes response-generator-agent with proper data structure
+ * - Returns the generated natural language response
+ *
+ * Pipeline Position (for each specialized agent):
+ * Query Receiver → Data Query Tool → Data Formatter → [Response Sender] → Response Generator
+ *
+ * Input Format:
+ * Receives formatted data object containing:
+ * - query: Original user question
+ * - questionType: Type classification
+ * - agentName: Source agent name
+ * - summary: Brief data summary
+ * - relevantData: Actual retrieved data
+ * - timestamp: When data was formatted
+ *
+ * Communication Pattern:
+ * - Formats data as JSON string in message body
+ * - Uses Mastra's agent-to-agent communication
+ * - Response-generator-agent parses JSON and generates response
+ * - Returns final user-facing message
+ *
+ * Important Notes:
+ * - Last tool called by specialized agents
+ * - Response-generator-agent must be registered in Mastra
+ * - Formatted data must include ALL required fields
+ * - Response contains natural language answer for user
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-
-/**
- * Tool for sending formatted data to the response-generator-agent
- */
 export const responseSender = createTool({
 	id: 'response-sender',
 	description:

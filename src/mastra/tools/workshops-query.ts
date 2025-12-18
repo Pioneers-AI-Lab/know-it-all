@@ -1,11 +1,43 @@
+/**
+ * Workshops Query Tool - Workshop and Training Session Retrieval
+ *
+ * This tool searches for workshop and training session information. Due to empty workshops.json,
+ * it falls back to searching the timeline.json for workshop-related events and activities.
+ *
+ * Purpose:
+ * - Attempts to load workshops.json first
+ * - Falls back to timeline.json if workshops data is empty
+ * - Searches for workshop-related content across data sources
+ * - Returns matching workshops with metadata
+ *
+ * Data Sources:
+ * Primary: data/workshops.json (currently empty)
+ * Fallback: data/timeline.json (contains workshop events in timeline)
+ *
+ * Search Strategy:
+ * - First tries workshops.json
+ * - If empty or not found, searches timeline.json
+ * - Uses searchInObject helper for deep object searching
+ * - Returns workshops/events that match search terms
+ *
+ * Pipeline Position:
+ * Workshops Agent → Query Receiver → [Workshops Query] → Data Formatter → Response Sender
+ *
+ * Output Format:
+ * {
+ *   workshops: Array of matching workshop objects,
+ *   found: boolean (true if workshops.length > 0)
+ * }
+ *
+ * Important Notes:
+ * - Returns COMPLETE object with both workshops array and found flag
+ * - Data formatter expects this complete structure
+ * - Fallback logic handles missing or empty data files gracefully
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
-
-/**
- * Tool for querying workshops information
- * Since workshops.json is empty, this searches the timeline for workshop-related events
- */
 export const workshopsQuery = createTool({
 	id: 'workshops-query',
 	description:

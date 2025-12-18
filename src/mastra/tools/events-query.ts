@@ -1,10 +1,43 @@
+/**
+ * Events Query Tool - Event Information Retrieval
+ *
+ * This tool searches the events.json knowledge base to find information about accelerator
+ * events, meetings, and scheduled activities. Used by the event-agent to answer event-related queries.
+ *
+ * Purpose:
+ * - Loads and searches events.json data file
+ * - Performs semantic search across event objects
+ * - Returns matching events with metadata
+ * - Indicates whether results were found
+ *
+ * Data Source:
+ * File: data/events.json
+ * Content: Event objects with dates, descriptions, locations, attendees, etc.
+ *
+ * Search Strategy:
+ * - Uses searchInObject helper for deep object searching
+ * - Searches all event fields (title, date, description, location, etc.)
+ * - Returns events that match search terms
+ * - Provides found flag for empty result handling
+ *
+ * Pipeline Position:
+ * Event Agent → Query Receiver → [Events Query] → Data Formatter → Response Sender
+ *
+ * Output Format:
+ * {
+ *   events: Array of matching event objects,
+ *   found: boolean (true if events.length > 0)
+ * }
+ *
+ * Important Notes:
+ * - Returns COMPLETE object with both events array and found flag
+ * - Data formatter expects this complete structure
+ * - Empty results still return success with found=false
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
-
-/**
- * Tool for querying calendar events
- */
 export const eventsQuery = createTool({
 	id: 'events-query',
 	description:

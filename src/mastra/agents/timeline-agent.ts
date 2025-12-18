@@ -1,3 +1,28 @@
+/**
+ * Timeline Agent - Manages Program Timeline and Schedule Queries
+ *
+ * This specialized agent handles queries about the Pioneer.vc accelerator timeline,
+ * including program phases, milestones, events, and schedules. It provides temporal
+ * context about the accelerator program structure and important dates.
+ *
+ * Responsibilities:
+ * - Receives queries routed by orchestrator with questionType "timeline"
+ * - Searches timeline database using timelineQuery tool
+ * - Formats timeline data including phases and events
+ * - Sends formatted results to response-generator-agent for final user response
+ *
+ * Tool Execution Sequence:
+ * 1. query-receiver: Logs incoming query and metadata
+ * 2. timeline-query: Searches timeline data, returns {phases, events, found}
+ * 3. data-formatter: Formats complete result object with metadata
+ * 4. response-sender: Forwards formatted data to response-generator-agent
+ *
+ * Important Notes:
+ * - Must pass ENTIRE result object (not just arrays) to data-formatter
+ * - Returns both program phases and timeline-specific events
+ * - Part of multi-agent pipeline: orchestrator → specialized agent → response generator
+ */
+
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';

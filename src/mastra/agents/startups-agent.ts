@@ -1,3 +1,29 @@
+/**
+ * Startups Agent - Manages Startup and Founder Information
+ *
+ * This specialized agent handles queries about startups in the Pioneer.vc portfolio
+ * and their founders. It has dual query capabilities for both company and founder
+ * information, making it the primary source for portfolio-related questions.
+ *
+ * Responsibilities:
+ * - Receives queries routed by orchestrator with questionType "startups" or "founders"
+ * - Searches startup database using startupsQuery tool
+ * - Searches founder database using foundersQuery tool
+ * - Formats retrieved data with contextual metadata
+ * - Sends formatted results to response-generator-agent for final user response
+ *
+ * Tool Execution Sequence:
+ * 1. query-receiver: Logs incoming query and metadata
+ * 2. startups-query OR founders-query: Searches respective database, returns {startups/founders, found}
+ * 3. data-formatter: Formats complete result object with metadata
+ * 4. response-sender: Forwards formatted data to response-generator-agent
+ *
+ * Important Notes:
+ * - Must pass ENTIRE result object (not just the array) to data-formatter
+ * - Handles two question types: "startups" and "founders"
+ * - Part of multi-agent pipeline: orchestrator → specialized agent → response generator
+ */
+
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';

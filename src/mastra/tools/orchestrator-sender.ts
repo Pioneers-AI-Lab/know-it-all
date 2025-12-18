@@ -1,12 +1,38 @@
+/**
+ * Orchestrator Sender Tool - Query Forwarding to Orchestrator Agent
+ *
+ * This tool completes the first phase of the query pipeline by sending extracted and classified
+ * queries from the Lucie agent to the orchestrator-agent for routing to specialized agents.
+ *
+ * Purpose:
+ * - Acts as the bridge between Lucie agent and orchestrator-agent
+ * - Formats query data for inter-agent communication
+ * - Invokes orchestrator-agent with proper context
+ * - Returns orchestrator's response back to Lucie agent
+ *
+ * Communication Pattern:
+ * This tool uses Mastra's agent-to-agent communication to pass queries between agents
+ * without requiring direct HTTP calls or message queue systems.
+ *
+ * Pipeline Position:
+ * Lucie Agent → Query Extractor → [Orchestrator Sender] → Orchestrator Agent → Specialized Agents
+ *
+ * Input:
+ * - query: The extracted question text
+ * - formatted: Complete query object with question, type, and timestamp
+ *
+ * Output:
+ * - success: Whether the orchestrator received and processed the query
+ * - response: The orchestrator's routing response or error message
+ *
+ * Important Notes:
+ * - This tool is specific to the Lucie agent
+ * - Orchestrator-agent must be registered in Mastra instance
+ * - Response contains the full pipeline result from specialized agents
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-
-/**
- * Sends an extracted query to the orchestrator-agent for processing.
- *
- * This tool takes a formatted query object and forwards it to the orchestrator-agent,
- * which is responsible for routing the query to the appropriate specialized agents.
- */
 export const orchestratorSender = createTool({
 	id: 'orchestrator-sender',
 	description:

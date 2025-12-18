@@ -1,9 +1,45 @@
+/**
+ * Formatted Data Receiver Tool - Response Generator Data Intake Logging
+ *
+ * This tool logs the formatted data received by the response-generator-agent from
+ * specialized agents. Provides visibility into what data is being used to generate
+ * final user responses.
+ *
+ * Purpose:
+ * - Logs formatted data when response-generator-agent receives it
+ * - Displays data source, query context, and content summary
+ * - Helps debug response generation issues
+ * - Confirms successful data transfer between agents
+ *
+ * Log Output:
+ * - Source agent name
+ * - Question type and original query
+ * - Data summary
+ * - Complete relevant data (JSON formatted)
+ * - Timestamp information
+ * - Visual indicators (📬) for data reception
+ *
+ * Pipeline Position:
+ * Specialized Agent → Response Sender → [Formatted Data Receiver] → Response Synthesis
+ *
+ * Input Format:
+ * Formatted data object containing:
+ * - query: Original user question
+ * - questionType: Classification type
+ * - agentName: Source specialized agent
+ * - summary: Data summary
+ * - relevantData: Retrieved data
+ * - timestamp: Formatting timestamp
+ *
+ * Important Notes:
+ * - First tool called by response-generator-agent
+ * - Non-blocking logging operation
+ * - Helps track data flow to response generation
+ * - Useful for debugging incomplete or incorrect responses
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-
-/**
- * Tool for the response-generator-agent to receive and log formatted data
- */
 export const formattedDataReceiver = createTool({
 	id: 'formatted-data-receiver',
 	description:

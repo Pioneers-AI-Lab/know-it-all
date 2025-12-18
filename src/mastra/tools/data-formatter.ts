@@ -1,9 +1,45 @@
+/**
+ * Data Formatter Tool - Structured Data Packaging for Response Generation
+ *
+ * This tool transforms raw data retrieved from JSON knowledge bases into a structured format
+ * suitable for the response-generator-agent. It adds context, metadata, and summaries to help
+ * generate comprehensive user responses.
+ *
+ * Purpose:
+ * - Receives raw data from specialized agent query tools
+ * - Adds contextual metadata (query, questionType, agentName, timestamp)
+ * - Creates summary of the retrieved data
+ * - Packages everything into a standardized format
+ * - Prepares data for response-sender tool
+ *
+ * Data Flow:
+ * Query Tool (returns raw data) → [Data Formatter] → Response Sender → Response Generator Agent
+ *
+ * Input Requirements:
+ * - query: Original user question
+ * - questionType: Classification of the question
+ * - data: ENTIRE result object from query tool (not just the array)
+ * - agentName: Name of specialized agent processing the query
+ *
+ * Output Structure:
+ * {
+ *   query: string,
+ *   questionType: string,
+ *   agentName: string,
+ *   summary: string (describes what was found),
+ *   relevantData: any (the actual retrieved data),
+ *   timestamp: ISO date string
+ * }
+ *
+ * Important Notes:
+ * - Must receive COMPLETE result object from query tools
+ * - Do NOT pass just the data array - pass {data, found} object
+ * - Summary generation helps response-generator understand the data
+ * - Used by all specialized agents in their processing pipeline
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-
-/**
- * Tool for formatting retrieved data into a structured format for the response generator
- */
 export const dataFormatter = createTool({
 	id: 'data-formatter',
 	description:

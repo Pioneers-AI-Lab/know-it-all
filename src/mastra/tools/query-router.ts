@@ -1,10 +1,43 @@
+/**
+ * Query Router Tool - Intelligent Agent Routing Based on Question Type
+ *
+ * This tool implements the routing logic that directs queries from the orchestrator-agent
+ * to the appropriate specialized agent based on the classified question type. Acts as the
+ * central dispatcher in the multi-agent architecture.
+ *
+ * Purpose:
+ * - Maps question types to corresponding specialized agents
+ * - Invokes the correct agent with properly formatted query
+ * - Handles agent-to-agent communication via Mastra's agent system
+ * - Returns specialized agent responses back to orchestrator
+ *
+ * Routing Map:
+ * - startups → startups-agent (company/portfolio queries)
+ * - founders → startups-agent (founder-specific queries)
+ * - events → event-agent (event information)
+ * - guests → event-guests-agent (special guest events)
+ * - workshops → workshops-agent (training sessions)
+ * - timeline → timeline-agent (program schedule/phases)
+ * - general → general-questions-agent (general accelerator questions)
+ *
+ * Pipeline Position:
+ * Lucie → Orchestrator → Query Logger → [Query Router] → Specialized Agent → Response Generator
+ *
+ * Communication Flow:
+ * 1. Receives query and questionType from orchestrator
+ * 2. Formats message: "Question Type: {type}\n\nQuery: {query}"
+ * 3. Invokes appropriate agent via Mastra.agent(name).generate()
+ * 4. Returns agent's response to orchestrator
+ *
+ * Important Notes:
+ * - All specialized agents must be registered in Mastra instance
+ * - Agent names must match exactly (case-sensitive)
+ * - Specialized agents expect specific message format
+ * - Routing errors return descriptive failure messages
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-
-/**
- * Routes queries to the appropriate specialized agent based on question type.
- * This tool maps question types to their corresponding specialized agents and forwards the query.
- */
 export const queryRouter = createTool({
 	id: 'query-router',
 	description:

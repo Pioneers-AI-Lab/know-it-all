@@ -1,10 +1,46 @@
+/**
+ * General Questions Query Tool - General Accelerator Information Retrieval
+ *
+ * This tool searches the general-questions.json knowledge base to answer general questions
+ * about the Pioneer.vc accelerator that don't fit into specific categories. Used by
+ * general-questions-agent.
+ *
+ * Purpose:
+ * - Loads and searches general-questions.json data file
+ * - Performs text-based search across Q&A pairs
+ * - Returns matching answers from the knowledge base
+ * - Indicates whether results were found
+ *
+ * Data Source:
+ * File: data/general-questions.json
+ * Content: Q&A pairs about the accelerator program, policies, benefits, etc.
+ * Structure: Likely array of {question, answer} objects
+ *
+ * Search Strategy:
+ * - Uses searchInText helper for text-based searching
+ * - Searches questions and answers for matching content
+ * - Returns answers that best match the query
+ * - Provides found flag for empty result handling
+ *
+ * Pipeline Position:
+ * General Questions Agent → Query Receiver → [General Questions Query] → Data Formatter → Response Sender
+ *
+ * Output Format:
+ * {
+ *   answers: Array of matching answer objects/strings,
+ *   found: boolean (true if answers.length > 0)
+ * }
+ *
+ * Important Notes:
+ * - Returns COMPLETE object with both answers array and found flag
+ * - Data formatter expects this complete structure
+ * - Handles catch-all queries that don't fit other categories
+ * - Different search strategy (searchInText vs searchInObject)
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInText } from './data-helpers';
-
-/**
- * Tool for querying the general questions knowledge base
- */
 export const generalQuestionsQuery = createTool({
 	id: 'general-questions-query',
 	description:

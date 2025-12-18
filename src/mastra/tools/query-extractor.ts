@@ -1,16 +1,44 @@
+/**
+ * Query Extractor Tool - Intelligent Question Parsing and Classification
+ *
+ * This tool serves as the first step in the query processing pipeline, extracting user questions
+ * from conversational messages and classifying them into structured query objects with proper types.
+ *
+ * Purpose:
+ * - Parses natural language user messages to identify questions
+ * - Classifies questions into predefined categories based on content and keywords
+ * - Structures queries into a standardized JSON format for downstream agents
+ * - Handles conversational context and extracts the core question intent
+ *
+ * Classification Strategy:
+ * - Analyzes keywords related to data categories (startups, events, workshops, timeline, founders, guests)
+ * - Detects question indicators (question marks, interrogative words)
+ * - Maps detected keywords to one of 7 question types
+ * - Falls back to 'general' type for unclassified questions
+ *
+ * Question Types:
+ * 1. startups: Company/portfolio queries
+ * 2. events: Event information requests
+ * 3. workshops: Training/workshop queries
+ * 4. timeline: Program schedule/phase questions
+ * 5. founders: Founder-specific information
+ * 6. guests: Special guest event queries
+ * 7. general: Catch-all for other accelerator questions
+ *
+ * Pipeline Position:
+ * User Message → [Query Extractor] → Orchestrator Sender → Orchestrator Agent → Specialized Agents
+ *
+ * Output Format:
+ * {
+ *   query: "extracted question text",
+ *   questionType: "startups|events|workshops|timeline|founders|guests|general",
+ *   timestamp: "ISO date string"
+ * }
+ */
+
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { log, message, error } from '../../lib/print-helpers';
-
-/**
- * Extracts the user's question from their message and formats it as a structured JSON object.
- *
- * This tool intelligently identifies questions by:
- * - Looking for keywords related to data categories (startups, events, workshops, timeline, founders, guests)
- * - Detecting question marks
- * - Extracting the core question from conversational context
- * - Classifying the question type based on available data files
- */
 export const queryExtractor = createTool({
 	id: 'query-extractor',
 	description:
