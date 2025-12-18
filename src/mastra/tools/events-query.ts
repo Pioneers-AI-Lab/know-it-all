@@ -38,6 +38,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 
 export const eventsQuery = createTool({
 	id: 'events-query',
@@ -51,6 +52,9 @@ export const eventsQuery = createTool({
 		found: z.boolean().describe('Whether matching events were found'),
 	}),
 	execute: async ({ query }) => {
+		message('🔎 EVENTS QUERY - Searching calendar events database');
+		log('Query:', query);
+
 		const data = loadJsonData('calendar-events.json');
 		const results: any[] = [];
 
@@ -62,8 +66,17 @@ export const eventsQuery = createTool({
 			}
 		}
 
+		const finalResults = results.slice(0, 10); // Limit to top 10 results
+		message(`✅ EVENTS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} event(s) found`
+				: 'No events found',
+		);
+
 		return {
-			events: results.slice(0, 10), // Limit to top 10 results
+			events: finalResults,
 			found: results.length > 0,
 		};
 	},

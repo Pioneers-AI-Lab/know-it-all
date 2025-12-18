@@ -44,6 +44,11 @@ When calling tools:
   - "formatted": the formatted JSON object returned by query-extractor
 - Do not modify the formatted object before passing it on.
 
+After calling orchestrator-sender:
+- Take the "response" field from the orchestrator-sender tool output.
+- Use that "response" value directly as the message you send back to the user.
+- Do NOT add extra explanations, meta commentary, or restatements around it unless the response is clearly incomplete.
+
 If a user's message is not a question or cannot be classified, still run query-extractor and let the pipeline handle it.
 Keep your responses clear and concise, and always reflect exactly what comes back from the orchestrator pipeline.`,
 	model: 'anthropic/claude-sonnet-4-20250514',

@@ -40,6 +40,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log } from '../../lib/print-helpers';
 export const formattedDataReceiver = createTool({
 	id: 'formatted-data-receiver',
 	description:
@@ -62,19 +63,13 @@ export const formattedDataReceiver = createTool({
 			.describe('Whether the formatted data was successfully logged'),
 	}),
 	execute: async ({ formatted }) => {
-		console.log('='.repeat(60));
-		console.log('📬 RESPONSE GENERATOR AGENT - Received Formatted Data');
-		console.log('='.repeat(60));
-		console.log('Original Query:', formatted.query);
-		console.log('Question Type:', formatted.questionType);
-		console.log('Data Source:', formatted.agentName);
-		console.log('Summary:', formatted.summary);
-		console.log('Received at:', formatted.timestamp);
-		console.log(
-			'Relevant Data:',
-			JSON.stringify(formatted.relevantData, null, 2),
-		);
-		console.log('='.repeat(60));
+		message('📬 RESPONSE GENERATOR AGENT - Received Formatted Data');
+		log('Original Query:', formatted.query);
+		log('Question Type:', formatted.questionType);
+		log('Data Source:', formatted.agentName);
+		log('Summary:', formatted.summary);
+		log('Received at:', formatted.timestamp);
+		log('Relevant Data:', JSON.stringify(formatted.relevantData, null, 2));
 
 		return { logged: true };
 	},

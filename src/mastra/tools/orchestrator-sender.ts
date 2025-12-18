@@ -33,6 +33,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log } from '../../lib/print-helpers';
 export const orchestratorSender = createTool({
 	id: 'orchestrator-sender',
 	description:
@@ -64,6 +65,10 @@ export const orchestratorSender = createTool({
 		success: boolean;
 		response: string;
 	}> => {
+		message('🚀 ORCHESTRATOR SENDER - Forwarding to orchestrator-agent');
+		log('Query:', query);
+		log('Formatted object:', JSON.stringify(formatted, null, 2));
+
 		// Lazy import to avoid circular dependency
 		const { mastra } = await import('../index');
 		// Get the orchestrator-agent from the mastra instance
@@ -73,18 +78,28 @@ export const orchestratorSender = createTool({
 		}
 
 		// Create a message that includes both the query and the formatted object
-		const message = `Process this query: ${query}\n\nFormatted query object: ${JSON.stringify(
+		const agentMessage = `Process this query: ${query}\n\nFormatted query object: ${JSON.stringify(
 			formatted,
 			null,
 			2,
 		)}`;
 
 		// Send the query to the orchestrator-agent
-		const response = await orchestratorAgent.generate(message);
+		message('🚀 ORCHESTRATOR SENDER - Calling orchestrator-agent');
+		log('Message sent:', agentMessage);
+
+		const response = await orchestratorAgent.generate(agentMessage);
+
+		const responseText = response.text || JSON.stringify(response);
+
+		message(
+			'✅ ORCHESTRATOR SENDER - Received response from orchestrator-agent',
+		);
+		log('Response text:', responseText);
 
 		return {
 			success: true,
-			response: response.text || JSON.stringify(response),
+			response: responseText,
 		};
 	},
 });

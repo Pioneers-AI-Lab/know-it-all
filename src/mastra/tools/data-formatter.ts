@@ -40,6 +40,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log } from '../../lib/print-helpers';
 export const dataFormatter = createTool({
 	id: 'data-formatter',
 	description:
@@ -75,6 +76,12 @@ export const dataFormatter = createTool({
 			.describe('The formatted data ready for the response generator'),
 	}),
 	execute: async ({ query, questionType, data, agentName }) => {
+		message('📦 DATA FORMATTER - Formatting retrieved data');
+		log('Query:', query);
+		log('Question Type:', questionType);
+		log('Agent Name:', agentName);
+		log('Raw data received:', JSON.stringify(data, null, 2));
+
 		// Create a summary of the retrieved data
 		let summary = '';
 		let relevantData: any = [];
@@ -152,6 +159,13 @@ export const dataFormatter = createTool({
 			relevantData,
 			timestamp: new Date().toISOString(),
 		};
+
+		message('✅ DATA FORMATTER - Data formatted successfully');
+		log('Summary:', summary);
+		log(
+			'Relevant data count:',
+			Array.isArray(relevantData) ? relevantData.length : 'N/A',
+		);
 
 		return { formatted };
 	},

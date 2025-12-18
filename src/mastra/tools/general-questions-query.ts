@@ -41,6 +41,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInText } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 export const generalQuestionsQuery = createTool({
 	id: 'general-questions-query',
 	description:
@@ -63,6 +64,9 @@ export const generalQuestionsQuery = createTool({
 		found: z.boolean().describe('Whether matching answers were found'),
 	}),
 	execute: async ({ query }) => {
+		message('🔎 GENERAL QUESTIONS QUERY - Searching knowledge base');
+		log('Query:', query);
+
 		const data = loadJsonData('general-questions.json');
 		const results: Array<{
 			question: string;
@@ -94,8 +98,19 @@ export const generalQuestionsQuery = createTool({
 			}
 		}
 
+		const finalResults = results.slice(0, 5); // Limit to top 5 results
+		message(
+			`✅ GENERAL QUESTIONS QUERY - Found ${finalResults.length} result(s)`,
+		);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} answer(s) found`
+				: 'No answers found',
+		);
+
 		return {
-			answers: results.slice(0, 5), // Limit to top 5 results
+			answers: finalResults,
 			found: results.length > 0,
 		};
 	},

@@ -39,6 +39,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 export const guestsQuery = createTool({
 	id: 'guests-query',
 	description:
@@ -55,6 +56,11 @@ export const guestsQuery = createTool({
 		found: z.boolean().describe('Whether matching guest events were found'),
 	}),
 	execute: async ({ query }) => {
+		message(
+			'🔎 GUESTS QUERY - Searching special events with guests database',
+		);
+		log('Query:', query);
+
 		const data = loadJsonData('special-events-with-guests.json');
 		const results: any[] = [];
 
@@ -66,8 +72,17 @@ export const guestsQuery = createTool({
 			}
 		}
 
+		const finalResults = results.slice(0, 10); // Limit to top 10 results
+		message(`✅ GUESTS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} guest event(s) found`
+				: 'No guest events found',
+		);
+
 		return {
-			events: results.slice(0, 10), // Limit to top 10 results
+			events: finalResults,
 			found: results.length > 0,
 		};
 	},

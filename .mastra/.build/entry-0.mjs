@@ -12,6 +12,17 @@ import { WebClient } from '@slack/web-api';
 import * as crypto from 'crypto';
 
 "use strict";
+function message(message2) {
+  console.log("\x1B[32m%s\x1B[0m", message2);
+}
+function log(message2, data) {
+  console.log("\x1B[33m%s\x1B[0m", message2, data);
+}
+function error(message2, data) {
+  console.log("\x1B[31m%s\x1B[0m", message2, data);
+}
+
+"use strict";
 const queryExtractor = createTool({
   id: "query-extractor",
   description: "Extracts the user's question from their message and formats it into a structured JSON object",
@@ -35,8 +46,10 @@ const queryExtractor = createTool({
       timestamp: z.string()
     }).describe("The formatted JSON object containing the question")
   }),
-  execute: async ({ message: message2 }) => {
-    const cleanedMessage = message2.trim().replace(/\s+/g, " ");
+  execute: async ({ message: userMessage }) => {
+    message("\u{1F50D} QUERY EXTRACTOR - Starting extraction");
+    log("Raw message:", userMessage);
+    const cleanedMessage = userMessage.trim().replace(/\s+/g, " ");
     let query = cleanedMessage.replace(
       /^(can you|could you|would you|please|tell me|i want to know|i need to know|i'm asking|i ask)\s+/i,
       ""
@@ -131,6 +144,10 @@ const queryExtractor = createTool({
       type: questionType,
       timestamp: (/* @__PURE__ */ new Date()).toISOString()
     };
+    message("\u{1F50D} QUERY EXTRACTOR - Result");
+    log("Extracted query:", query);
+    log("Detected questionType:", questionType);
+    log("Formatted object:", JSON.stringify(formatted, null, 2));
     return {
       query,
       questionType,
@@ -159,22 +176,32 @@ const orchestratorSender = createTool({
     query,
     formatted
   }) => {
+    message("\u{1F680} ORCHESTRATOR SENDER - Forwarding to orchestrator-agent");
+    log("Query:", query);
+    log("Formatted object:", JSON.stringify(formatted, null, 2));
     const { mastra } = await Promise.resolve().then(function () { return index; });
     const orchestratorAgent = mastra.getAgent("orchestratorAgent");
     if (!orchestratorAgent) {
       throw new Error("Orchestrator agent not found");
     }
-    const message = `Process this query: ${query}
+    const agentMessage = `Process this query: ${query}
 
 Formatted query object: ${JSON.stringify(
       formatted,
       null,
       2
     )}`;
-    const response = await orchestratorAgent.generate(message);
+    message("\u{1F680} ORCHESTRATOR SENDER - Calling orchestrator-agent");
+    log("Message sent:", agentMessage);
+    const response = await orchestratorAgent.generate(agentMessage);
+    const responseText = response.text || JSON.stringify(response);
+    message(
+      "\u2705 ORCHESTRATOR SENDER - Received response from orchestrator-agent"
+    );
+    log("Response text:", responseText);
     return {
       success: true,
-      response: response.text || JSON.stringify(response)
+      response: responseText
     };
   }
 });
@@ -183,17 +210,34 @@ Formatted query object: ${JSON.stringify(
 const lucie = new Agent({
   id: "lucie-agent",
   name: "lucie-agent",
-  description: "Lucie is the CEO of the the Pioneer.vc accelerator.",
-  instructions: `You are Lucie. You are the CEO of the Pioneer.vc accelerator. You are responsible for the overall direction of the accelerator. You are also responsible for the hiring of the founders. You are also responsible for the fundraising of the founders. You are also responsible for the marketing of the accelerator. You are also responsible for the events of the accelerator. You are also responsible for the community of the accelerator. You are also responsible for the alumni of the accelerator. You are also responsible for the network of the accelerator. You are also responsible for the partnerships of the accelerator. You are also responsible for the investments of the accelerator. You are also responsible for the portfolio of the accelerator.
+  description: "Lucie is the Pioneer.vc accelerator agent.",
+  instructions: `You are Lucie, the primary Pioneer.vc accelerator agent and the front door to the multi-agent system.
 
-		When a user asks you a question:
-		1. First, use the query-extractor tool to extract and format the user's question
-		2. Then, use the orchestrator-sender tool to send the extracted query to the orchestrator-agent for processing
-		3. Return the orchestrator-agent's response to the user
+Your job is NOT to answer questions directly from your own knowledge. Instead, you:
+- Use the query-extractor tool to extract and classify the user's question from their latest message.
+- Then use the orchestrator-sender tool to forward the extracted query and formatted object to the orchestrator-agent.
+- Finally, return the orchestrator's response back to the user as your answer.
 
-		IMPORTANT: Always use both tools in sequence - first extract the query, then send it to the orchestrator.`,
+When calling tools:
+- Always pass ONLY the user's latest natural-language question as the "message" input to query-extractor.
+- NEVER include prior conversation history or any other metadata in the tool inputs.
+- After receiving { query, questionType, formatted } from query-extractor, call orchestrator-sender with:
+  - "query": the extracted query string
+  - "formatted": the formatted JSON object returned by query-extractor
+- Do not modify the formatted object before passing it on.
+
+After calling orchestrator-sender:
+- Take the "response" field from the orchestrator-sender tool output.
+- Use that "response" value directly as the message you send back to the user.
+- Do NOT add extra explanations, meta commentary, or restatements around it unless the response is clearly incomplete.
+
+If a user's message is not a question or cannot be classified, still run query-extractor and let the pipeline handle it.
+Keep your responses clear and concise, and always reflect exactly what comes back from the orchestrator pipeline.`,
   model: "anthropic/claude-sonnet-4-20250514",
-  tools: { queryExtractor, orchestratorSender },
+  tools: {
+    queryExtractor,
+    orchestratorSender
+  },
   memory: new Memory({
     options: {
       lastMessages: 20
@@ -217,17 +261,11 @@ const queryLogger = createTool({
     logged: z.boolean().describe("Whether the query was successfully logged")
   }),
   execute: async ({ query, formatted }) => {
-    console.log("=".repeat(60));
-    console.log("\u{1F4E5} ORCHESTRATOR AGENT - Received Query");
-    console.log("=".repeat(60));
-    console.log("Query:", query);
-    console.log(
-      "Formatted Query Object:",
-      JSON.stringify(formatted, null, 2)
-    );
-    console.log("Timestamp:", formatted.timestamp);
-    console.log("Question Type:", formatted.type);
-    console.log("=".repeat(60));
+    message("\u{1F4E5} ORCHESTRATOR AGENT - Received Query");
+    log("Query:", query);
+    log("Formatted Query Object:", JSON.stringify(formatted, null, 2));
+    log("Timestamp:", formatted.timestamp);
+    log("Question Type:", formatted.type);
     return { logged: true };
   }
 });
@@ -259,6 +297,9 @@ const queryRouter = createTool({
     query,
     questionType
   }) => {
+    message("\u{1F9ED} QUERY ROUTER - Routing query to specialized agent");
+    log("Question type:", questionType);
+    log("Query:", query);
     const agentMapping = {
       startups: {
         agentName: "startupsAgent",
@@ -292,27 +333,42 @@ const queryRouter = createTool({
     };
     const mapping = agentMapping[questionType];
     if (!mapping) {
+      error("No agent mapping found for question type:", questionType);
       throw new Error(
         `No agent mapping found for question type: ${questionType}`
       );
     }
+    log("Resolved mapping:", JSON.stringify(mapping));
     const { mastra } = await Promise.resolve().then(function () { return index; });
     const specializedAgent = mastra.getAgent(
       mapping.agentName
     );
     if (!specializedAgent) {
+      error(
+        `Specialized agent "${mapping.agentName}" not found`,
+        mapping
+      );
       throw new Error(
         `Specialized agent "${mapping.agentName}" not found`
       );
     }
-    const message = `Question Type: ${questionType}
+    const agentMessage = `Question Type: ${questionType}
 
 Query: ${query}`;
-    const response = await specializedAgent.generate(message);
+    message(
+      `\u{1F9ED} QUERY ROUTER - Calling specialized agent: ${mapping.agentName}`
+    );
+    log("Message sent:", agentMessage);
+    const response = await specializedAgent.generate(agentMessage);
+    const responseText = response.text || JSON.stringify(response);
+    message(
+      `\u2705 QUERY ROUTER - Received response from ${mapping.agentName}`
+    );
+    log("Response text:", responseText);
     return {
       success: true,
       agentName: mapping.displayName,
-      response: response.text || JSON.stringify(response)
+      response: responseText
     };
   }
 });
@@ -362,13 +418,10 @@ const queryReceiver = createTool({
     logged: z.boolean().describe("Whether the query was successfully logged")
   }),
   execute: async ({ query, questionType, agentName }) => {
-    console.log("=".repeat(60));
-    console.log(`\u{1F4E8} ${agentName.toUpperCase()} - Received Query`);
-    console.log("=".repeat(60));
-    console.log("Query:", query);
-    console.log("Question Type:", questionType);
-    console.log("Received at:", (/* @__PURE__ */ new Date()).toISOString());
-    console.log("=".repeat(60));
+    message(`\u{1F4E8} ${agentName.toUpperCase()} - Received Query`);
+    log("Query:", query);
+    log("Question Type:", questionType);
+    log("Received at:", (/* @__PURE__ */ new Date()).toISOString());
     return { logged: true };
   }
 });
@@ -455,6 +508,8 @@ const generalQuestionsQuery = createTool({
     found: z.boolean().describe("Whether matching answers were found")
   }),
   execute: async ({ query }) => {
+    message("\u{1F50E} GENERAL QUESTIONS QUERY - Searching knowledge base");
+    log("Query:", query);
     const data = loadJsonData("general-questions.json");
     const results = [];
     if (data.knowledge_base) {
@@ -474,9 +529,16 @@ const generalQuestionsQuery = createTool({
         }
       }
     }
+    const finalResults = results.slice(0, 5);
+    message(
+      `\u2705 GENERAL QUESTIONS QUERY - Found ${finalResults.length} result(s)`
+    );
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} answer(s) found` : "No answers found"
+    );
     return {
-      answers: results.slice(0, 5),
-      // Limit to top 5 results
+      answers: finalResults,
       found: results.length > 0
     };
   }
@@ -511,6 +573,11 @@ const dataFormatter = createTool({
     }).describe("The formatted data ready for the response generator")
   }),
   execute: async ({ query, questionType, data, agentName }) => {
+    message("\u{1F4E6} DATA FORMATTER - Formatting retrieved data");
+    log("Query:", query);
+    log("Question Type:", questionType);
+    log("Agent Name:", agentName);
+    log("Raw data received:", JSON.stringify(data, null, 2));
     let summary = "";
     let relevantData = [];
     if (data && typeof data === "object") {
@@ -572,6 +639,12 @@ const dataFormatter = createTool({
       relevantData,
       timestamp: (/* @__PURE__ */ new Date()).toISOString()
     };
+    message("\u2705 DATA FORMATTER - Data formatted successfully");
+    log("Summary:", summary);
+    log(
+      "Relevant data count:",
+      Array.isArray(relevantData) ? relevantData.length : "N/A"
+    );
     return { formatted };
   }
 });
@@ -599,14 +672,19 @@ const responseSender = createTool({
   execute: async ({
     formatted
   }) => {
+    message(
+      "\u{1F4E4} RESPONSE SENDER - Sending formatted data to response-generator-agent"
+    );
+    log("Formatted data:", JSON.stringify(formatted, null, 2));
     const { mastra } = await Promise.resolve().then(function () { return index; });
     const responseGeneratorAgent = mastra.getAgent(
       "responseGeneratorAgent"
     );
     if (!responseGeneratorAgent) {
+      error("Response generator agent not found", null);
       throw new Error("Response generator agent not found");
     }
-    const message = `You have received formatted data from a specialized agent.
+    const agentMessage = `You have received formatted data from a specialized agent.
 
 First, extract the formatted data from this message and use the formatted-data-receiver tool to log it.
 
@@ -614,7 +692,11 @@ Formatted Data JSON:
 ${JSON.stringify(formatted, null, 2)}
 
 After logging, generate a clear, helpful, and comprehensive response to the user's query using the relevant data provided.`;
-    const response = await responseGeneratorAgent.generate(message);
+    const response = await responseGeneratorAgent.generate(agentMessage);
+    message(
+      "\u2705 RESPONSE SENDER - Received response from response-generator-agent"
+    );
+    log("Response:", response.text || JSON.stringify(response));
     return {
       success: true,
       response: response.text || JSON.stringify(response)
@@ -669,6 +751,10 @@ const guestsQuery = createTool({
     found: z.boolean().describe("Whether matching guest events were found")
   }),
   execute: async ({ query }) => {
+    message(
+      "\u{1F50E} GUESTS QUERY - Searching special events with guests database"
+    );
+    log("Query:", query);
     const data = loadJsonData("special-events-with-guests.json");
     const results = [];
     if (data.events && Array.isArray(data.events)) {
@@ -678,9 +764,14 @@ const guestsQuery = createTool({
         }
       }
     }
+    const finalResults = results.slice(0, 10);
+    message(`\u2705 GUESTS QUERY - Found ${finalResults.length} result(s)`);
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} guest event(s) found` : "No guest events found"
+    );
     return {
-      events: results.slice(0, 10),
-      // Limit to top 10 results
+      events: finalResults,
       found: results.length > 0
     };
   }
@@ -728,6 +819,8 @@ const eventsQuery = createTool({
     found: z.boolean().describe("Whether matching events were found")
   }),
   execute: async ({ query }) => {
+    message("\u{1F50E} EVENTS QUERY - Searching calendar events database");
+    log("Query:", query);
     const data = loadJsonData("calendar-events.json");
     const results = [];
     if (data.events && Array.isArray(data.events)) {
@@ -737,9 +830,14 @@ const eventsQuery = createTool({
         }
       }
     }
+    const finalResults = results.slice(0, 10);
+    message(`\u2705 EVENTS QUERY - Found ${finalResults.length} result(s)`);
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} event(s) found` : "No events found"
+    );
     return {
-      events: results.slice(0, 10),
-      // Limit to top 10 results
+      events: finalResults,
       found: results.length > 0
     };
   }
@@ -787,6 +885,8 @@ const startupsQuery = createTool({
     found: z.boolean().describe("Whether matching startups were found")
   }),
   execute: async ({ query }) => {
+    message("\u{1F50E} STARTUPS QUERY - Searching startups database");
+    log("Query:", query);
     const data = loadJsonData("startups.json");
     const results = [];
     if (data.startups && Array.isArray(data.startups)) {
@@ -796,9 +896,14 @@ const startupsQuery = createTool({
         }
       }
     }
+    const finalResults = results.slice(0, 10);
+    message(`\u2705 STARTUPS QUERY - Found ${finalResults.length} result(s)`);
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} startup(s) found` : "No startups found"
+    );
     return {
-      startups: results.slice(0, 10),
-      // Limit to top 10 results
+      startups: finalResults,
       found: results.length > 0
     };
   }
@@ -816,6 +921,8 @@ const foundersQuery = createTool({
     found: z.boolean().describe("Whether matching founders were found")
   }),
   execute: async ({ query }) => {
+    message("\u{1F50E} FOUNDERS QUERY - Searching founders database");
+    log("Query:", query);
     const data = loadJsonData("founders.json");
     const results = [];
     if (data.founders && Array.isArray(data.founders)) {
@@ -825,9 +932,14 @@ const foundersQuery = createTool({
         }
       }
     }
+    const finalResults = results.slice(0, 10);
+    message(`\u2705 FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} founder(s) found` : "No founders found"
+    );
     return {
-      founders: results.slice(0, 10),
-      // Limit to top 10 results
+      founders: finalResults,
       found: results.length > 0
     };
   }
@@ -883,6 +995,8 @@ const timelineQuery = createTool({
     found: z.boolean().describe("Whether matching timeline information was found")
   }),
   execute: async ({ query }) => {
+    message("\u{1F50E} TIMELINE QUERY - Searching timeline database");
+    log("Query:", query);
     const data = loadJsonData("timeline.json");
     const phaseResults = [];
     const eventResults = [];
@@ -904,10 +1018,20 @@ const timelineQuery = createTool({
         }
       }
     }
+    const finalPhases = phaseResults.slice(0, 5);
+    const finalEvents = eventResults.slice(0, 10);
+    const found = phaseResults.length > 0 || eventResults.length > 0;
+    message(
+      `\u2705 TIMELINE QUERY - Found ${finalPhases.length} phase(s) and ${finalEvents.length} event(s)`
+    );
+    log(
+      "Results:",
+      found ? `${finalPhases.length} phase(s), ${finalEvents.length} event(s)` : "No timeline data found"
+    );
     return {
-      phases: phaseResults.slice(0, 5),
-      events: eventResults.slice(0, 10),
-      found: phaseResults.length > 0 || eventResults.length > 0
+      phases: finalPhases,
+      events: finalEvents,
+      found
     };
   }
 });
@@ -954,6 +1078,8 @@ const workshopsQuery = createTool({
     found: z.boolean().describe("Whether matching workshops were found")
   }),
   execute: async ({ query }) => {
+    message("\u{1F50E} WORKSHOPS QUERY - Searching timeline for workshops");
+    log("Query:", query);
     const data = loadJsonData("timeline.json");
     const results = [];
     if (data.timeline && Array.isArray(data.timeline)) {
@@ -974,9 +1100,14 @@ const workshopsQuery = createTool({
         }
       }
     }
+    const finalResults = results.slice(0, 10);
+    message(`\u2705 WORKSHOPS QUERY - Found ${finalResults.length} result(s)`);
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} workshop(s) found` : "No workshops found"
+    );
     return {
-      workshops: results.slice(0, 10),
-      // Limit to top 10 results
+      workshops: finalResults,
       found: results.length > 0
     };
   }
@@ -1030,19 +1161,13 @@ const formattedDataReceiver = createTool({
     logged: z.boolean().describe("Whether the formatted data was successfully logged")
   }),
   execute: async ({ formatted }) => {
-    console.log("=".repeat(60));
-    console.log("\u{1F4EC} RESPONSE GENERATOR AGENT - Received Formatted Data");
-    console.log("=".repeat(60));
-    console.log("Original Query:", formatted.query);
-    console.log("Question Type:", formatted.questionType);
-    console.log("Data Source:", formatted.agentName);
-    console.log("Summary:", formatted.summary);
-    console.log("Received at:", formatted.timestamp);
-    console.log(
-      "Relevant Data:",
-      JSON.stringify(formatted.relevantData, null, 2)
-    );
-    console.log("=".repeat(60));
+    message("\u{1F4EC} RESPONSE GENERATOR AGENT - Received Formatted Data");
+    log("Original Query:", formatted.query);
+    log("Question Type:", formatted.questionType);
+    log("Data Source:", formatted.agentName);
+    log("Summary:", formatted.summary);
+    log("Received at:", formatted.timestamp);
+    log("Relevant Data:", JSON.stringify(formatted.relevantData, null, 2));
     return { logged: true };
   }
 });

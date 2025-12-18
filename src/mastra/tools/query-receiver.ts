@@ -37,6 +37,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log } from '../../lib/print-helpers';
 export const queryReceiver = createTool({
 	id: 'query-receiver',
 	description:
@@ -66,13 +67,10 @@ export const queryReceiver = createTool({
 			.describe('Whether the query was successfully logged'),
 	}),
 	execute: async ({ query, questionType, agentName }) => {
-		console.log('='.repeat(60));
-		console.log(`📨 ${agentName.toUpperCase()} - Received Query`);
-		console.log('='.repeat(60));
-		console.log('Query:', query);
-		console.log('Question Type:', questionType);
-		console.log('Received at:', new Date().toISOString());
-		console.log('='.repeat(60));
+		message(`📨 ${agentName.toUpperCase()} - Received Query`);
+		log('Query:', query);
+		log('Question Type:', questionType);
+		log('Received at:', new Date().toISOString());
 
 		return { logged: true };
 	},

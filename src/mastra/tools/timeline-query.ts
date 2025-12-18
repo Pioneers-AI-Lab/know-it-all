@@ -41,6 +41,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 export const timelineQuery = createTool({
 	id: 'timeline-query',
 	description:
@@ -58,6 +59,9 @@ export const timelineQuery = createTool({
 			.describe('Whether matching timeline information was found'),
 	}),
 	execute: async ({ query }) => {
+		message('🔎 TIMELINE QUERY - Searching timeline database');
+		log('Query:', query);
+
 		const data = loadJsonData('timeline.json');
 		const phaseResults: any[] = [];
 		const eventResults: any[] = [];
@@ -83,10 +87,24 @@ export const timelineQuery = createTool({
 			}
 		}
 
+		const finalPhases = phaseResults.slice(0, 5);
+		const finalEvents = eventResults.slice(0, 10);
+		const found = phaseResults.length > 0 || eventResults.length > 0;
+
+		message(
+			`✅ TIMELINE QUERY - Found ${finalPhases.length} phase(s) and ${finalEvents.length} event(s)`,
+		);
+		log(
+			'Results:',
+			found
+				? `${finalPhases.length} phase(s), ${finalEvents.length} event(s)`
+				: 'No timeline data found',
+		);
+
 		return {
-			phases: phaseResults.slice(0, 5),
-			events: eventResults.slice(0, 10),
-			found: phaseResults.length > 0 || eventResults.length > 0,
+			phases: finalPhases,
+			events: finalEvents,
+			found,
 		};
 	},
 });

@@ -37,6 +37,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log, error } from '../../lib/print-helpers';
 export const responseSender = createTool({
 	id: 'response-sender',
 	description:
@@ -67,6 +68,11 @@ export const responseSender = createTool({
 		success: boolean;
 		response: string;
 	}> => {
+		message(
+			'📤 RESPONSE SENDER - Sending formatted data to response-generator-agent',
+		);
+		log('Formatted data:', JSON.stringify(formatted, null, 2));
+
 		// Lazy import to avoid circular dependency
 		const { mastra } = await import('../index');
 		// Get the response-generator-agent from the mastra instance
@@ -74,11 +80,12 @@ export const responseSender = createTool({
 			'responseGeneratorAgent' as 'responseGeneratorAgent',
 		);
 		if (!responseGeneratorAgent) {
+			error('Response generator agent not found', null);
 			throw new Error('Response generator agent not found');
 		}
 
 		// Create a message with the formatted data in a structured format
-		const message = `You have received formatted data from a specialized agent.
+		const agentMessage = `You have received formatted data from a specialized agent.
 
 First, extract the formatted data from this message and use the formatted-data-receiver tool to log it.
 
@@ -88,7 +95,12 @@ ${JSON.stringify(formatted, null, 2)}
 After logging, generate a clear, helpful, and comprehensive response to the user's query using the relevant data provided.`;
 
 		// Send the formatted data to the response-generator-agent
-		const response = await responseGeneratorAgent.generate(message);
+		const response = await responseGeneratorAgent.generate(agentMessage);
+
+		message(
+			'✅ RESPONSE SENDER - Received response from response-generator-agent',
+		);
+		log('Response:', response.text || JSON.stringify(response));
 
 		return {
 			success: true,

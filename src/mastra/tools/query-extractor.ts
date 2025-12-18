@@ -38,6 +38,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log } from '../../lib/print-helpers';
 export const queryExtractor = createTool({
 	id: 'query-extractor',
 	description:
@@ -68,9 +69,12 @@ export const queryExtractor = createTool({
 			})
 			.describe('The formatted JSON object containing the question'),
 	}),
-	execute: async ({ message }) => {
+	execute: async ({ message: userMessage }) => {
+		message('🔍 QUERY EXTRACTOR - Starting extraction');
+		log('Raw message:', userMessage);
+
 		// Clean the message - remove extra whitespace and normalize
-		const cleanedMessage = message.trim().replace(/\s+/g, ' ');
+		const cleanedMessage = userMessage.trim().replace(/\s+/g, ' ');
 
 		// Extract the core question
 		// Remove common prefixes like "can you", "please", "tell me", etc.
@@ -188,6 +192,11 @@ export const queryExtractor = createTool({
 			type: questionType,
 			timestamp: new Date().toISOString(),
 		};
+
+		message('🔍 QUERY EXTRACTOR - Result');
+		log('Extracted query:', query);
+		log('Detected questionType:', questionType);
+		log('Formatted object:', JSON.stringify(formatted, null, 2));
 
 		return {
 			query,

@@ -34,6 +34,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log } from '../../lib/print-helpers';
 export const queryLogger = createTool({
 	id: 'query-logger',
 	description:
@@ -54,17 +55,11 @@ export const queryLogger = createTool({
 			.describe('Whether the query was successfully logged'),
 	}),
 	execute: async ({ query, formatted }) => {
-		console.log('='.repeat(60));
-		console.log('📥 ORCHESTRATOR AGENT - Received Query');
-		console.log('='.repeat(60));
-		console.log('Query:', query);
-		console.log(
-			'Formatted Query Object:',
-			JSON.stringify(formatted, null, 2),
-		);
-		console.log('Timestamp:', formatted.timestamp);
-		console.log('Question Type:', formatted.type);
-		console.log('='.repeat(60));
+		message('📥 ORCHESTRATOR AGENT - Received Query');
+		log('Query:', query);
+		log('Formatted Query Object:', JSON.stringify(formatted, null, 2));
+		log('Timestamp:', formatted.timestamp);
+		log('Question Type:', formatted.type);
 
 		return { logged: true };
 	},

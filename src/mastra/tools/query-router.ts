@@ -38,6 +38,7 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { message, log, error } from '../../lib/print-helpers';
 export const queryRouter = createTool({
 	id: 'query-router',
 	description:
@@ -77,6 +78,10 @@ export const queryRouter = createTool({
 		agentName: string;
 		response: string;
 	}> => {
+		message('🧭 QUERY ROUTER - Routing query to specialized agent');
+		log('Question type:', questionType);
+		log('Query:', query);
+
 		// Map question types to agent names
 		const agentMapping: Record<
 			string,
@@ -117,10 +122,13 @@ export const queryRouter = createTool({
 
 		const mapping = agentMapping[questionType];
 		if (!mapping) {
+			error('No agent mapping found for question type:', questionType);
 			throw new Error(
 				`No agent mapping found for question type: ${questionType}`,
 			);
 		}
+
+		log('Resolved mapping:', JSON.stringify(mapping));
 
 		// Lazy import to avoid circular dependency
 		const { mastra } = await import('../index');
@@ -135,6 +143,10 @@ export const queryRouter = createTool({
 				| 'generalQuestionsAgent',
 		);
 		if (!specializedAgent) {
+			error(
+				`Specialized agent "${mapping.agentName}" not found`,
+				mapping,
+			);
 			throw new Error(
 				`Specialized agent "${mapping.agentName}" not found`,
 			);
@@ -142,15 +154,27 @@ export const queryRouter = createTool({
 
 		// Create a message that includes the query and question type
 		// The agent will use its query-receiver tool to log the incoming query
-		const message = `Question Type: ${questionType}\n\nQuery: ${query}`;
+		const agentMessage = `Question Type: ${questionType}\n\nQuery: ${query}`;
 
 		// Send the query to the specialized agent
-		const response = await specializedAgent.generate(message);
+		message(
+			`🧭 QUERY ROUTER - Calling specialized agent: ${mapping.agentName}`,
+		);
+		log('Message sent:', agentMessage);
+
+		const response = await specializedAgent.generate(agentMessage);
+
+		const responseText = response.text || JSON.stringify(response);
+
+		message(
+			`✅ QUERY ROUTER - Received response from ${mapping.agentName}`,
+		);
+		log('Response text:', responseText);
 
 		return {
 			success: true,
 			agentName: mapping.displayName,
-			response: response.text || JSON.stringify(response),
+			response: responseText,
 		};
 	},
 });

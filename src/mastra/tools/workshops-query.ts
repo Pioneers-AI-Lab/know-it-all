@@ -38,6 +38,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 export const workshopsQuery = createTool({
 	id: 'workshops-query',
 	description:
@@ -54,6 +55,9 @@ export const workshopsQuery = createTool({
 		found: z.boolean().describe('Whether matching workshops were found'),
 	}),
 	execute: async ({ query }) => {
+		message('🔎 WORKSHOPS QUERY - Searching timeline for workshops');
+		log('Query:', query);
+
 		const data = loadJsonData('timeline.json');
 		const results: any[] = [];
 
@@ -83,8 +87,17 @@ export const workshopsQuery = createTool({
 			}
 		}
 
+		const finalResults = results.slice(0, 10); // Limit to top 10 results
+		message(`✅ WORKSHOPS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} workshop(s) found`
+				: 'No workshops found',
+		);
+
 		return {
-			workshops: results.slice(0, 10), // Limit to top 10 results
+			workshops: finalResults,
 			found: results.length > 0,
 		};
 	},

@@ -38,6 +38,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 export const startupsQuery = createTool({
 	id: 'startups-query',
 	description:
@@ -54,6 +55,9 @@ export const startupsQuery = createTool({
 		found: z.boolean().describe('Whether matching startups were found'),
 	}),
 	execute: async ({ query }) => {
+		message('🔎 STARTUPS QUERY - Searching startups database');
+		log('Query:', query);
+
 		const data = loadJsonData('startups.json');
 		const results: any[] = [];
 
@@ -65,8 +69,17 @@ export const startupsQuery = createTool({
 			}
 		}
 
+		const finalResults = results.slice(0, 10); // Limit to top 10 results
+		message(`✅ STARTUPS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} startup(s) found`
+				: 'No startups found',
+		);
+
 		return {
-			startups: results.slice(0, 10), // Limit to top 10 results
+			startups: finalResults,
 			found: results.length > 0,
 		};
 	},

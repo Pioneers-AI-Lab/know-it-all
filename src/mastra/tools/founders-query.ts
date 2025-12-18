@@ -39,6 +39,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
+import { message, log } from '../../lib/print-helpers';
 export const foundersQuery = createTool({
 	id: 'founders-query',
 	description:
@@ -55,6 +56,9 @@ export const foundersQuery = createTool({
 		found: z.boolean().describe('Whether matching founders were found'),
 	}),
 	execute: async ({ query }) => {
+		message('🔎 FOUNDERS QUERY - Searching founders database');
+		log('Query:', query);
+
 		const data = loadJsonData('founders.json');
 		const results: any[] = [];
 
@@ -66,8 +70,17 @@ export const foundersQuery = createTool({
 			}
 		}
 
+		const finalResults = results.slice(0, 10); // Limit to top 10 results
+		message(`✅ FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} founder(s) found`
+				: 'No founders found',
+		);
+
 		return {
-			founders: results.slice(0, 10), // Limit to top 10 results
+			founders: finalResults,
 			found: results.length > 0,
 		};
 	},
