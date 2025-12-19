@@ -1,0 +1,195 @@
+{
+	"generated_at": "2025-12-16",
+	"dataset_purpose": "Demo / testing / Slack chatbot / accelerator simulations",
+	"startups": [
+		{
+			"startup_id": "fs_001",
+			"name": "PulseMind",
+			"tagline": "Real-time mental health insights for modern teams",
+			"description": "PulseMind provides AI-powered mental health analytics for companies, helping leaders detect burnout risks early and improve employee well-being.",
+			"industry": ["HealthTech", "HRTech", "AI"],
+			"business_model": "B2B SaaS",
+			"problem": "Companies lack real-time visibility into employee mental well-being, leading to burnout, churn, and reduced productivity.",
+			"solution": "PulseMind analyzes anonymized behavioral signals and surveys to surface actionable mental health insights for managers.",
+			"target_customers": {
+				"primary": "SMEs (50–500 employees)",
+				"secondary": "HR departments in large enterprises"
+			},
+			"market": {
+				"tam": "USD 50B",
+				"sam": "USD 8B",
+				"som": "USD 500M"
+			},
+			"product_stage": "MVP",
+			"traction": {
+				"users": 1200,
+				"paying_customers": 18,
+				"mrr_usd": 7200,
+				"growth_rate_monthly": "18%"
+			},
+			"technology": {
+				"stack": ["Next.js", "Node.js", "Python", "PostgreSQL"],
+				"ai": ["Sentiment analysis", "Anomaly detection"],
+				"infrastructure": ["AWS", "Docker"]
+			},
+			"team": [
+				{
+					"name": "Emma Laurent",
+					"role": "CEO",
+					"background": "Former HR Director at a 500-person tech company"
+				},
+				{
+					"name": "Julien Moreau",
+					"role": "CTO",
+					"background": "10 years in machine learning and data engineering"
+				}
+			],
+			"funding": {
+				"stage": "Pre-seed",
+				"raised_usd": 300000,
+				"investors": ["Angel investors"],
+				"seeking_usd": 1000000
+			},
+			"location": {
+				"hq": "Paris, France",
+				"remote_friendly": true
+			},
+			"regulatory_or_risk": [
+				"GDPR compliance",
+				"Data anonymization requirements"
+			],
+			"metrics_focus": [
+				"Engagement",
+				"Retention",
+				"Burnout risk reduction"
+			],
+			"status": "Active"
+		},
+		{
+			"startup_id": "fs_002",
+			"name": "AgroLoop",
+			"tagline": "Smarter irrigation for sustainable farming",
+			"description": "AgroLoop helps farmers reduce water usage by optimizing irrigation using IoT sensors and predictive analytics.",
+			"industry": ["AgriTech", "ClimateTech", "IoT"],
+			"business_model": "B2B + Hardware-as-a-Service",
+			"problem": "Farmers waste water due to inefficient and manual irrigation systems.",
+			"solution": "AgroLoop deploys soil sensors and AI models to automate irrigation decisions in real time.",
+			"target_customers": {
+				"primary": "Mid-size farms",
+				"secondary": "Agricultural cooperatives"
+			},
+			"market": {
+				"tam": "USD 120B",
+				"sam": "USD 20B",
+				"som": "USD 1.2B"
+			},
+			"product_stage": "Pilot",
+			"traction": {
+				"active_farms": 42,
+				"countries": 3,
+				"water_saved_percent_avg": "25%"
+			},
+			"technology": {
+				"stack": ["Go", "Python", "TimescaleDB"],
+				"hardware": ["Soil moisture sensors", "Weather stations"],
+				"ai": ["Predictive modeling"],
+				"infrastructure": ["GCP"]
+			},
+			"team": [
+				{
+					"name": "Lucas Bernard",
+					"role": "CEO",
+					"background": "Agricultural engineer"
+				},
+				{
+					"name": "Sofia Alvarez",
+					"role": "COO",
+					"background": "Operations lead in AgriTech startups"
+				},
+				{
+					"name": "Nicolas Petit",
+					"role": "CTO",
+					"background": "IoT systems architect"
+				}
+			],
+			"funding": {
+				"stage": "Seed",
+				"raised_usd": 1800000,
+				"investors": ["Climate VC Fund"],
+				"seeking_usd": 3000000
+			},
+			"location": {
+				"hq": "Barcelona, Spain",
+				"remote_friendly": false
+			},
+			"regulatory_or_risk": [
+				"Hardware deployment costs",
+				"Weather dependency"
+			],
+			"metrics_focus": ["Water efficiency", "Crop yield improvement"],
+			"status": "Active"
+		},
+		{
+			"startup_id": "fs_003",
+			"name": "Contractly",
+			"tagline": "Contracts, finally readable",
+			"description": "Contractly uses AI to summarize, compare, and flag risks in legal contracts for startups and SMEs.",
+			"industry": ["LegalTech", "AI", "B2B SaaS"],
+			"business_model": "Subscription SaaS",
+			"problem": "Founders and SMEs struggle to understand legal contracts quickly and affordably.",
+			"solution": "Contractly automatically extracts key clauses, risks, and obligations using large language models.",
+			"target_customers": {
+				"primary": "Startups and SMEs",
+				"secondary": "Freelancers"
+			},
+			"market": {
+				"tam": "USD 35B",
+				"sam": "USD 6B",
+				"som": "USD 400M"
+			},
+			"product_stage": "Public beta",
+			"traction": {
+				"users": 8500,
+				"paying_customers": 320,
+				"mrr_usd": 14500,
+				"churn_rate": "3.2%"
+			},
+			"technology": {
+				"stack": ["TypeScript", "Next.js", "Python"],
+				"ai": ["LLMs", "Document parsing"],
+				"infrastructure": ["Vercel", "AWS"]
+			},
+			"team": [
+				{
+					"name": "Alice Nguyen",
+					"role": "CEO",
+					"background": "Former corporate lawyer"
+				},
+				{
+					"name": "Romain Dupuis",
+					"role": "CTO",
+					"background": "AI engineer, ex-scaleup"
+				}
+			],
+			"funding": {
+				"stage": "Bootstrapped",
+				"raised_usd": 0,
+				"revenue_funded": true
+			},
+			"location": {
+				"hq": "Remote-first",
+				"remote_friendly": true
+			},
+			"regulatory_or_risk": [
+				"Legal liability disclaimers",
+				"AI accuracy limitations"
+			],
+			"metrics_focus": [
+				"MRR growth",
+				"Activation rate",
+				"Time saved per contract"
+			],
+			"status": "Active"
+		}
+	]
+}
