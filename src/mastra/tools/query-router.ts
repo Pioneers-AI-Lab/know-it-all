@@ -169,7 +169,6 @@ export const queryRouter = createTool({
 		message(
 			`✅ QUERY ROUTER - Received response from ${mapping.agentName}`,
 		);
-		log('Response text:', responseText);
 
 		return {
 			success: true,

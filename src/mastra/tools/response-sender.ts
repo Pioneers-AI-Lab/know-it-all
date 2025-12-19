@@ -97,11 +97,6 @@ After logging, generate a clear, helpful, and comprehensive response to the user
 		// Send the formatted data to the response-generator-agent
 		const response = await responseGeneratorAgent.generate(agentMessage);
 
-		message(
-			'✅ RESPONSE SENDER - Received response from response-generator-agent',
-		);
-		log('Response:', response.text || JSON.stringify(response));
-
 		return {
 			success: true,
 			response: response.text || JSON.stringify(response),

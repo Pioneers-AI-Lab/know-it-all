@@ -95,7 +95,6 @@ export const orchestratorSender = createTool({
 		message(
 			'✅ ORCHESTRATOR SENDER - Received response from orchestrator-agent',
 		);
-		log('Response text:', responseText);
 
 		return {
 			success: true,
