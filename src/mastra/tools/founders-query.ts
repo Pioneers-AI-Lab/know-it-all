@@ -38,8 +38,10 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { loadJsonData, searchInObject } from './data-helpers';
 import { message, log } from '../../lib/print-helpers';
+import { searchInObject } from './data-helpers';
+import foundersData from '../../../data/founders.json';
+
 export const foundersQuery = createTool({
 	id: 'founders-query',
 	description:
@@ -59,18 +61,35 @@ export const foundersQuery = createTool({
 		message('🔎 FOUNDERS QUERY - Searching founders database');
 		log('Query:', query);
 
-		const data = loadJsonData('founders.json');
+		const queryLower = query.toLowerCase();
+
+		// Check if query is asking for "all founders" or "list of founders"
+		const isAllFoundersQuery =
+			queryLower.includes('all founder') ||
+			queryLower.includes('list of founder') ||
+			queryLower.includes('every founder') ||
+			queryLower.includes('all the founder') ||
+			queryLower === 'founders' ||
+			queryLower === 'founder';
+
 		const results: any[] = [];
 
-		if (data.founders && Array.isArray(data.founders)) {
-			for (const founder of data.founders) {
-				if (searchInObject(founder, query)) {
-					results.push(founder);
+		if (foundersData.founders && Array.isArray(foundersData.founders)) {
+			if (isAllFoundersQuery) {
+				// Return all founders if query asks for all
+				message('📋 FOUNDERS QUERY - Returning all founders');
+				results.push(...foundersData.founders);
+			} else {
+				// Search across all founder fields using searchInObject
+				for (const founder of foundersData.founders) {
+					if (searchInObject(founder, query)) {
+						results.push(founder);
+					}
 				}
 			}
 		}
 
-		const finalResults = results.slice(0, 10); // Limit to top 10 results
+		const finalResults = results.slice(0, 50); // Limit to top 50 results for "all" queries
 		message(`✅ FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
 		log(
 			'Results:',
