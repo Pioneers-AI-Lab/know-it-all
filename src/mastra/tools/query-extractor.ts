@@ -31,7 +31,7 @@
  * Output Format:
  * {
  *   query: "extracted question text",
- *   questionType: "startups|events|workshops|timeline|founders|guests|general",
+ *   questionType: "startups|calendar|founders|general",
  *   timestamp: "ISO date string"
  * }
  */
@@ -51,15 +51,7 @@ export const queryExtractor = createTool({
 	outputSchema: z.object({
 		query: z.string().describe('The extracted question'),
 		questionType: z
-			.enum([
-				'startups',
-				'events',
-				'workshops',
-				'timeline',
-				'founders',
-				'guests',
-				'general',
-			])
+			.enum(['startups', 'events', 'calendar', 'founders', 'general'])
 			.describe('The type of question based on data categories'),
 		formatted: z
 			.object({
@@ -107,7 +99,7 @@ export const queryExtractor = createTool({
 				/mrr/i,
 				/revenue/i,
 			],
-			events: [
+			calendar: [
 				/event/i,
 				/events/i,
 				/calendar/i,
@@ -120,27 +112,6 @@ export const queryExtractor = createTool({
 				/fireside/i,
 				/ama/i,
 			],
-			workshops: [
-				/workshop/i,
-				/workshops/i,
-				/training/i,
-				/seminar/i,
-				/learning/i,
-				/curriculum/i,
-			],
-			timeline: [
-				/timeline/i,
-				/phase/i,
-				/phases/i,
-				/program/i,
-				/cohort/i,
-				/schedule/i,
-				/duration/i,
-				/week/i,
-				/weeks/i,
-				/milestone/i,
-				/milestones/i,
-			],
 			founders: [
 				/founder/i,
 				/founders/i,
@@ -148,32 +119,26 @@ export const queryExtractor = createTool({
 				/entrepreneurs/i,
 				/ceo/i,
 				/cto/i,
+				/cofounder/i,
 				/co-founder/i,
+				/co-founders/i,
 				/team/i,
 				/background/i,
 				/experience/i,
-			],
-			guests: [
-				/guest/i,
-				/guests/i,
-				/speaker/i,
-				/speakers/i,
-				/invited/i,
-				/special guest/i,
-				/visiting/i,
+				/skills/i,
+				/background/i,
+				/experience/i,
+				/skills/i,
+				/background/i,
+				/experience/i,
+				/skills/i,
 			],
 		};
 
 		// Check for keywords in the query (case-insensitive)
 		const queryLower = query.toLowerCase();
-		let questionType:
-			| 'startups'
-			| 'events'
-			| 'workshops'
-			| 'timeline'
-			| 'founders'
-			| 'guests'
-			| 'general' = 'general';
+		let questionType: 'startups' | 'calendar' | 'founders' | 'general' =
+			'general';
 
 		// Check each data type's keywords
 		for (const [type, patterns] of Object.entries(dataTypeKeywords)) {
