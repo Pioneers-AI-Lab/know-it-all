@@ -131,8 +131,23 @@ export const dataFormatter = createTool({
 				};
 			} else if (data.events && Array.isArray(data.events)) {
 				// From events-query or guests-query
-				summary = `Found ${data.events.length} matching event(s).`;
+				if (data.metadata?.queryType === 'aggregate') {
+					summary = `Found ${
+						data.metadata.totalCount || data.events.length
+					} total event(s) in the calendar.`;
+				} else if (data.metadata?.queryType === 'specific_field') {
+					summary = `Found ${data.events.length} event(s) matching the query.`;
+				} else {
+					summary = `Found ${data.events.length} matching event(s).`;
+				}
 				relevantData = data.events;
+				// Include metadata if present for context
+				if (data.metadata) {
+					relevantData = {
+						events: data.events,
+						metadata: data.metadata,
+					};
+				}
 			} else if (data.timeline && Array.isArray(data.timeline)) {
 				// From timeline-query (alternative structure)
 				summary = `Found ${data.timeline.length} timeline phase(s).`;
