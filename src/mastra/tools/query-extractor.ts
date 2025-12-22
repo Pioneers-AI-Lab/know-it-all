@@ -32,7 +32,7 @@
  * Output Format:
  * {
  *   query: "extracted question text",
- *   questionType: "startups|calendar|founders|pioneers|sessions|general",
+ *   questionType: "startups|founders|pioneers|sessions|general",
  *   timestamp: "ISO date string"
  * }
  */
@@ -55,7 +55,6 @@ export const queryExtractor = createTool({
 			.enum([
 				'startups',
 				'events',
-				'calendar',
 				'founders',
 				'pioneers',
 				'sessions',
@@ -71,8 +70,8 @@ export const queryExtractor = createTool({
 			.describe('The formatted JSON object containing the question'),
 	}),
 	execute: async ({ message: userMessage }) => {
-		message('🔍 QUERY EXTRACTOR - Starting extraction');
-		log('Raw message:', userMessage);
+		// message('🔍 QUERY EXTRACTOR - Starting extraction');
+		// log('Raw message:', userMessage);
 
 		// Clean the message - remove extra whitespace and normalize
 		const cleanedMessage = userMessage.trim().replace(/\s+/g, ' ');
@@ -108,19 +107,6 @@ export const queryExtractor = createTool({
 				/mrr/i,
 				/revenue/i,
 			],
-			calendar: [
-				/event/i,
-				/events/i,
-				/calendar/i,
-				/schedule/i,
-				/scheduled/i,
-				/meeting/i,
-				/meetings/i,
-				/session/i,
-				/sessions/i,
-				/fireside/i,
-				/ama/i,
-			],
 			founders: [
 				/founder/i,
 				/founders/i,
@@ -151,6 +137,17 @@ export const queryExtractor = createTool({
 				/pioneer book/i,
 			],
 			sessions: [
+				/event/i,
+				/events/i,
+				/calendar/i,
+				/schedule/i,
+				/scheduled/i,
+				/meeting/i,
+				/meetings/i,
+				/session/i,
+				/sessions/i,
+				/fireside/i,
+				/ama/i,
 				/session/i,
 				/sessions/i,
 				/event grid/i,
@@ -170,7 +167,6 @@ export const queryExtractor = createTool({
 		const queryLower = query.toLowerCase();
 		let questionType:
 			| 'startups'
-			| 'calendar'
 			| 'founders'
 			| 'pioneers'
 			| 'sessions'
@@ -194,10 +190,10 @@ export const queryExtractor = createTool({
 			timestamp: new Date().toISOString(),
 		};
 
-		message('🔍 QUERY EXTRACTOR - Result');
-		log('Extracted query:', query);
-		log('Detected questionType:', questionType);
-		log('Formatted object:', JSON.stringify(formatted, null, 2));
+		// message('🔍 QUERY EXTRACTOR - Result');
+		// log('Extracted query:', query);
+		// log('Detected questionType:', questionType);
+		// log('Formatted object:', JSON.stringify(formatted, null, 2));
 
 		return {
 			query,
