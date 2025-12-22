@@ -28,7 +28,6 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { queryReceiver } from '../tools/query-receiver';
 import { startupsQuery } from '../tools/startups-query';
-import { foundersQuery } from '../tools/founders-query';
 import { dataFormatter } from '../tools/data-formatter';
 import { responseSender } from '../tools/response-sender';
 
@@ -58,7 +57,6 @@ Always pass the complete result object from the query tool to the data-formatter
 	tools: {
 		queryReceiver,
 		startupsQuery,
-		foundersQuery,
 		dataFormatter,
 		responseSender,
 	},

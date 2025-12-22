@@ -37,8 +37,10 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { loadJsonData, searchInObject } from './data-helpers';
+import { searchInObject } from './data-helpers';
 import { message, log } from '../../lib/print-helpers';
+import startupsData from '../../../data/startups.json';
+
 export const startupsQuery = createTool({
 	id: 'startups-query',
 	description:
@@ -58,11 +60,10 @@ export const startupsQuery = createTool({
 		message('🔎 STARTUPS QUERY - Searching startups database');
 		log('Query:', query);
 
-		const data = loadJsonData('startups.json');
 		const results: any[] = [];
 
-		if (data.startups && Array.isArray(data.startups)) {
-			for (const startup of data.startups) {
+		if (startupsData.startups && Array.isArray(startupsData.startups)) {
+			for (const startup of startupsData.startups) {
 				if (searchInObject(startup, query)) {
 					results.push(startup);
 				}
