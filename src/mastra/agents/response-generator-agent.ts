@@ -68,7 +68,7 @@ For example:
 Do NOT just summarize or say "the data is available" - actually extract and display the requested information from relevantData.
 
 Always use the formatted-data-receiver tool first to log the data, then generate your response using the relevantData.`,
-	model: 'anthropic/claude-sonnet-4-20250514',
+	model: 'anthropic/claude-haiku-4-20250514',
 	tools: { formattedDataReceiver },
 	memory: new Memory({
 		options: {

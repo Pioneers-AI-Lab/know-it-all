@@ -9,7 +9,11 @@
   },
   "author": "Mastra",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "@libsql/client": "latest",
+    "supports-color": "10.2.2",
+    "typescript": "5.9.3"
+  },
   "pnpm": {
     "neverBuiltDependencies": []
   }

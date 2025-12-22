@@ -54,7 +54,7 @@ Always follow this sequence: query-receiver → founders-query → data-formatte
 Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.
 
 For matching queries (e.g., "match me with a CTO", "find me a business co-founder"), the founders-query tool will automatically filter for founders seeking co-founders. Pay attention to the metadata to understand the query type and provide appropriate context in your response.`,
-	model: 'anthropic/claude-sonnet-4-20250514',
+	model: 'anthropic/claude-haiku-4-20250514',
 	tools: {
 		queryReceiver,
 		foundersQuery,

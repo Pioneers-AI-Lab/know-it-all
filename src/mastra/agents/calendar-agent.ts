@@ -50,7 +50,7 @@ Query: {query}"
 
 Always follow this sequence: query-receiver → events-query → data-formatter → response-sender.
 Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
-	model: 'anthropic/claude-sonnet-4-20250514',
+	model: 'anthropic/claude-haiku-4-20250514',
 	tools: {
 		queryReceiver,
 		eventsQuery,
