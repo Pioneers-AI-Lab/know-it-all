@@ -70,8 +70,8 @@ export const queryExtractor = createTool({
 			.describe('The formatted JSON object containing the question'),
 	}),
 	execute: async ({ message: userMessage }) => {
-		message('🔍 QUERY EXTRACTOR - Starting extraction');
-		log('Raw message:', userMessage);
+		// message('🔍 QUERY EXTRACTOR - Starting extraction');
+		// log('Raw message:', userMessage);
 
 		// Clean the message - remove extra whitespace and normalize
 		const cleanedMessage = userMessage.trim().replace(/\s+/g, ' ');
@@ -193,10 +193,10 @@ export const queryExtractor = createTool({
 			timestamp: new Date().toISOString(),
 		};
 
-		message('🔍 QUERY EXTRACTOR - Result');
-		log('Extracted query:', query);
-		log('Detected questionType:', questionType);
-		log('Formatted object:', JSON.stringify(formatted, null, 2));
+		// message('🔍 QUERY EXTRACTOR - Result');
+		// log('Extracted query:', query);
+		// log('Detected questionType:', questionType);
+		// log('Formatted object:', JSON.stringify(formatted, null, 2));
 
 		return {
 			query,

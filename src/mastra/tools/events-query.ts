@@ -52,8 +52,8 @@ export const eventsQuery = createTool({
 		found: z.boolean().describe('Whether matching events were found'),
 	}),
 	execute: async ({ query }) => {
-		message('🔎 EVENTS QUERY - Searching calendar events database');
-		log('Query:', query);
+		// message('🔎 EVENTS QUERY - Searching calendar events database');
+		// log('Query:', query);
 
 		const data = loadJsonData('calendar-events.json');
 		const results: any[] = [];
@@ -67,13 +67,13 @@ export const eventsQuery = createTool({
 		}
 
 		const finalResults = results.slice(0, 10); // Limit to top 10 results
-		message(`✅ EVENTS QUERY - Found ${finalResults.length} result(s)`);
-		log(
-			'Results:',
-			finalResults.length > 0
-				? `${finalResults.length} event(s) found`
-				: 'No events found',
-		);
+		// message(`✅ EVENTS QUERY - Found ${finalResults.length} result(s)`);
+		// log(
+		// 	'Results:',
+		// 	finalResults.length > 0
+		// 		? `${finalResults.length} event(s) found`
+		// 		: 'No events found',
+		// );
 
 		return {
 			events: finalResults,

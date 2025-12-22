@@ -63,13 +63,13 @@ export const formattedDataReceiver = createTool({
 			.describe('Whether the formatted data was successfully logged'),
 	}),
 	execute: async ({ formatted }) => {
-		message('📬 RESPONSE GENERATOR AGENT - Received Formatted Data');
-		log('Original Query:', formatted.query);
-		log('Question Type:', formatted.questionType);
-		log('Data Source:', formatted.agentName);
-		log('Summary:', formatted.summary);
-		log('Received at:', formatted.timestamp);
-		log('Relevant Data:', JSON.stringify(formatted.relevantData, null, 2));
+		// message('📬 RESPONSE GENERATOR AGENT - Received Formatted Data');
+		// log('Original Query:', formatted.query);
+		// log('Question Type:', formatted.questionType);
+		// log('Data Source:', formatted.agentName);
+		// log('Summary:', formatted.summary);
+		// log('Received at:', formatted.timestamp);
+		// log('Relevant Data:', JSON.stringify(formatted.relevantData, null, 2));
 
 		return { logged: true };
 	},

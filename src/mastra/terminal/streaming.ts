@@ -130,7 +130,7 @@ export async function streamToTerminal(
 		} else {
 			process.stdout.write('\n');
 		}
-		console.log('\n✅ Response complete\n');
+		// console.log('\n✅ Response complete\n');
 	} catch (error) {
 		console.error(
 			'\n❌ Error:',
