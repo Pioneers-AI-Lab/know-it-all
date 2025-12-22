@@ -76,8 +76,8 @@ export const startupsQuery = createTool({
 			.describe('Additional metadata about the query results'),
 	}),
 	execute: async ({ query }) => {
-		// message('🔎 STARTUPS QUERY - Searching startups database');
-		// log('Query:', query);
+		message('🔎 STARTUPS QUERY - Searching startups database');
+		log('Query:', query);
 
 		const startupsData = loadJsonData('startups.json');
 		const allStartups = startupsData.startups || [];
@@ -135,7 +135,7 @@ export const startupsQuery = createTool({
 			| undefined;
 
 		if (allStartups.length === 0) {
-			// message('⚠️ STARTUPS QUERY - No startups found in database');
+			message('⚠️ STARTUPS QUERY - No startups found in database');
 			return {
 				startups: [],
 				found: false,
@@ -144,9 +144,9 @@ export const startupsQuery = createTool({
 
 		// Handle aggregate queries - return all startups with metadata
 		if (isAggregateQuery) {
-			// message(
-			// 	'📊 STARTUPS QUERY - Detected aggregate query, returning all startups',
-			// );
+			message(
+				'📊 STARTUPS QUERY - Detected aggregate query, returning all startups',
+			);
 			results = [...allStartups];
 			metadata = {
 				queryType: 'aggregate' as const,
@@ -155,7 +155,7 @@ export const startupsQuery = createTool({
 		}
 		// Handle "all startups" queries
 		else if (isAllStartupsQuery) {
-			// message('📋 STARTUPS QUERY - Returning all startups');
+			message('📋 STARTUPS QUERY - Returning all startups');
 			results = [...allStartups];
 			metadata = {
 				queryType: 'all' as const,
@@ -164,7 +164,7 @@ export const startupsQuery = createTool({
 		}
 		// Handle specific field queries - extract startup name and return relevant startups
 		else if (isSpecificFieldQuery) {
-			// message('🎯 STARTUPS QUERY - Detected specific field query');
+			message('🎯 STARTUPS QUERY - Detected specific field query');
 
 			// Try to extract startup name from query
 			let matchedStartups: any[] = [];
@@ -196,7 +196,7 @@ export const startupsQuery = createTool({
 		}
 		// General search - use semantic matching
 		else {
-			// message('🔍 STARTUPS QUERY - Performing general search');
+			message('🔍 STARTUPS QUERY - Performing general search');
 			// Search across all startup fields using searchInObject
 			for (const startup of allStartups) {
 				if (searchInObject(startup, query)) {
@@ -209,13 +209,13 @@ export const startupsQuery = createTool({
 		}
 
 		const finalResults = results.slice(0, 50); // Limit to top 50 results
-		// message(`✅ STARTUPS QUERY - Found ${finalResults.length} result(s)`);
-		// log(
-		// 	'Results:',
-		// 	finalResults.length > 0
-		// 		? `${finalResults.length} startup(s) found`
-		// 		: 'No startups found',
-		// );
+		message(`✅ STARTUPS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} startup(s) found`
+				: 'No startups found',
+		);
 		if (metadata) {
 			log('Query type:', metadata.queryType);
 			if (metadata.totalCount !== undefined) {

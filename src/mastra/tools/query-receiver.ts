@@ -67,10 +67,10 @@ export const queryReceiver = createTool({
 			.describe('Whether the query was successfully logged'),
 	}),
 	execute: async ({ query, questionType, agentName }) => {
-		// message(`📨 ${agentName.toUpperCase()} - Received Query`);
-		// log('Query:', query);
-		// log('Question Type:', questionType);
-		// log('Received at:', new Date().toISOString());
+		message(`📨 ${agentName.toUpperCase()} - Received Query`);
+		log('Query:', query);
+		log('Question Type:', questionType);
+		log('Received at:', new Date().toISOString());
 
 		return { logged: true };
 	},

@@ -55,11 +55,11 @@ export const queryLogger = createTool({
 			.describe('Whether the query was successfully logged'),
 	}),
 	execute: async ({ query, formatted }) => {
-		// message('📥 ORCHESTRATOR AGENT - Received Query');
-		// log('Query:', query);
-		// log('Formatted Query Object:', JSON.stringify(formatted, null, 2));
-		// log('Timestamp:', formatted.timestamp);
-		// log('Question Type:', formatted.type);
+		message('📥 ORCHESTRATOR AGENT - Received Query');
+		log('Query:', query);
+		log('Formatted Query Object:', JSON.stringify(formatted, null, 2));
+		log('Timestamp:', formatted.timestamp);
+		log('Question Type:', formatted.type);
 
 		return { logged: true };
 	},

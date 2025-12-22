@@ -91,7 +91,7 @@ export function loadJsonData(filename: string): any {
 	}
 
 	// If all paths failed, throw error
-	// console.error(`Error loading ${filename}: Tried paths:`, possiblePaths);
+	console.error(`Error loading ${filename}: Tried paths:`, possiblePaths);
 	throw new Error(
 		`Failed to load data file: ${filename}. Checked paths: ${possiblePaths.join(
 			', ',

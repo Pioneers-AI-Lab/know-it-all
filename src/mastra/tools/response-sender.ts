@@ -68,10 +68,10 @@ export const responseSender = createTool({
 		success: boolean;
 		response: string;
 	}> => {
-		// message(
-		// 	'📤 RESPONSE SENDER - Sending formatted data to response-generator-agent',
-		// );
-		// log('Formatted data:', JSON.stringify(formatted, null, 2));
+		message(
+			'📤 RESPONSE SENDER - Sending formatted data to response-generator-agent',
+		);
+		log('Formatted data:', JSON.stringify(formatted, null, 2));
 
 		// Lazy import to avoid circular dependency
 		const { mastra } = await import('../index');
@@ -80,7 +80,7 @@ export const responseSender = createTool({
 			'responseGeneratorAgent' as 'responseGeneratorAgent',
 		);
 		if (!responseGeneratorAgent) {
-			// error('Response generator agent not found', null);
+			error('Response generator agent not found', null);
 			throw new Error('Response generator agent not found');
 		}
 

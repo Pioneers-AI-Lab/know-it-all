@@ -70,9 +70,9 @@ export const queryRouter = createTool({
 		agentName: string;
 		response: string;
 	}> => {
-		// message('🧭 QUERY ROUTER - Routing query to specialized agent');
-		// log('Question type:', questionType);
-		// log('Query:', query);
+		message('🧭 QUERY ROUTER - Routing query to specialized agent');
+		log('Question type:', questionType);
+		log('Query:', query);
 
 		// Map question types to agent names
 		const agentMapping: Record<
@@ -102,7 +102,7 @@ export const queryRouter = createTool({
 
 		const mapping = agentMapping[questionType];
 		if (!mapping) {
-			// error('No agent mapping found for question type:', questionType);
+			error('No agent mapping found for question type:', questionType);
 			throw new Error(
 				`No agent mapping found for question type: ${questionType}`,
 			);
@@ -123,10 +123,10 @@ export const queryRouter = createTool({
 				| 'foundersAgent',
 		);
 		if (!specializedAgent) {
-			// error(
-			// 	`Specialized agent "${mapping.agentName}" not found`,
-			// 	mapping,
-			// );
+			error(
+				`Specialized agent "${mapping.agentName}" not found`,
+				mapping,
+			);
 			throw new Error(
 				`Specialized agent "${mapping.agentName}" not found`,
 			);
@@ -137,18 +137,18 @@ export const queryRouter = createTool({
 		const agentMessage = `Question Type: ${questionType}\n\nQuery: ${query}`;
 
 		// Send the query to the specialized agent
-		// message(
-		// 	`🧭 QUERY ROUTER - Calling specialized agent: ${mapping.agentName}`,
-		// );
-		// log('Message sent:', agentMessage);
+		message(
+			`🧭 QUERY ROUTER - Calling specialized agent: ${mapping.agentName}`,
+		);
+		log('Message sent:', agentMessage);
 
 		const response = await specializedAgent.generate(agentMessage);
 
 		const responseText = response.text || JSON.stringify(response);
 
-		// message(
-		// 	`✅ QUERY ROUTER - Received response from ${mapping.agentName}`,
-		// );
+		message(
+			`✅ QUERY ROUTER - Received response from ${mapping.agentName}`,
+		);
 
 		return {
 			success: true,

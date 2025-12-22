@@ -58,8 +58,8 @@ export const foundersQuery = createTool({
 		found: z.boolean().describe('Whether matching founders were found'),
 	}),
 	execute: async ({ query }) => {
-		// message('🔎 FOUNDERS QUERY - Searching founders database');
-		// log('Query:', query);
+		message('🔎 FOUNDERS QUERY - Searching founders database');
+		log('Query:', query);
 
 		const queryLower = query.toLowerCase();
 
@@ -77,7 +77,7 @@ export const foundersQuery = createTool({
 		if (foundersData.founders && Array.isArray(foundersData.founders)) {
 			if (isAllFoundersQuery) {
 				// Return all founders if query asks for all
-				// message('📋 FOUNDERS QUERY - Returning all founders');
+				message('📋 FOUNDERS QUERY - Returning all founders');
 				results.push(...foundersData.founders);
 			} else {
 				// Search across all founder fields using searchInObject
@@ -90,13 +90,13 @@ export const foundersQuery = createTool({
 		}
 
 		const finalResults = results.slice(0, 50); // Limit to top 50 results for "all" queries
-		// message(`✅ FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
-		// log(
-		// 	'Results:',
-		// 	finalResults.length > 0
-		// 		? `${finalResults.length} founder(s) found`
-		// 		: 'No founders found',
-		// );
+		message(`✅ FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} founder(s) found`
+				: 'No founders found',
+		);
 
 		return {
 			founders: finalResults,

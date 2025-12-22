@@ -64,8 +64,8 @@ export const generalQuestionsQuery = createTool({
 		found: z.boolean().describe('Whether matching answers were found'),
 	}),
 	execute: async ({ query }) => {
-		// message('🔎 GENERAL QUESTIONS QUERY - Searching knowledge base');
-		// log('Query:', query);
+		message('🔎 GENERAL QUESTIONS QUERY - Searching knowledge base');
+		log('Query:', query);
 
 		const data = loadJsonData('general-questions.json');
 		const results: Array<{
@@ -99,15 +99,15 @@ export const generalQuestionsQuery = createTool({
 		}
 
 		const finalResults = results.slice(0, 5); // Limit to top 5 results
-		// message(
-		// 	`✅ GENERAL QUESTIONS QUERY - Found ${finalResults.length} result(s)`,
-		// );
-		// log(
-		// 	'Results:',
-		// 	finalResults.length > 0
-		// 		? `${finalResults.length} answer(s) found`
-		// 		: 'No answers found',
-		// );
+		message(
+			`✅ GENERAL QUESTIONS QUERY - Found ${finalResults.length} result(s)`,
+		);
+		log(
+			'Results:',
+			finalResults.length > 0
+				? `${finalResults.length} answer(s) found`
+				: 'No answers found',
+		);
 
 		return {
 			answers: finalResults,

@@ -65,9 +65,9 @@ export const orchestratorSender = createTool({
 		success: boolean;
 		response: string;
 	}> => {
-		// message('🚀 ORCHESTRATOR SENDER - Forwarding to orchestrator-agent');
-		// log('Query:', query);
-		// log('Formatted object:', JSON.stringify(formatted, null, 2));
+		message('🚀 ORCHESTRATOR SENDER - Forwarding to orchestrator-agent');
+		log('Query:', query);
+		log('Formatted object:', JSON.stringify(formatted, null, 2));
 
 		// Lazy import to avoid circular dependency
 		const { mastra } = await import('../index');
@@ -85,16 +85,16 @@ export const orchestratorSender = createTool({
 		)}`;
 
 		// Send the query to the orchestrator-agent
-		// message('🚀 ORCHESTRATOR SENDER - Calling orchestrator-agent');
-		// log('Message sent:', agentMessage);
+		message('🚀 ORCHESTRATOR SENDER - Calling orchestrator-agent');
+		log('Message sent:', agentMessage);
 
 		const response = await orchestratorAgent.generate(agentMessage);
 
 		const responseText = response.text || JSON.stringify(response);
 
-		// message(
-		// 	'✅ ORCHESTRATOR SENDER - Received response from orchestrator-agent',
-		// );
+		message(
+			'✅ ORCHESTRATOR SENDER - Received response from orchestrator-agent',
+		);
 
 		return {
 			success: true,

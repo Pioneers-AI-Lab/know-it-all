@@ -81,9 +81,9 @@ function createSlackEventsRoute(config: SlackAppConfig) {
 
 				// Handle URL verification challenge
 				if (payload.type === 'url_verification') {
-					// console.log(
-					// 	`✅ [${config.name}] URL verification challenge received`,
-					// );
+					console.log(
+						`✅ [${config.name}] URL verification challenge received`,
+					);
 					return c.json({ challenge: payload.challenge });
 				}
 
@@ -142,11 +142,11 @@ function createSlackEventsRoute(config: SlackAppConfig) {
 						const threadTs = event.thread_ts || event.ts;
 						const teamId = payload.team_id;
 
-						// console.log(`📨 [${config.name}] Message received:`, {
-						// 	agent: config.agentName,
-						// 	text: messageText,
-						// 	user: userId,
-						// });
+						console.log(`📨 [${config.name}] Message received:`, {
+							agent: config.agentName,
+							text: messageText,
+							user: userId,
+						});
 
 						// Strip out bot mention from message
 						messageText = messageText
