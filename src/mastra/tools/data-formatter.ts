@@ -95,8 +95,23 @@ export const dataFormatter = createTool({
 				relevantData = data.answers;
 			} else if (data.startups && Array.isArray(data.startups)) {
 				// From startups-query
-				summary = `Found ${data.startups.length} matching startup(s).`;
+				if (data.metadata?.queryType === 'aggregate') {
+					summary = `Found ${
+						data.metadata.totalCount || data.startups.length
+					} total startup(s) in the accelerator.`;
+				} else if (data.metadata?.queryType === 'specific_field') {
+					summary = `Found ${data.startups.length} startup(s) matching the query.`;
+				} else {
+					summary = `Found ${data.startups.length} matching startup(s).`;
+				}
 				relevantData = data.startups;
+				// Include metadata if present for context
+				if (data.metadata) {
+					relevantData = {
+						startups: data.startups,
+						metadata: data.metadata,
+					};
+				}
 			} else if (data.founders && Array.isArray(data.founders)) {
 				// From founders-query
 				summary = `Found ${data.founders.length} matching founder(s).`;

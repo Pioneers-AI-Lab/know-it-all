@@ -254,6 +254,762 @@
 			"funding_experience": "Seed",
 			"goals_next_12_months": ["Scale backend"],
 			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_011",
+			"full_name": "Nicolas Petit",
+			"age": 33,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Barcelona, Spain",
+			"role": "CTO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MSc IoT Systems",
+				"previous_experience": "IoT systems architect",
+				"domain_expertise": ["IoT", "AgriTech", "Hardware"]
+			},
+			"skills": [
+				"IoT architecture",
+				"Hardware integration",
+				"System design"
+			],
+			"motivation": "Using technology to solve climate challenges",
+			"strengths": ["Technical depth", "Hardware expertise"],
+			"weaknesses": ["Business development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Scale IoT infrastructure",
+				"Reduce hardware costs"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_012",
+			"full_name": "Maria Santos",
+			"age": 34,
+			"gender": "Female",
+			"nationality": "Portuguese",
+			"current_location": "London, UK",
+			"role": "CEO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MEd Education Policy",
+				"previous_experience": "Former teacher and education policy advisor",
+				"domain_expertise": ["EdTech", "Education", "Policy"]
+			},
+			"skills": ["Education strategy", "Policy", "Leadership"],
+			"motivation": "Transforming education through personalized learning",
+			"strengths": [
+				"Domain expertise",
+				"Vision",
+				"Stakeholder management"
+			],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": ["Expand to 500 schools", "Raise Series B"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_013",
+			"full_name": "David Chen",
+			"age": 31,
+			"gender": "Male",
+			"nationality": "Chinese-American",
+			"current_location": "London, UK",
+			"role": "CTO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MSc Machine Learning",
+				"previous_experience": "ML engineer with 8 years in EdTech",
+				"domain_expertise": ["Machine Learning", "EdTech", "AI"]
+			},
+			"skills": [
+				"ML algorithms",
+				"Adaptive learning systems",
+				"Team leadership"
+			],
+			"motivation": "Applying AI to improve educational outcomes",
+			"strengths": ["Technical excellence", "Research"],
+			"weaknesses": ["Sales"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Improve model accuracy",
+				"Scale infrastructure"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_014",
+			"full_name": "Sarah Johnson",
+			"age": 29,
+			"gender": "Female",
+			"nationality": "British",
+			"current_location": "London, UK",
+			"role": "CPO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "BSc Product Design",
+				"previous_experience": "Product lead at major EdTech company",
+				"domain_expertise": ["Product Management", "EdTech", "UX"]
+			},
+			"skills": ["Product strategy", "User research", "Roadmap planning"],
+			"motivation": "Creating products that truly help students learn",
+			"strengths": ["User empathy", "Product vision"],
+			"weaknesses": ["Engineering depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": ["Launch mobile app", "Improve engagement"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_015",
+			"full_name": "James Mitchell",
+			"age": 39,
+			"gender": "Male",
+			"nationality": "British",
+			"current_location": "Singapore",
+			"role": "CEO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MBA, INSEAD",
+				"previous_experience": "Former VP at major payment processor",
+				"domain_expertise": ["FinTech", "Payments", "B2B"]
+			},
+			"skills": ["Sales", "Partnerships", "Fundraising", "Strategy"],
+			"motivation": "Democratizing access to global payments",
+			"strengths": ["Industry connections", "Execution"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Expand to 100 countries",
+				"Raise Series A"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_016",
+			"full_name": "Priya Patel",
+			"age": 32,
+			"gender": "Female",
+			"nationality": "Indian",
+			"current_location": "Singapore",
+			"role": "CTO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MSc Blockchain Technology",
+				"previous_experience": "Blockchain engineer, ex-crypto exchange",
+				"domain_expertise": ["Blockchain", "Cryptocurrency", "FinTech"]
+			},
+			"skills": [
+				"Blockchain architecture",
+				"Smart contracts",
+				"Security"
+			],
+			"motivation": "Building the future of financial infrastructure",
+			"strengths": ["Technical depth", "Security expertise"],
+			"weaknesses": ["Business development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Scale transaction volume",
+				"Improve latency"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_017",
+			"full_name": "Thomas Anderson",
+			"age": 36,
+			"gender": "Male",
+			"nationality": "American",
+			"current_location": "Singapore",
+			"role": "CFO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MBA Finance",
+				"previous_experience": "Former investment banker",
+				"domain_expertise": ["Finance", "Treasury", "Compliance"]
+			},
+			"skills": ["Financial modeling", "Compliance", "Risk management"],
+			"motivation": "Building compliant financial products",
+			"strengths": ["Financial acumen", "Regulatory knowledge"],
+			"weaknesses": ["Product development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Obtain licenses",
+				"Build treasury operations"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_018",
+			"full_name": "Lisa Wang",
+			"age": 28,
+			"gender": "Female",
+			"nationality": "Chinese-German",
+			"current_location": "Berlin, Germany",
+			"role": "CEO",
+			"startup_stage": "Pre-seed",
+			"background": {
+				"education": "BSc Business Administration",
+				"previous_experience": "Former product manager at food delivery app",
+				"domain_expertise": ["FoodTech", "Consumer", "Product"]
+			},
+			"skills": ["Product management", "Growth", "User acquisition"],
+			"motivation": "Helping families eat healthier and waste less",
+			"strengths": ["Product sense", "Growth mindset"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": ["Reach 10K users", "Raise seed round"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_019",
+			"full_name": "Carlos Rodriguez",
+			"age": 30,
+			"gender": "Male",
+			"nationality": "Spanish",
+			"current_location": "Berlin, Germany",
+			"role": "CTO",
+			"startup_stage": "Pre-seed",
+			"background": {
+				"education": "MSc Computer Science",
+				"previous_experience": "Full-stack engineer, ex-startup founder",
+				"domain_expertise": ["Full-stack development", "AI", "Mobile"]
+			},
+			"skills": ["Full-stack development", "AI/ML", "Mobile apps"],
+			"motivation": "Using technology to solve sustainability challenges",
+			"strengths": ["Technical versatility", "Execution speed"],
+			"weaknesses": ["Enterprise sales"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Build recommendation engine",
+				"Scale backend"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_020",
+			"full_name": "Robert Kim",
+			"age": 37,
+			"gender": "Male",
+			"nationality": "Korean-American",
+			"current_location": "Austin, USA",
+			"role": "CEO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "BSc Real Estate",
+				"previous_experience": "Former property manager, real estate investor",
+				"domain_expertise": ["Real Estate", "PropTech", "Operations"]
+			},
+			"skills": ["Operations", "Real estate", "Sales"],
+			"motivation": "Modernizing property management",
+			"strengths": ["Domain expertise", "Customer relationships"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": ["Onboard 200 customers", "Raise Series A"],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_021",
+			"full_name": "Amanda Foster",
+			"age": 35,
+			"gender": "Female",
+			"nationality": "American",
+			"current_location": "Austin, USA",
+			"role": "CTO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MSc IoT Systems",
+				"previous_experience": "IoT systems architect, 12 years experience",
+				"domain_expertise": ["IoT", "PropTech", "Hardware"]
+			},
+			"skills": [
+				"IoT architecture",
+				"System design",
+				"Hardware integration"
+			],
+			"motivation": "Building smart buildings and cities",
+			"strengths": ["Technical depth", "Architecture"],
+			"weaknesses": ["Business development"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Deploy 10K sensors",
+				"Improve reliability"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_022",
+			"full_name": "Michael Brown",
+			"age": 33,
+			"gender": "Male",
+			"nationality": "American",
+			"current_location": "Austin, USA",
+			"role": "Head of Sales",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "BSc Business",
+				"previous_experience": "B2B SaaS sales, ex-Salesforce",
+				"domain_expertise": ["Sales", "B2B SaaS", "Enterprise"]
+			},
+			"skills": ["Enterprise sales", "Account management", "Negotiation"],
+			"motivation": "Helping property managers succeed",
+			"strengths": ["Sales execution", "Relationship building"],
+			"weaknesses": ["Product development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Close 50 enterprise deals",
+				"Build sales team"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_023",
+			"full_name": "Alex Thompson",
+			"age": 34,
+			"gender": "Male",
+			"nationality": "American",
+			"current_location": "San Francisco, USA",
+			"role": "CEO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MSc Computer Science",
+				"previous_experience": "Former engineering manager at FAANG company",
+				"domain_expertise": ["DevTools", "Engineering", "AI"]
+			},
+			"skills": [
+				"Engineering leadership",
+				"Product strategy",
+				"Fundraising"
+			],
+			"motivation": "Making developers more productive",
+			"strengths": ["Technical leadership", "Vision"],
+			"weaknesses": ["Sales"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Series A",
+			"goals_next_12_months": ["Reach 50K developers", "Raise Series B"],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_024",
+			"full_name": "Yuki Tanaka",
+			"age": 29,
+			"gender": "Female",
+			"nationality": "Japanese",
+			"current_location": "San Francisco, USA",
+			"role": "CTO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "PhD Computer Science",
+				"previous_experience": "AI researcher, PhD in computer science",
+				"domain_expertise": ["AI", "Machine Learning", "Code Analysis"]
+			},
+			"skills": ["AI research", "ML models", "Code analysis"],
+			"motivation": "Applying cutting-edge AI to developer tools",
+			"strengths": ["Research", "Technical depth"],
+			"weaknesses": ["Product management"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Improve model accuracy",
+				"Reduce false positives"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_025",
+			"full_name": "Rachel Green",
+			"age": 31,
+			"gender": "Female",
+			"nationality": "American",
+			"current_location": "San Francisco, USA",
+			"role": "Head of Product",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "BSc Product Design",
+				"previous_experience": "Product manager at developer tools company",
+				"domain_expertise": [
+					"Product Management",
+					"DevTools",
+					"Developer Experience"
+				]
+			},
+			"skills": ["Product strategy", "User research", "Roadmap planning"],
+			"motivation": "Creating tools developers love to use",
+			"strengths": ["Developer empathy", "Product vision"],
+			"weaknesses": ["Engineering depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": ["Launch integrations", "Improve UX"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_026",
+			"full_name": "Jennifer Martinez",
+			"age": 30,
+			"gender": "Female",
+			"nationality": "American",
+			"current_location": "Amsterdam, Netherlands",
+			"role": "CEO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "BSc Kinesiology",
+				"previous_experience": "Former fitness trainer, tech entrepreneur",
+				"domain_expertise": ["Fitness", "HealthTech", "Consumer"]
+			},
+			"skills": ["Product strategy", "Marketing", "Community building"],
+			"motivation": "Making fitness accessible and personalized",
+			"strengths": ["Domain expertise", "Vision"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": ["Reach 50K users", "Raise Series A"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_027",
+			"full_name": "Kevin Lee",
+			"age": 32,
+			"gender": "Male",
+			"nationality": "Korean-American",
+			"current_location": "Amsterdam, Netherlands",
+			"role": "CTO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MSc Computer Vision",
+				"previous_experience": "Computer vision engineer, ex-Google",
+				"domain_expertise": ["Computer Vision", "AI", "Hardware"]
+			},
+			"skills": ["Computer vision", "ML", "Motion analysis"],
+			"motivation": "Using AI to improve fitness outcomes",
+			"strengths": ["Technical depth", "Research"],
+			"weaknesses": ["Business development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Improve form detection",
+				"Reduce latency"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_028",
+			"full_name": "Sophie Dubois",
+			"age": 28,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Amsterdam, Netherlands",
+			"role": "Head of Hardware",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MSc Electrical Engineering",
+				"previous_experience": "Hardware engineer, ex-Fitbit",
+				"domain_expertise": ["Hardware", "Wearables", "IoT"]
+			},
+			"skills": [
+				"Hardware design",
+				"Manufacturing",
+				"Product development"
+			],
+			"motivation": "Building hardware that enhances fitness",
+			"strengths": ["Hardware expertise", "Product design"],
+			"weaknesses": ["Software development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Reduce hardware costs",
+				"Scale manufacturing"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_029",
+			"full_name": "Daniel Schmidt",
+			"age": 42,
+			"gender": "Male",
+			"nationality": "Swiss-German",
+			"current_location": "Zurich, Switzerland",
+			"role": "CEO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MBA Supply Chain Management",
+				"previous_experience": "Former supply chain director at Fortune 500 company",
+				"domain_expertise": ["Supply Chain", "Logistics", "Enterprise"]
+			},
+			"skills": ["Operations", "Enterprise sales", "Strategy"],
+			"motivation": "Creating transparent and sustainable supply chains",
+			"strengths": ["Industry expertise", "Enterprise relationships"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Onboard 50 enterprises",
+				"Raise Series B"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_030",
+			"full_name": "Mei Lin",
+			"age": 35,
+			"gender": "Female",
+			"nationality": "Chinese",
+			"current_location": "Zurich, Switzerland",
+			"role": "CTO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MSc Blockchain Technology",
+				"previous_experience": "Blockchain architect, ex-IBM",
+				"domain_expertise": ["Blockchain", "Distributed Systems", "IoT"]
+			},
+			"skills": [
+				"Blockchain architecture",
+				"Distributed systems",
+				"Security"
+			],
+			"motivation": "Using blockchain to solve real-world problems",
+			"strengths": ["Technical depth", "Architecture"],
+			"weaknesses": ["Business development"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Scale blockchain network",
+				"Improve throughput"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_031",
+			"full_name": "Oliver Wright",
+			"age": 38,
+			"gender": "Male",
+			"nationality": "British",
+			"current_location": "Zurich, Switzerland",
+			"role": "Head of Operations",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "BSc Logistics",
+				"previous_experience": "Logistics operations expert",
+				"domain_expertise": ["Logistics", "Operations", "Supply Chain"]
+			},
+			"skills": ["Operations", "Process optimization", "Partnerships"],
+			"motivation": "Streamlining global supply chains",
+			"strengths": ["Operations expertise", "Execution"],
+			"weaknesses": ["Product development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Expand partner network",
+				"Improve efficiency"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_032",
+			"full_name": "Dr. Sarah Williams",
+			"age": 40,
+			"gender": "Female",
+			"nationality": "American",
+			"current_location": "Boston, USA",
+			"role": "CEO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MD, MBA Healthcare Management",
+				"previous_experience": "MD, former healthcare IT executive",
+				"domain_expertise": [
+					"Healthcare",
+					"HealthTech",
+					"Interoperability"
+				]
+			},
+			"skills": ["Healthcare strategy", "Regulatory", "Leadership"],
+			"motivation": "Improving patient care through better data sharing",
+			"strengths": ["Domain expertise", "Credibility", "Vision"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": ["Onboard 50 hospitals", "Raise Series B"],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_033",
+			"full_name": "Mark Chen",
+			"age": 37,
+			"gender": "Male",
+			"nationality": "Chinese-American",
+			"current_location": "Boston, USA",
+			"role": "CTO",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "MSc Healthcare Informatics",
+				"previous_experience": "Healthcare systems architect, 15 years experience",
+				"domain_expertise": [
+					"Healthcare IT",
+					"FHIR",
+					"Interoperability"
+				]
+			},
+			"skills": ["Healthcare systems", "FHIR", "API design"],
+			"motivation": "Building interoperable healthcare systems",
+			"strengths": ["Technical depth", "Domain expertise"],
+			"weaknesses": ["Business development"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Improve integration speed",
+				"Scale infrastructure"
+			],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_034",
+			"full_name": "Emily Davis",
+			"age": 33,
+			"gender": "Female",
+			"nationality": "American",
+			"current_location": "Boston, USA",
+			"role": "Head of Compliance",
+			"startup_stage": "Series A",
+			"background": {
+				"education": "JD, Healthcare Law",
+				"previous_experience": "Healthcare compliance expert, HIPAA specialist",
+				"domain_expertise": [
+					"Healthcare Compliance",
+					"HIPAA",
+					"Regulatory"
+				]
+			},
+			"skills": ["Compliance", "Regulatory", "Risk management"],
+			"motivation": "Ensuring secure and compliant healthcare data",
+			"strengths": ["Regulatory expertise", "Risk management"],
+			"weaknesses": ["Product development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Maintain compliance",
+				"Expand certifications"
+			],
+			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_035",
+			"full_name": "Ryan O'Connor",
+			"age": 35,
+			"gender": "Male",
+			"nationality": "American",
+			"current_location": "Portland, USA",
+			"role": "CEO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "BSc Business",
+				"previous_experience": "Former local business owner, tech entrepreneur",
+				"domain_expertise": [
+					"E-commerce",
+					"Marketplace",
+					"Local Business"
+				]
+			},
+			"skills": [
+				"Business development",
+				"Community building",
+				"Strategy"
+			],
+			"motivation": "Supporting local businesses and communities",
+			"strengths": ["Domain expertise", "Community relationships"],
+			"weaknesses": ["Technical depth"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": ["Expand to 50 cities", "Raise Series A"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_036",
+			"full_name": "Isabella Rossi",
+			"age": 30,
+			"gender": "Female",
+			"nationality": "Italian-American",
+			"current_location": "Portland, USA",
+			"role": "CTO",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "MSc Computer Science",
+				"previous_experience": "Full-stack engineer, ex-marketplace startup",
+				"domain_expertise": ["Full-stack", "Marketplace", "E-commerce"]
+			},
+			"skills": [
+				"Full-stack development",
+				"Marketplace systems",
+				"Scalability"
+			],
+			"motivation": "Building technology that supports local economies",
+			"strengths": ["Technical versatility", "Execution"],
+			"weaknesses": ["Enterprise sales"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": ["Scale platform", "Improve performance"],
+			"open_to_mentorship": true
+		},
+		{
+			"founder_id": "f_037",
+			"full_name": "Marcus Johnson",
+			"age": 32,
+			"gender": "Male",
+			"nationality": "American",
+			"current_location": "Portland, USA",
+			"role": "Head of Growth",
+			"startup_stage": "Seed",
+			"background": {
+				"education": "BSc Marketing",
+				"previous_experience": "Growth marketer, ex-Uber Eats",
+				"domain_expertise": ["Growth", "Marketing", "Marketplace"]
+			},
+			"skills": ["Growth marketing", "User acquisition", "Retention"],
+			"motivation": "Helping local businesses grow",
+			"strengths": ["Growth expertise", "Data-driven"],
+			"weaknesses": ["Product development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": ["Reach 500K users", "Improve retention"],
+			"open_to_mentorship": false
 		}
 	]
 }
