@@ -49,7 +49,7 @@ Do NOT call any other tools or agents - generate your final response directly af
 	},
 	memory: new Memory({
 		options: {
-			lastMessages: 5,
+			lastMessages: 10,
 		},
 	}),
 });

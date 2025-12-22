@@ -52,6 +52,14 @@ export const specializedAgentRouter = createTool({
 			.describe(
 				'The type of question determining which agent to route to',
 			),
+		threadId: z
+			.string()
+			.optional()
+			.describe('Thread ID for maintaining conversation context'),
+		resourceId: z
+			.string()
+			.optional()
+			.describe('Resource ID for maintaining conversation context'),
 	}),
 	outputSchema: z.object({
 		success: z
@@ -64,14 +72,32 @@ export const specializedAgentRouter = createTool({
 			.string()
 			.describe('The response from the specialized agent'),
 	}),
-	execute: async ({
-		query,
-		questionType,
-	}): Promise<{
+	execute: async (
+		{
+			query,
+			questionType,
+			threadId: inputThreadId,
+			resourceId: inputResourceId,
+		},
+		context,
+	): Promise<{
 		success: boolean;
 		agentName: string;
 		response: string;
 	}> => {
+		// Try to get threadId and resourceId from explicit parameters first,
+		// then fall back to execution context if Mastra provides it
+		const threadId =
+			inputThreadId ||
+			(context && 'threadId' in context
+				? (context as any).threadId
+				: undefined);
+		const resourceId =
+			inputResourceId ||
+			(context && 'resourceId' in context
+				? (context as any).resourceId
+				: undefined);
+
 		message(
 			'🎯 SPECIALIZED AGENT ROUTER - Routing query directly to specialized agent',
 		);
@@ -128,8 +154,6 @@ export const specializedAgentRouter = createTool({
 			mapping.agentName as
 				| 'lucie'
 				| 'generalQuestionsAgent'
-				| 'startupsAgent'
-				| 'foundersAgent'
 				| 'pioneerProfileBookAgent'
 				| 'sessionEventGridAgent',
 		);
@@ -145,10 +169,25 @@ export const specializedAgentRouter = createTool({
 		}
 
 		// Send the query directly to the specialized agent
+		// Pass through threadId and resourceId to maintain conversation context
 		message(`🎯 SPECIALIZED AGENT ROUTER - Calling ${mapping.displayName}`);
 		log('Query sent:', query);
 
-		const response = await specializedAgent.generate(query);
+		if (threadId || resourceId) {
+			log('Thread context:', { threadId, resourceId });
+		}
+
+		// Build options object for context if available
+		const generateOptions: { threadId?: string; resourceId?: string } = {};
+		if (threadId) generateOptions.threadId = threadId;
+		if (resourceId) generateOptions.resourceId = resourceId;
+
+		const response = await specializedAgent.generate(
+			query,
+			Object.keys(generateOptions).length > 0
+				? generateOptions
+				: undefined,
+		);
 
 		const responseText = response.text || JSON.stringify(response);
 

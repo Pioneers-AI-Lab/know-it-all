@@ -45,17 +45,6 @@ import { HTTPException as HTTPException$2 } from 'hono/http-exception';
 import { tools } from '#tools';
 
 "use strict";
-function message(message2) {
-  console.log("\x1B[32m%s\x1B[0m", message2);
-}
-function log(message2, data) {
-  console.log("\x1B[33m%s\x1B[0m", message2, data);
-}
-function error(message2, data) {
-  console.log("\x1B[31m%s\x1B[0m", message2, data);
-}
-
-"use strict";
 const queryExtractor = createTool({
   id: "query-extractor",
   description: "Extracts the user's question from their message and formats it into a structured JSON object",
@@ -64,14 +53,7 @@ const queryExtractor = createTool({
   }),
   outputSchema: z.object({
     query: z.string().describe("The extracted question"),
-    questionType: z.enum([
-      "startups",
-      "events",
-      "calendar",
-      "founders",
-      "pioneers",
-      "general"
-    ]).describe("The type of question based on data categories"),
+    questionType: z.enum(["startups", "founders", "pioneers", "sessions", "general"]).describe("The type of question based on data categories"),
     formatted: z.object({
       question: z.string(),
       type: z.string(),
@@ -79,8 +61,6 @@ const queryExtractor = createTool({
     }).describe("The formatted JSON object containing the question")
   }),
   execute: async ({ message: userMessage }) => {
-    message("\u{1F50D} QUERY EXTRACTOR - Starting extraction");
-    log("Raw message:", userMessage);
     const cleanedMessage = userMessage.trim().replace(/\s+/g, " ");
     let query = cleanedMessage.replace(
       /^(can you|could you|would you|please|tell me|i want to know|i need to know|i'm asking|i ask)\s+/i,
@@ -103,19 +83,6 @@ const queryExtractor = createTool({
         /traction/i,
         /mrr/i,
         /revenue/i
-      ],
-      calendar: [
-        /event/i,
-        /events/i,
-        /calendar/i,
-        /schedule/i,
-        /scheduled/i,
-        /meeting/i,
-        /meetings/i,
-        /session/i,
-        /sessions/i,
-        /fireside/i,
-        /ama/i
       ],
       founders: [
         /founder/i,
@@ -145,6 +112,31 @@ const queryExtractor = createTool({
         /pioneer profile/i,
         /pioneer profiles/i,
         /pioneer book/i
+      ],
+      sessions: [
+        /event/i,
+        /events/i,
+        /calendar/i,
+        /schedule/i,
+        /scheduled/i,
+        /meeting/i,
+        /meetings/i,
+        /session/i,
+        /sessions/i,
+        /fireside/i,
+        /ama/i,
+        /session/i,
+        /sessions/i,
+        /event grid/i,
+        /session grid/i,
+        /schedule/i,
+        /program week/i,
+        /week \d+/i,
+        /masterclass/i,
+        /group exercise/i,
+        /office hours/i,
+        /pitch day/i,
+        /friday pitch/i
       ]
     };
     const queryLower = query.toLowerCase();
@@ -163,10 +155,6 @@ const queryExtractor = createTool({
       type: questionType,
       timestamp: (/* @__PURE__ */ new Date()).toISOString()
     };
-    message("\u{1F50D} QUERY EXTRACTOR - Result");
-    log("Extracted query:", query);
-    log("Detected questionType:", questionType);
-    log("Formatted object:", JSON.stringify(formatted, null, 2));
     return {
       query,
       questionType,
@@ -176,12 +164,34 @@ const queryExtractor = createTool({
 });
 
 "use strict";
+function message(message2) {
+  console.log("\x1B[32m%s\x1B[0m", message2);
+}
+function log(message2, data) {
+  console.log("\x1B[33m%s\x1B[0m", message2, data);
+}
+function error(message2, data) {
+  console.log("\x1B[31m%s\x1B[0m", message2, data);
+}
+
+"use strict";
 const specializedAgentRouter = createTool({
   id: "specialized-agent-router",
   description: "Routes a query directly to the appropriate specialized agent based on the question type",
   inputSchema: z.object({
     query: z.string().describe("The user query to route to a specialized agent"),
-    questionType: z.enum(["startups", "events", "calendar", "founders", "pioneers", "general"]).describe("The type of question determining which agent to route to")
+    questionType: z.enum([
+      "startups",
+      "events",
+      "founders",
+      "pioneers",
+      "sessions",
+      "general"
+    ]).describe(
+      "The type of question determining which agent to route to"
+    ),
+    threadId: z.string().optional().describe("Thread ID for maintaining conversation context"),
+    resourceId: z.string().optional().describe("Resource ID for maintaining conversation context")
   }),
   outputSchema: z.object({
     success: z.boolean().describe("Whether the query was successfully routed"),
@@ -190,9 +200,15 @@ const specializedAgentRouter = createTool({
   }),
   execute: async ({
     query,
-    questionType
-  }) => {
-    message("\u{1F3AF} SPECIALIZED AGENT ROUTER - Routing query directly to specialized agent");
+    questionType,
+    threadId: inputThreadId,
+    resourceId: inputResourceId
+  }, context) => {
+    const threadId = inputThreadId || (context && "threadId" in context ? context.threadId : void 0);
+    const resourceId = inputResourceId || (context && "resourceId" in context ? context.resourceId : void 0);
+    message(
+      "\u{1F3AF} SPECIALIZED AGENT ROUTER - Routing query directly to specialized agent"
+    );
     log("Question type:", questionType);
     log("Query:", query);
     const agentMapping = {
@@ -201,11 +217,7 @@ const specializedAgentRouter = createTool({
         displayName: "Startups Agent"
       },
       events: {
-        agentName: "calendarAgent",
-        displayName: "Calendar Agent"
-      },
-      calendar: {
-        agentName: "calendarAgent",
+        agentName: "sessionEventGridAgent",
         displayName: "Calendar Agent"
       },
       founders: {
@@ -216,6 +228,10 @@ const specializedAgentRouter = createTool({
         agentName: "pioneerProfileBookAgent",
         displayName: "Pioneer Profile Book Agent"
       },
+      sessions: {
+        agentName: "sessionEventGridAgent",
+        displayName: "Session Event Grid Agent"
+      },
       general: {
         agentName: "generalQuestionsAgent",
         displayName: "General Questions Agent"
@@ -224,21 +240,39 @@ const specializedAgentRouter = createTool({
     const mapping = agentMapping[questionType];
     if (!mapping) {
       error("No agent mapping found for question type:", questionType);
-      throw new Error(`No agent mapping found for question type: ${questionType}`);
+      throw new Error(
+        `No agent mapping found for question type: ${questionType}`
+      );
     }
     const { mastra } = await Promise.resolve().then(function () { return index; });
     const specializedAgent = mastra.getAgent(
       mapping.agentName
     );
     if (!specializedAgent) {
-      error(`Specialized agent "${mapping.agentName}" not found`, mapping);
-      throw new Error(`Specialized agent "${mapping.agentName}" not found`);
+      error(
+        `Specialized agent "${mapping.agentName}" not found`,
+        mapping
+      );
+      throw new Error(
+        `Specialized agent "${mapping.agentName}" not found`
+      );
     }
     message(`\u{1F3AF} SPECIALIZED AGENT ROUTER - Calling ${mapping.displayName}`);
     log("Query sent:", query);
-    const response = await specializedAgent.generate(query);
+    if (threadId || resourceId) {
+      log("Thread context:", { threadId, resourceId });
+    }
+    const generateOptions = {};
+    if (threadId) generateOptions.threadId = threadId;
+    if (resourceId) generateOptions.resourceId = resourceId;
+    const response = await specializedAgent.generate(
+      query,
+      Object.keys(generateOptions).length > 0 ? generateOptions : void 0
+    );
     const responseText = response.text || JSON.stringify(response);
-    message(`\u2705 SPECIALIZED AGENT ROUTER - Received response from ${mapping.displayName}`);
+    message(
+      `\u2705 SPECIALIZED AGENT ROUTER - Received response from ${mapping.displayName}`
+    );
     return {
       success: true,
       agentName: mapping.displayName,
@@ -261,11 +295,11 @@ Your job is NOT to answer questions directly from your own knowledge. Instead, y
 
 When calling tools:
 - Always pass ONLY the user's latest natural-language question as the "message" input to query-extractor
-- NEVER include prior conversation history or any other metadata in the tool inputs
 - After receiving { query, questionType, formatted } from query-extractor, call specialized-agent-router with:
-  - "query": the extracted query string (or the user's original question)
+  - "query": the user's question WITH relevant conversation context if needed for follow-up questions
   - "questionType": the questionType returned by query-extractor
-- Do not modify these values before passing them on
+- If the user's question is a follow-up (references "the first", "those", "them", "it", etc.), include brief context from your previous response in the query
+- Example: If user asks "Tell me about the first two" after you listed startups, pass "Tell me about the first two startups I just mentioned (PulseMind and AgroLoop)" to the router
 
 After calling specialized-agent-router:
 - Take the "response" field from the specialized-agent-router tool output
@@ -444,465 +478,7 @@ Do NOT call any other tools or agents - generate your final response directly af
   },
   memory: new Memory$1({
     options: {
-      lastMessages: 5
-    }
-  })
-});
-
-"use strict";
-const eventsQuery = createTool({
-  id: "events-query",
-  description: "Queries the calendar events database to find information about events in the accelerator. Handles general searches, specific field queries (date, location, guest, etc.), and aggregate queries (count, totals, etc.)",
-  inputSchema: z.object({
-    query: z.string().describe(
-      "The search query to find relevant events or answer questions about them"
-    )
-  }),
-  outputSchema: z.object({
-    events: z.array(z.any()).describe("Matching events from the database"),
-    found: z.boolean().describe("Whether matching events were found"),
-    metadata: z.object({
-      queryType: z.enum(["aggregate", "specific_field", "general", "all"]).optional().describe("Type of query detected"),
-      totalCount: z.number().optional().describe("Total number of events")
-    }).optional().describe("Additional metadata about the query results")
-  }),
-  execute: async ({ query }) => {
-    message("\u{1F50E} EVENTS QUERY - Searching calendar events database");
-    log("Query:", query);
-    const data = loadJsonData("calendar-events.json");
-    const allEvents = data.events || [];
-    const queryLower = query.toLowerCase();
-    const isAggregateQuery = queryLower.includes("how many") || queryLower.includes("count") || queryLower.includes("total") || queryLower.includes("number of") || queryLower.includes("events are") || queryLower.includes("events scheduled");
-    const isAllEventsQuery = queryLower.includes("all event") || queryLower.includes("list of event") || queryLower.includes("every event") || queryLower.includes("all the event") || queryLower === "events" || queryLower === "event" || queryLower.includes("what events") || queryLower.includes("show me events") || queryLower.includes("calendar");
-    const isSpecificFieldQuery = queryLower.includes("when") || queryLower.includes("date") || queryLower.includes("time") || queryLower.includes("where") || queryLower.includes("location") || queryLower.includes("venue") || queryLower.includes("room") || queryLower.includes("who is") || queryLower.includes("guest") || queryLower.includes("speaker") || queryLower.includes("title") || queryLower.includes("name of") || queryLower.includes("description") || queryLower.includes("registration") || queryLower.includes("rsvp") || queryLower.includes("capacity") || queryLower.includes("audience") || queryLower.includes("mandatory") || queryLower.includes("reminder") || queryLower.includes("tag") || queryLower.includes("cohort") || queryLower.includes("start date") || queryLower.includes("end date");
-    let results = [];
-    let metadata;
-    if (allEvents.length === 0) {
-      message("\u26A0\uFE0F EVENTS QUERY - No events found in database");
-      return {
-        events: [],
-        found: false
-      };
-    }
-    if (isAggregateQuery) {
-      message(
-        "\u{1F4CA} EVENTS QUERY - Detected aggregate query, returning all events"
-      );
-      results = [...allEvents];
-      metadata = {
-        queryType: "aggregate",
-        totalCount: allEvents.length
-      };
-    } else if (isAllEventsQuery) {
-      message("\u{1F4CB} EVENTS QUERY - Returning all events");
-      results = [...allEvents];
-      metadata = {
-        queryType: "all",
-        totalCount: allEvents.length
-      };
-    } else if (isSpecificFieldQuery) {
-      message("\u{1F3AF} EVENTS QUERY - Detected specific field query");
-      let matchedEvents = [];
-      for (const event of allEvents) {
-        const eventTitleLower = event.title?.toLowerCase() || "";
-        const eventIdLower = event.event_id?.toLowerCase() || "";
-        if (queryLower.includes(eventTitleLower) || queryLower.includes(eventIdLower) || searchInText(queryLower, eventTitleLower) || searchInText(queryLower, eventIdLower)) {
-          matchedEvents.push(event);
-        }
-      }
-      if (matchedEvents.length > 0) {
-        results = matchedEvents;
-        metadata = {
-          queryType: "specific_field"
-        };
-      } else {
-        results = [...allEvents];
-        metadata = {
-          queryType: "specific_field",
-          totalCount: allEvents.length
-        };
-      }
-    } else {
-      message("\u{1F50D} EVENTS QUERY - Performing general search");
-      for (const event of allEvents) {
-        if (searchInObject(event, query)) {
-          results.push(event);
-        }
-      }
-      metadata = {
-        queryType: "general"
-      };
-    }
-    const finalResults = results.slice(0, 50);
-    message(`\u2705 EVENTS QUERY - Found ${finalResults.length} result(s)`);
-    log(
-      "Results:",
-      finalResults.length > 0 ? `${finalResults.length} event(s) found` : "No events found"
-    );
-    if (metadata) {
-      log("Query type:", metadata.queryType);
-      if (metadata.totalCount !== void 0) {
-        log("Total count:", metadata.totalCount);
-      }
-    }
-    return {
-      events: finalResults,
-      found: results.length > 0,
-      metadata
-    };
-  }
-});
-
-"use strict";
-const calendarAgent = new Agent({
-  id: "calendar-agent",
-  name: "calendar-agent",
-  description: "Calendar Agent is responsible for answering questions about events and calendar information in the Pioneer.vc accelerator",
-  instructions: `You are a calendar agent for the Pioneer.vc accelerator program. You handle questions about events, calendar information, and scheduled activities. You handle questions about event dates, times, locations, guests, descriptions, registration requirements, and event types.
-
-When you receive a query:
-1. Use the events-query tool with the user's question to search for event information
-2. The tool returns an object with "events" (array of matching events), "found" (boolean), and optional "metadata"
-3. Generate a clear, helpful, and comprehensive response directly to the user based on the results
-
-Response Guidelines:
-- If events are found, provide detailed information from the data
-- When users ask for specific data (lists, dates, fields), extract and display the exact information
-- If no events are found, provide a helpful message
-- Keep responses conversational and informative
-- Always use the same language as the user's question
-- Be concise but thorough
-
-Do NOT call any other tools or agents - generate your final response directly after using the events-query tool.`,
-  model: "anthropic/claude-3-5-haiku-20241022",
-  tools: {
-    eventsQuery
-  },
-  memory: new Memory$1({
-    options: {
-      lastMessages: 5
-    }
-  })
-});
-
-"use strict";
-const startupsQuery = createTool({
-  id: "startups-query",
-  description: "Queries the startups database to find information about startups in the accelerator. Handles general searches, specific field queries (CEO name, funding stage, etc.), and aggregate queries (count, totals, etc.)",
-  inputSchema: z.object({
-    query: z.string().describe(
-      "The search query to find relevant startups or answer questions about them"
-    )
-  }),
-  outputSchema: z.object({
-    startups: z.array(z.any()).describe("Matching startups from the database"),
-    found: z.boolean().describe("Whether matching startups were found"),
-    metadata: z.object({
-      queryType: z.enum(["aggregate", "specific_field", "general", "all"]).optional().describe("Type of query detected"),
-      totalCount: z.number().optional().describe("Total number of startups")
-    }).optional().describe("Additional metadata about the query results")
-  }),
-  execute: async ({ query }) => {
-    message("\u{1F50E} STARTUPS QUERY - Searching startups database");
-    log("Query:", query);
-    const startupsData = loadJsonData("startups.json");
-    const allStartups = startupsData.startups || [];
-    const queryLower = query.toLowerCase();
-    const isAggregateQuery = queryLower.includes("how many") || queryLower.includes("count") || queryLower.includes("total") || queryLower.includes("number of") || queryLower.includes("enrolled") || queryLower.includes("companies are") || queryLower.includes("startups are");
-    const isAllStartupsQuery = queryLower.includes("all startup") || queryLower.includes("list of startup") || queryLower.includes("every startup") || queryLower.includes("all the startup") || queryLower === "startups" || queryLower === "startup";
-    const isSpecificFieldQuery = queryLower.includes("ceo") || queryLower.includes("cto") || queryLower.includes("coo") || queryLower.includes("name of") || queryLower.includes("funding stage") || queryLower.includes("funding") || queryLower.includes("raised") || queryLower.includes("investors") || queryLower.includes("industry") || queryLower.includes("location") || queryLower.includes("hq") || queryLower.includes("headquarters") || queryLower.includes("team") || queryLower.includes("traction") || queryLower.includes("mrr") || queryLower.includes("users") || queryLower.includes("customers") || queryLower.includes("product stage") || queryLower.includes("business model");
-    let results = [];
-    let metadata;
-    if (allStartups.length === 0) {
-      message("\u26A0\uFE0F STARTUPS QUERY - No startups found in database");
-      return {
-        startups: [],
-        found: false
-      };
-    }
-    if (isAggregateQuery) {
-      message(
-        "\u{1F4CA} STARTUPS QUERY - Detected aggregate query, returning all startups"
-      );
-      results = [...allStartups];
-      metadata = {
-        queryType: "aggregate",
-        totalCount: allStartups.length
-      };
-    } else if (isAllStartupsQuery) {
-      message("\u{1F4CB} STARTUPS QUERY - Returning all startups");
-      results = [...allStartups];
-      metadata = {
-        queryType: "all",
-        totalCount: allStartups.length
-      };
-    } else if (isSpecificFieldQuery) {
-      message("\u{1F3AF} STARTUPS QUERY - Detected specific field query");
-      let matchedStartups = [];
-      for (const startup of allStartups) {
-        const startupNameLower = startup.name?.toLowerCase() || "";
-        if (queryLower.includes(startupNameLower) || searchInText(queryLower, startupNameLower)) {
-          matchedStartups.push(startup);
-        }
-      }
-      if (matchedStartups.length > 0) {
-        results = matchedStartups;
-        metadata = {
-          queryType: "specific_field"
-        };
-      } else {
-        results = [...allStartups];
-        metadata = {
-          queryType: "specific_field",
-          totalCount: allStartups.length
-        };
-      }
-    } else {
-      message("\u{1F50D} STARTUPS QUERY - Performing general search");
-      for (const startup of allStartups) {
-        if (searchInObject(startup, query)) {
-          results.push(startup);
-        }
-      }
-      metadata = {
-        queryType: "general"
-      };
-    }
-    const finalResults = results.slice(0, 50);
-    message(`\u2705 STARTUPS QUERY - Found ${finalResults.length} result(s)`);
-    log(
-      "Results:",
-      finalResults.length > 0 ? `${finalResults.length} startup(s) found` : "No startups found"
-    );
-    if (metadata) {
-      log("Query type:", metadata.queryType);
-      if (metadata.totalCount !== void 0) {
-        log("Total count:", metadata.totalCount);
-      }
-    }
-    return {
-      startups: finalResults,
-      found: results.length > 0,
-      metadata
-    };
-  }
-});
-
-"use strict";
-const startupsAgent = new Agent({
-  id: "startups-agent",
-  name: "startups-agent",
-  description: "Startups Agent is responsible for answering questions about startups in the Pioneer.vc accelerator",
-  instructions: `You are a startups agent for the Pioneer.vc accelerator program. You handle questions about startup companies, their products, funding, teams, industries, and business models.
-
-When you receive a query:
-1. Use the startups-query tool with the user's question to search for startup information
-2. The tool returns an object with "startups" (array of matching startups), "found" (boolean), and optional "metadata"
-3. Generate a clear, helpful, and comprehensive response directly to the user based on the results
-
-Response Guidelines:
-- If startups are found, provide detailed information from the data
-- When users ask for specific data (lists, names, fields), extract and display the exact information
-- If no startups are found, provide a helpful message
-- Keep responses conversational and informative
-- Always use the same language as the user's question
-- Be concise but thorough
-
-Do NOT call any other tools or agents - generate your final response directly after using the startups-query tool.`,
-  model: "anthropic/claude-3-5-haiku-20241022",
-  tools: {
-    startupsQuery
-  },
-  memory: new Memory$1({
-    options: {
-      lastMessages: 5
-    }
-  })
-});
-
-"use strict";
-const foundersQuery = createTool({
-  id: "founders-query",
-  description: "Queries the founders database to find information about founders in the accelerator. Handles general searches, role-based queries (CTO, CEO, etc.), matching queries (co-founder matching), and aggregate queries (count, totals, etc.)",
-  inputSchema: z.object({
-    query: z.string().describe(
-      "The search query to find relevant founders or answer questions about them"
-    )
-  }),
-  outputSchema: z.object({
-    founders: z.array(z.any()).describe("Matching founders from the database"),
-    found: z.boolean().describe("Whether matching founders were found"),
-    metadata: z.object({
-      queryType: z.enum(["aggregate", "role", "matching", "general", "all"]).optional().describe("Type of query detected"),
-      totalCount: z.number().optional().describe("Total number of founders"),
-      role: z.string().optional().describe("Role filter applied (CTO, CEO, etc.)")
-    }).optional().describe("Additional metadata about the query results")
-  }),
-  execute: async ({ query }) => {
-    message("\u{1F50E} FOUNDERS QUERY - Searching founders database");
-    log("Query:", query);
-    const data = loadJsonData("founders.json");
-    const allFounders = data.founders || [];
-    const queryLower = query.toLowerCase();
-    const isAggregateQuery = queryLower.includes("how many") || queryLower.includes("count") || queryLower.includes("total") || queryLower.includes("number of") || queryLower.includes("founders are");
-    const isAllFoundersQuery = queryLower.includes("all founder") || queryLower.includes("list of founder") || queryLower.includes("every founder") || queryLower.includes("all the founder") || queryLower === "founders" || queryLower === "founder";
-    const isMatchingQuery = queryLower.includes("match") || queryLower.includes("find me a") || queryLower.includes("looking for") || queryLower.includes("seeking") || queryLower.includes("available") || queryLower.includes("co-founder") || queryLower.includes("cofounder");
-    const isRoleQuery = queryLower.includes("cto") || queryLower.includes("ceo") || queryLower.includes("coo") || queryLower.includes("chief") || queryLower.includes("technical founder") || queryLower.includes("business founder") || queryLower.includes("founder with role");
-    let targetRole = null;
-    if (isRoleQuery) {
-      if (queryLower.includes("cto") || queryLower.includes("technical")) {
-        targetRole = "CTO";
-      } else if (queryLower.includes("ceo") || queryLower.includes("business")) {
-        targetRole = "CEO";
-      } else if (queryLower.includes("coo")) {
-        targetRole = "COO";
-      }
-    }
-    let results = [];
-    let metadata;
-    if (allFounders.length === 0) {
-      message("\u26A0\uFE0F FOUNDERS QUERY - No founders found in database");
-      return {
-        founders: [],
-        found: false
-      };
-    }
-    if (isAggregateQuery) {
-      message(
-        "\u{1F4CA} FOUNDERS QUERY - Detected aggregate query, returning all founders"
-      );
-      results = [...allFounders];
-      metadata = {
-        queryType: "aggregate",
-        totalCount: allFounders.length
-      };
-    } else if (isAllFoundersQuery) {
-      message("\u{1F4CB} FOUNDERS QUERY - Returning all founders");
-      results = [...allFounders];
-      metadata = {
-        queryType: "all",
-        totalCount: allFounders.length
-      };
-    } else if (isMatchingQuery) {
-      message("\u{1F3AF} FOUNDERS QUERY - Detected matching query");
-      const seekingFounders = allFounders.filter(
-        (founder) => founder.seeking_cofounder === true || founder.startup_stage === "Looking for co-founder"
-      );
-      if (targetRole) {
-        const roleFiltered = seekingFounders.filter(
-          (founder) => founder.role?.toUpperCase() === targetRole?.toUpperCase()
-        );
-        if (roleFiltered.length > 0) {
-          results = roleFiltered;
-          metadata = {
-            queryType: "matching",
-            role: targetRole
-          };
-        } else {
-          results = seekingFounders;
-          metadata = {
-            queryType: "matching"
-          };
-        }
-      } else {
-        if (queryLower.includes("technical") || queryLower.includes("cto")) {
-          results = seekingFounders.filter(
-            (founder) => founder.role === "CTO" || founder.cofounder_type_seeking === "Technical/CTO"
-          );
-          metadata = {
-            queryType: "matching",
-            role: "CTO"
-          };
-        } else if (queryLower.includes("business") || queryLower.includes("ceo")) {
-          results = seekingFounders.filter(
-            (founder) => founder.role === "CEO" || founder.cofounder_type_seeking === "Business/CEO"
-          );
-          metadata = {
-            queryType: "matching",
-            role: "CEO"
-          };
-        } else {
-          results = seekingFounders;
-          metadata = {
-            queryType: "matching"
-          };
-        }
-      }
-    } else if (isRoleQuery && targetRole) {
-      message(
-        `\u{1F3AF} FOUNDERS QUERY - Detected role query for ${targetRole}`
-      );
-      results = allFounders.filter(
-        (founder) => founder.role?.toUpperCase() === targetRole.toUpperCase()
-      );
-      metadata = {
-        queryType: "role",
-        role: targetRole,
-        totalCount: results.length
-      };
-    } else {
-      message("\u{1F50D} FOUNDERS QUERY - Performing general search");
-      for (const founder of allFounders) {
-        if (searchInObject(founder, query)) {
-          results.push(founder);
-        }
-      }
-      metadata = {
-        queryType: "general"
-      };
-    }
-    const finalResults = results.slice(0, 50);
-    message(`\u2705 FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
-    log(
-      "Results:",
-      finalResults.length > 0 ? `${finalResults.length} founder(s) found` : "No founders found"
-    );
-    if (metadata) {
-      log("Query type:", metadata.queryType);
-      if (metadata.totalCount !== void 0) {
-        log("Total count:", metadata.totalCount);
-      }
-      if (metadata.role) {
-        log("Role filter:", metadata.role);
-      }
-    }
-    return {
-      founders: finalResults,
-      found: results.length > 0,
-      metadata
-    };
-  }
-});
-
-"use strict";
-const foundersAgent = new Agent({
-  id: "founders-agent",
-  name: "founders-agent",
-  description: "Founders Agent is responsible for answering questions about founders in the Pioneer.vc accelerator, including listing founders, matching co-founders, and filtering by roles and skills",
-  instructions: `You are a founders agent for the Pioneer.vc accelerator program. You handle questions about founder profiles, their roles (CTO, CEO, COO), skills, backgrounds, and co-founder matching.
-
-When you receive a query:
-1. Use the founders-query tool with the user's question to search for founder information
-2. The tool returns an object with "founders" (array of matching founders), "found" (boolean), and optional "metadata"
-3. Generate a clear, helpful, and comprehensive response directly to the user based on the results
-
-Response Guidelines:
-- If founders are found, provide detailed information from the data
-- For co-founder matching queries, highlight relevant skills and roles
-- When users ask for specific data (lists, names, fields), extract and display the exact information
-- If no founders are found, provide a helpful message
-- Keep responses conversational and informative
-- Always use the same language as the user's question
-- Be concise but thorough
-
-Do NOT call any other tools or agents - generate your final response directly after using the founders-query tool.`,
-  model: "anthropic/claude-3-5-haiku-20241022",
-  tools: {
-    foundersQuery
-  },
-  memory: new Memory$1({
-    options: {
-      lastMessages: 5
+      lastMessages: 10
     }
   })
 });
@@ -1116,7 +692,182 @@ Do NOT call any other tools or agents - generate your final response directly af
   },
   memory: new Memory$1({
     options: {
-      lastMessages: 5
+      lastMessages: 10
+    }
+  })
+});
+
+"use strict";
+const sessionEventGridQuery = createTool({
+  id: "session-event-grid-query",
+  description: "Queries the session event grid database to find information about sessions, events, and activities in the accelerator. Handles general searches, specific field queries (date, speaker, type, week, participants, etc.), and aggregate queries (count, totals, etc.)",
+  inputSchema: z.object({
+    query: z.string().describe(
+      "The search query to find relevant sessions or answer questions about them"
+    )
+  }),
+  outputSchema: z.object({
+    sessions: z.array(z.any()).describe("Matching sessions from the database"),
+    found: z.boolean().describe("Whether matching sessions were found"),
+    metadata: z.object({
+      queryType: z.enum([
+        "aggregate",
+        "specific_field",
+        "participant",
+        "general",
+        "all"
+      ]).optional().describe("Type of query detected"),
+      totalCount: z.number().optional().describe("Total number of sessions"),
+      filterField: z.string().optional().describe(
+        "Field filter applied (date, speaker, type, week, etc.)"
+      )
+    }).optional().describe("Additional metadata about the query results")
+  }),
+  execute: async ({ query }) => {
+    message("\u{1F50E} SESSION EVENT GRID QUERY - Searching sessions database");
+    log("Query:", query);
+    const data = loadJsonData("session_event_grid_view.json");
+    const allSessions = Array.isArray(data) ? data : [];
+    const queryLower = query.toLowerCase();
+    const isAggregateQuery = queryLower.includes("how many") || queryLower.includes("count") || queryLower.includes("total") || queryLower.includes("number of") || queryLower.includes("sessions are");
+    const isAllSessionsQuery = queryLower.includes("all session") || queryLower.includes("list of session") || queryLower.includes("every session") || queryLower.includes("all the session") || queryLower === "sessions" || queryLower === "session" || queryLower.includes("what sessions") || queryLower.includes("show me sessions") || queryLower.includes("event grid");
+    const isParticipantQuery = queryLower.includes("who attended") || queryLower.includes("who participated") || queryLower.includes("participants") || queryLower.includes("who was at") || queryLower.includes("who went to") || queryLower.includes("attended by");
+    const isSpecificFieldQuery = queryLower.includes("date") || queryLower.includes("when") || queryLower.includes("time") || queryLower.includes("speaker") || queryLower.includes("week") || queryLower.includes("type of session") || queryLower.includes("session type") || queryLower.includes("masterclass") || queryLower.includes("group exercise") || queryLower.includes("office hours") || queryLower.includes("pitch") || queryLower.includes("friday") || queryLower.includes("instruction") || queryLower.includes("slack") || queryLower.includes("notes") || queryLower.includes("feedback");
+    let results = [];
+    let metadata;
+    if (allSessions.length === 0) {
+      message(
+        "\u26A0\uFE0F SESSION EVENT GRID QUERY - No sessions found in database"
+      );
+      return {
+        sessions: [],
+        found: false
+      };
+    }
+    if (isAggregateQuery) {
+      message(
+        "\u{1F4CA} SESSION EVENT GRID QUERY - Detected aggregate query, returning all sessions"
+      );
+      results = [...allSessions];
+      metadata = {
+        queryType: "aggregate",
+        totalCount: allSessions.length
+      };
+    } else if (isAllSessionsQuery) {
+      message("\u{1F4CB} SESSION EVENT GRID QUERY - Returning all sessions");
+      results = [...allSessions];
+      metadata = {
+        queryType: "all",
+        totalCount: allSessions.length
+      };
+    } else if (isParticipantQuery) {
+      message("\u{1F465} SESSION EVENT GRID QUERY - Detected participant query");
+      for (const session of allSessions) {
+        const participants = session["Participants"] || "";
+        const nameFromLinked = session["Name (from linked)"] || "";
+        const participantsStr = (participants + " " + nameFromLinked).toLowerCase();
+        if (searchInText(participantsStr, query)) {
+          results.push(session);
+        }
+      }
+      metadata = {
+        queryType: "participant",
+        filterField: "Participants"
+      };
+    } else if (isSpecificFieldQuery) {
+      message(
+        "\u{1F3AF} SESSION EVENT GRID QUERY - Detected specific field query"
+      );
+      let matchedSessions = [];
+      for (const session of allSessions) {
+        const nameLower = (session["Name"] || "").toLowerCase();
+        if (queryLower.includes(nameLower) || searchInText(queryLower, nameLower)) {
+          matchedSessions.push(session);
+        }
+      }
+      if (matchedSessions.length > 0) {
+        results = matchedSessions;
+        metadata = {
+          queryType: "specific_field"
+        };
+      } else {
+        for (const session of allSessions) {
+          if (searchInObject(session, query)) {
+            results.push(session);
+          }
+        }
+        metadata = {
+          queryType: "specific_field",
+          totalCount: results.length
+        };
+      }
+    } else {
+      message("\u{1F50D} SESSION EVENT GRID QUERY - Performing general search");
+      for (const session of allSessions) {
+        if (searchInObject(session, query)) {
+          results.push(session);
+        }
+      }
+      metadata = {
+        queryType: "general"
+      };
+    }
+    const finalResults = results.slice(0, 50);
+    message(
+      `\u2705 SESSION EVENT GRID QUERY - Found ${finalResults.length} result(s)`
+    );
+    log(
+      "Results:",
+      finalResults.length > 0 ? `${finalResults.length} session(s) found` : "No sessions found"
+    );
+    if (metadata) {
+      log("Query type:", metadata.queryType);
+      if (metadata.totalCount !== void 0) {
+        log("Total count:", metadata.totalCount);
+      }
+      if (metadata.filterField) {
+        log("Filter field:", metadata.filterField);
+      }
+    }
+    return {
+      sessions: finalResults,
+      found: results.length > 0,
+      metadata
+    };
+  }
+});
+
+"use strict";
+const sessionEventGridAgent = new Agent({
+  id: "session-event-grid-agent",
+  name: "session-event-grid-agent",
+  description: "Session Event Grid Agent is responsible for answering questions about sessions, events, schedules, and activities in the Pioneer.vc accelerator",
+  instructions: `You are a session event grid agent for the Pioneer.vc accelerator program. You handle questions about sessions, events, schedules, activities, speakers, participants, program weeks, session types, and all information related to the program calendar and event grid.
+
+When you receive a query:
+1. Use the session-event-grid-query tool with the user's question to search for session/event information
+2. The tool returns an object with "sessions" (array of matching sessions), "found" (boolean), and optional "metadata"
+3. Generate a clear, helpful, and comprehensive response directly to the user based on the results
+
+Response Guidelines:
+- If sessions are found, provide detailed information from the data including dates, times, locations, speakers, participants, instructions, etc.
+- When users ask for specific data (lists, schedules, participants), extract and display the exact information
+- If no sessions are found, provide a helpful message
+- Keep responses conversational and informative
+- Always use the same language as the user's question
+- Be concise but thorough
+- For date/time queries, format dates clearly
+- For participant queries, list all participants clearly
+- For schedule queries, organize information by date or week
+
+Do NOT call any other tools or agents - generate your final response directly after using the session-event-grid-query tool.`,
+  model: "anthropic/claude-3-5-haiku-20241022",
+  tools: {
+    sessionEventGridQuery
+  },
+  memory: new Memory$1({
+    options: {
+      lastMessages: 10
     }
   })
 });
@@ -1404,10 +1155,8 @@ const mastra = new Mastra({
   agents: {
     lucie,
     generalQuestionsAgent,
-    calendarAgent,
-    startupsAgent,
-    foundersAgent,
-    pioneerProfileBookAgent
+    pioneerProfileBookAgent,
+    sessionEventGridAgent
   },
   // Registered workflows - available to agents via their workflows config
   workflows: {},

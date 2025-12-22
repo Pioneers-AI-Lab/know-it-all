@@ -30,8 +30,6 @@ import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { lucie } from './agents/lucie-agent';
 import { generalQuestionsAgent } from './agents/general-questions-agent';
-import { startupsAgent } from './agents/startups-agent';
-import { foundersAgent } from './agents/founders-agent';
 import { pioneerProfileBookAgent } from './agents/pioneer-profile-book-agent';
 import { sessionEventGridAgent } from './agents/session-event-grid-agent';
 import { slackRoutes } from './slack/routes';
@@ -41,8 +39,6 @@ export const mastra = new Mastra({
 	agents: {
 		lucie,
 		generalQuestionsAgent,
-		startupsAgent,
-		foundersAgent,
 		pioneerProfileBookAgent,
 		sessionEventGridAgent,
 	},

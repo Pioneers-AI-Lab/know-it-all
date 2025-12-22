@@ -42,10 +42,11 @@ User → Lucie (entry) → Query Extractor → Specialized Agent Router → Spec
 - ✅ Removed orchestrator-agent (eliminates 1-2 LLM calls)
 - ✅ Removed response-generator-agent (specialized agents format responses directly)
 - ✅ Simplified specialized agents (1 tool instead of 4 sequential tools)
-- ✅ Direct routing from Lucie to specialized agents
+- ✅ Direct routing from Lucie to specialized agents with context preservation
 - ✅ JSON data caching (10-20% faster disk I/O)
-- ✅ Haiku 4 for specialized agents (3-4x faster than Sonnet 4)
-- ✅ Reduced memory footprint (5 messages instead of 20 for specialized agents)
+- ✅ Haiku 3.5 for specialized agents (2-3x faster than Sonnet 4)
+- ✅ Optimized memory: 10 messages for specialized agents (maintains context)
+- ✅ Context-enrichment pattern: Lucie adds relevant history to follow-up questions
 
 **Pipeline Flow:**
 
@@ -72,9 +73,10 @@ User → Lucie (entry) → Query Extractor → Specialized Agent Router → Spec
    - `calendar-agent.ts`: Event information
    - `pioneer-profile-book-agent.ts`: Pioneer profile book queries
    - `general-questions-agent.ts`: General accelerator questions
-   - Each uses Claude Haiku 4 (fast, cost-effective for data lookup)
+   - Each uses Claude Haiku 3.5 (fast, cost-effective for data lookup)
    - Each uses a single query tool and generates responses directly
-   - Memory limited to last 5 messages (stateless data lookup)
+   - Memory set to last 10 messages (maintains context for follow-up questions)
+   - Receives threadId/resourceId to maintain conversation continuity
 
 **Key Pattern:** Direct agent-to-agent routing via `mastra.getAgent(name).generate()` with minimal intermediary steps.
 
@@ -152,20 +154,25 @@ Slack message → /slack/lucie/events → lucie agent → streaming response
 - Each agent has its own Mastra Agent instance with Memory
 - Agents can have tools, workflows, or both
 - Memory configuration:
-  - Lucie: `lastMessages: 20` (user-facing, needs conversation context)
-  - Specialized agents: `lastMessages: 5` (stateless data lookup, minimal context needed)
+  - Lucie: `lastMessages: 20` (user-facing, needs full conversation context)
+  - Specialized agents: `lastMessages: 10` (maintains context for same-agent follow-ups)
+- Context-enrichment pattern: Lucie enriches follow-up queries with relevant conversation context before routing
+  - Detects reference words ("the first", "those", "them", etc.)
+  - Adds brief context from previous responses to the query
+  - Example: "Tell me about the first two" → "Tell me about the first two startups from the 12 in the accelerator"
 - Agent instructions should specify when to use tools vs. workflows
 - Phase 2 optimization: Specialized agents generate responses directly (no intermediate agents)
 
 **Tools** (`src/mastra/tools/`)
 - Created with `createTool()` from `@mastra/core/tools`
 - Define input/output schemas with Zod
-- Execute function receives typed inputs from schema
-- Tools can invoke other agents via `mastra.getAgent(name).generate()`
+- Execute function receives typed inputs from schema and execution context
+- Tools can invoke other agents via `mastra.getAgent(name).generate(query, { threadId, resourceId })`
 - Key tools:
   - `query-extractor.ts`: Classification via regex (no LLM)
-  - `specialized-agent-router.ts`: Direct routing to specialized agents
+  - `specialized-agent-router.ts`: Direct routing to specialized agents with context preservation
   - `{domain}-query.ts`: Data lookup from cached JSON files
+- Context-aware routing: specializedAgentRouter passes threadId/resourceId to maintain conversation memory
 - Phase 2 removed: queryReceiver, dataFormatter, responseSender, orchestratorSender, queryRouter
 
 **Workflows** (`src/mastra/workflows/`)
@@ -189,8 +196,8 @@ For multiple apps, use naming convention: `SLACK_{APP_NAME}_BOT_TOKEN` (uppercas
 ## Adding a New Specialized Agent (Phase 2 Pattern)
 
 1. Create agent file in `src/mastra/agents/{name}-agent.ts`
-   - Use Claude Haiku 4 model: `model: 'anthropic/claude-haiku-4-20250514'`
-   - Set memory to 5 messages: `lastMessages: 5`
+   - Use Claude Haiku 3.5 model: `model: 'anthropic/claude-3-5-haiku-20241022'`
+   - Set memory to 10 messages: `lastMessages: 10` (maintains context for follow-ups)
    - Include only the query tool (no queryReceiver, dataFormatter, responseSender)
    - Agent should generate final user response directly
 
@@ -217,9 +224,9 @@ For multiple apps, use naming convention: `SLACK_{APP_NAME}_BOT_TOKEN` (uppercas
 export const myAgent = new Agent({
   id: 'my-agent',
   name: 'my-agent',
-  model: 'anthropic/claude-haiku-4-20250514',
+  model: 'anthropic/claude-3-5-haiku-20241022',
   tools: { myQuery },  // Single query tool only
-  memory: new Memory({ options: { lastMessages: 5 } }),
+  memory: new Memory({ options: { lastMessages: 10 } }),
   instructions: `Use the my-query tool to search data, then generate a clear response directly to the user.`
 });
 ```
@@ -259,11 +266,13 @@ Status display logic in `src/mastra/slack/status.ts` uses these states to show c
 ## Important Notes
 
 - Bot messages and message edits are automatically ignored (checks for `bot_id` and `subtype`)
-- Thread context is preserved using Slack's `thread_ts` field
+- Thread context is preserved using Slack's `thread_ts` field for Lucie's memory
 - Animation timing is configurable via constants in `src/mastra/slack/constants.ts`
 - Workflow events are nested in `tool-output` chunks and require special extraction logic
-- Agent instructions should explicitly mention NOT to include conversation history when calling tools/workflows
-- Agents communicate through tools using `mastra.getAgent(name).generate()` pattern
 - **Phase 2:** Specialized agents are invoked directly by Lucie via specializedAgentRouter (no orchestrator)
+- **Context handling:** Lucie uses context-enrichment pattern for follow-up questions
+  - Lucie maintains conversation memory (20 messages)
+  - When routing follow-ups, Lucie adds relevant context to the query itself
+  - Specialized agents get self-contained queries that don't require shared thread context
 - Data files in `data/` directory are loaded once and cached in memory by `data-helpers.ts`
 - Use `clearDataCache()` from `data-helpers.ts` when JSON files are updated during development
