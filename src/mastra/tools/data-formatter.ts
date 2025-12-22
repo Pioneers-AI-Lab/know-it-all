@@ -114,8 +114,31 @@ export const dataFormatter = createTool({
 				}
 			} else if (data.founders && Array.isArray(data.founders)) {
 				// From founders-query
-				summary = `Found ${data.founders.length} matching founder(s).`;
+				if (data.metadata?.queryType === 'aggregate') {
+					summary = `Found ${
+						data.metadata.totalCount || data.founders.length
+					} total founder(s) in the accelerator.`;
+				} else if (data.metadata?.queryType === 'matching') {
+					summary = `Found ${
+						data.founders.length
+					} founder(s) seeking co-founders${
+						data.metadata.role ? ` (${data.metadata.role})` : ''
+					}.`;
+				} else if (data.metadata?.queryType === 'role') {
+					summary = `Found ${data.founders.length} ${
+						data.metadata.role || 'founder(s)'
+					} matching the query.`;
+				} else {
+					summary = `Found ${data.founders.length} matching founder(s).`;
+				}
 				relevantData = data.founders;
+				// Include metadata if present for context
+				if (data.metadata) {
+					relevantData = {
+						founders: data.founders,
+						metadata: data.metadata,
+					};
+				}
 			} else if (data.workshops && Array.isArray(data.workshops)) {
 				// From workshops-query
 				summary = `Found ${data.workshops.length} matching workshop(s).`;
