@@ -4,13 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Slack bot framework built on Mastra that connects AI agents to Slack workspaces. The architecture supports multiple Slack apps, each mapped to a distinct Mastra agent, with streaming responses and thread-based conversation memory.
+A Slack bot framework built on Mastra that connects AI agents to Slack workspaces. This project implements a **multi-agent pipeline architecture** where a primary agent (Lucie) routes user queries through specialized agents for Pioneer.vc accelerator questions. Features streaming responses, thread-based conversation memory, and a knowledge base backed by JSON data files.
 
 ## Key Commands
 
 ```bash
 # Development (runs Mastra dev server on port 4111)
 pnpm dev
+
+# Terminal CLI for local testing (no Slack required)
+pnpm dev:cli
+pnpm dev:cli --agent lucie
 
 # Build for production
 pnpm build
@@ -26,18 +30,69 @@ ngrok http 4111
 
 ## Architecture
 
-### Multi-App Pattern
+### Multi-Agent Pipeline Architecture
+
+This codebase implements a **hub-and-spoke pattern** for query processing:
+
+```
+User → Lucie (entry) → Query Extractor → Orchestrator Sender →
+  Orchestrator Agent → Query Router → Specialized Agent →
+  Response Generator → User
+```
+
+**Pipeline Flow:**
+
+1. **Lucie Agent** (`src/mastra/agents/lucie-agent.ts`)
+   - Entry point for all user queries via Slack
+   - Uses `queryExtractor` tool to parse and classify questions
+   - Uses `orchestratorSender` tool to forward to orchestrator
+   - Returns orchestrator's response to user
+
+2. **Query Extractor Tool** (`src/mastra/tools/query-extractor.ts`)
+   - Parses natural language messages
+   - Classifies into types: `startups`, `events`, `founders`, `general`
+   - Returns structured query object with type and timestamp
+
+3. **Orchestrator Agent** (`src/mastra/agents/orchestrator-agent.ts`)
+   - Central routing hub using hub-and-spoke pattern
+   - Logs incoming queries via `queryLogger`
+   - Routes to specialized agents via `queryRouter` based on questionType
+
+4. **Specialized Agents** (`src/mastra/agents/`)
+   - `startups-agent.ts`: Company and portfolio queries
+   - `founders-agent.ts`: Founder-specific information
+   - `calendar-agent.ts`: Event information
+   - `general-questions-agent.ts`: General accelerator questions
+   - Each has dedicated query tools that read from `data/` JSON files
+
+5. **Response Generator Agent** (`src/mastra/agents/response-generator-agent.ts`)
+   - Formats final responses for users
+   - Maintains consistent tone and language
+
+**Key Pattern:** Agents communicate through tools, not direct calls. Specialized agents invoke each other via `mastra.getAgent(name).generate()`.
+
+### Knowledge Base Structure
+
+Data is stored in JSON files under `data/`:
+- `startups.json`: Company profiles, founders, funding, industries
+- `founders.json`: Individual founder information
+- `calendar-events.json`: Event schedule and details
+- `general-questions.json`: FAQ-style general information
+
+Tools use `data-helpers.ts` for loading and searching JSON data.
+
+### Slack Integration (Multi-App Pattern)
 
 The system uses a one-to-one mapping: **1 Slack App = 1 Mastra Agent = 1 Webhook Route**
 
 Each Slack app configuration in `src/mastra/slack/routes.ts` creates:
 - A webhook endpoint at `/slack/{name}/events`
 - A dedicated Slack bot with its own credentials
-- A connection to a specific Mastra agent
+- A connection to a specific Mastra agent (currently only Lucie)
 
 Example flow:
 ```
-Slack message → /slack/reverse/events → reverseAgent → streaming response
+Slack message → /slack/lucie/events → lucie agent → streaming response
 ```
 
 ### Core Components
@@ -63,6 +118,12 @@ Slack message → /slack/reverse/events → reverseAgent → streaming response
 - Final message replaces spinner with complete response
 - Retry logic for final message updates (3 attempts with 500ms delay)
 
+**Terminal CLI** (`src/mastra/terminal/cli.ts`)
+- Local testing interface without Slack webhooks
+- Run with `pnpm dev:cli` or `pnpm dev:cli --agent lucie`
+- Supports multi-turn conversations with memory
+- Useful for rapid agent testing and debugging
+
 **Request Verification** (`src/mastra/slack/verify.ts`)
 - Validates Slack request signatures using HMAC SHA256
 - Rejects requests older than 5 minutes
@@ -73,6 +134,13 @@ Slack message → /slack/reverse/events → reverseAgent → streaming response
 - Agents can have tools, workflows, or both
 - Memory configuration: `lastMessages: 20` for conversation context
 - Agent instructions should specify when to use tools vs. workflows
+
+**Tools** (`src/mastra/tools/`)
+- Created with `createTool()` from `@mastra/core/tools`
+- Define input/output schemas with Zod
+- Execute function receives typed inputs from schema
+- Tools can invoke other agents via `mastra.getAgent(name).generate()`
+- Common patterns: query tools (data access), sender tools (agent communication), formatter tools (data transformation)
 
 **Workflows** (`src/mastra/workflows/`)
 - Multi-step workflows using `createWorkflow` and `createStep`
@@ -86,13 +154,23 @@ Required per Slack app:
 ```bash
 OPENAI_API_KEY=sk-...
 
-SLACK_{APP_NAME}_BOT_TOKEN=xoxb-...
-SLACK_{APP_NAME}_SIGNING_SECRET=...
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
 ```
 
-Convention: Use uppercase snake_case for app names in env vars (e.g., `SLACK_REVERSE_BOT_TOKEN`)
+For multiple apps, use naming convention: `SLACK_{APP_NAME}_BOT_TOKEN` (uppercase snake_case)
 
-## Adding a New Agent
+## Adding a New Specialized Agent
+
+1. Create agent file in `src/mastra/agents/{name}-agent.ts`
+2. Create corresponding query tool in `src/mastra/tools/{name}-query.ts`
+3. Add data file in `data/{name}.json` if needed
+4. Import and register agent in `src/mastra/index.ts`: `agents: { myAgent }`
+5. Add questionType mapping in `src/mastra/tools/query-extractor.ts`
+6. Add routing case in `src/mastra/tools/query-router.ts`
+7. Test with CLI: `pnpm dev:cli --agent myAgent`
+
+## Adding a New Slack App
 
 1. Create agent file in `src/mastra/agents/{name}-agent.ts`
 2. Define agent with tools/workflows and memory
@@ -131,3 +209,6 @@ Status display logic in `src/mastra/slack/status.ts` uses these states to show c
 - Animation timing is configurable via constants in `src/mastra/slack/constants.ts`
 - Workflow events are nested in `tool-output` chunks and require special extraction logic
 - Agent instructions should explicitly mention NOT to include conversation history when calling tools/workflows
+- Agents communicate through tools using `mastra.getAgent(name).generate()` pattern
+- All specialized agents are invoked by the orchestrator, not by Lucie directly
+- Data files in `data/` directory are loaded synchronously by query tools using `data-helpers.ts`
