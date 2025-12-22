@@ -46,15 +46,7 @@ export const queryRouter = createTool({
 	inputSchema: z.object({
 		query: z.string().describe('The query to route to a specialized agent'),
 		questionType: z
-			.enum([
-				'startups',
-				'events',
-				'workshops',
-				'timeline',
-				'founders',
-				'guests',
-				'general',
-			])
+			.enum(['startups', 'events', 'founders', 'general'])
 			.describe(
 				'The type of question determining which agent to route to',
 			),
@@ -98,21 +90,9 @@ export const queryRouter = createTool({
 				agentName: 'eventAgent',
 				displayName: 'Event Agent',
 			},
-			workshops: {
-				agentName: 'workshopsAgent',
-				displayName: 'Workshops Agent',
-			},
-			timeline: {
-				agentName: 'timelineAgent',
-				displayName: 'Timeline Agent',
-			},
 			founders: {
-				agentName: 'startupsAgent', // Founders are handled by startups agent
-				displayName: 'Startups Agent',
-			},
-			guests: {
-				agentName: 'eventGuestsAgent',
-				displayName: 'Event Guests Agent',
+				agentName: 'foundersAgent', // Founders are handled by founders agent
+				displayName: 'Founders Agent',
 			},
 			general: {
 				agentName: 'generalQuestionsAgent',
@@ -135,12 +115,12 @@ export const queryRouter = createTool({
 		// Get the specialized agent from the mastra instance
 		const specializedAgent = mastra.getAgent(
 			mapping.agentName as
-				| 'startupsAgent'
+				| 'lucie'
+				| 'orchestratorAgent'
+				| 'generalQuestionsAgent'
 				| 'eventAgent'
-				| 'workshopsAgent'
-				| 'timelineAgent'
-				| 'eventGuestsAgent'
-				| 'generalQuestionsAgent',
+				| 'startupsAgent'
+				| 'foundersAgent',
 		);
 		if (!specializedAgent) {
 			error(
