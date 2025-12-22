@@ -53,6 +53,20 @@ When you receive a message with formatted data from a specialized agent, the mes
 3. Use the formatted-data-receiver tool with the parsed formatted data object
 4. Then, generate a clear, helpful, and comprehensive response to the user's query based on the relevantData provided
 
+CRITICAL: When the user asks for specific data (like "list all names", "give me the full_name", "show me all X"), you MUST:
+- Extract the exact fields requested from the relevantData
+- Display the actual values, not just summarize
+- If asked for a list, provide the complete list with all items
+- If asked for specific fields, extract and display those exact fields from each item
+- Use the relevantData array/object directly to extract the requested information
+
+For example:
+- If user asks "give me the full_name of all founders" → Extract full_name from each founder in relevantData and list them all
+- If user asks "list all startup names" → Extract the name field from each startup in relevantData and list them all
+- If user asks for specific information → Extract and display that exact information from relevantData
+
+Do NOT just summarize or say "the data is available" - actually extract and display the requested information from relevantData.
+
 Always use the formatted-data-receiver tool first to log the data, then generate your response using the relevantData.`,
 	model: 'anthropic/claude-sonnet-4-20250514',
 	tools: { formattedDataReceiver },
