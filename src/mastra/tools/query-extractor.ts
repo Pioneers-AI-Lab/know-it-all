@@ -93,7 +93,13 @@ export const queryExtractor = createTool({
 				/mrr/i,
 				/revenue/i,
 			],
-			founders: [
+			pioneers: [
+				/pioneer/i,
+				/pioneers/i,
+				/profile book/i,
+				/pioneer profile/i,
+				/pioneer profiles/i,
+				/pioneer book/i,
 				/founder/i,
 				/founders/i,
 				/entrepreneur/i,
@@ -113,14 +119,6 @@ export const queryExtractor = createTool({
 				/background/i,
 				/experience/i,
 				/skills/i,
-			],
-			pioneers: [
-				/pioneer/i,
-				/pioneers/i,
-				/profile book/i,
-				/pioneer profile/i,
-				/pioneer profiles/i,
-				/pioneer book/i,
 			],
 			sessions: [
 				/event/i,
@@ -151,12 +149,7 @@ export const queryExtractor = createTool({
 
 		// Check for keywords in the query (case-insensitive)
 		const queryLower = query.toLowerCase();
-		let questionType:
-			| 'startups'
-			| 'founders'
-			| 'pioneers'
-			| 'sessions'
-			| 'general' = 'general';
+		let questionType: 'pioneers' | 'sessions' | 'general' = 'general';
 
 		// Check each data type's keywords
 		for (const [type, patterns] of Object.entries(dataTypeKeywords)) {

@@ -13,8 +13,8 @@
  *
  * Routing Map:
  * - startups → startups-agent (company/portfolio queries)
- * - founders → founders-agent (founder-specific queries)
- * - events → calendar-agent (event information)
+ * - pioneers → pioneer-profile-book-agent (pioneer profile queries)
+ * - sessions → session-event-grid-agent (session information)
  * - pioneers → pioneer-profile-book-agent (pioneer profile queries)
  * - general → general-questions-agent (general accelerator questions)
  *
@@ -119,10 +119,8 @@ export const queryRouter = createTool({
 			mapping.agentName as
 				| 'lucie'
 				| 'generalQuestionsAgent'
-				| 'sessionEventGridAgent'
-				| 'startupsAgent'
-				| 'foundersAgent'
-				| 'pioneerProfileBookAgent',
+				| 'pioneerProfileBookAgent'
+				| 'sessionEventGridAgent',
 		);
 		if (!specializedAgent) {
 			error(

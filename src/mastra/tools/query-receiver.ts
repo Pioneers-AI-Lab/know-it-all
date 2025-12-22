@@ -22,11 +22,8 @@
  *
  * Used By:
  * - general-questions-agent
- * - event-agent
- * - event-guests-agent
- * - startups-agent
- * - timeline-agent
- * - workshops-agent
+ * - session-event-grid-agent
+ * - pioneer-profile-book-agent
  *
  * Important Notes:
  * - Always first tool called by specialized agents
@@ -47,15 +44,7 @@ export const queryReceiver = createTool({
 			.string()
 			.describe('The query string received from the orchestrator'),
 		questionType: z
-			.enum([
-				'startups',
-				'events',
-				'workshops',
-				'timeline',
-				'founders',
-				'guests',
-				'general',
-			])
+			.enum(['pioneers', 'sessions', 'general'])
 			.describe('The type of question'),
 		agentName: z
 			.string()
