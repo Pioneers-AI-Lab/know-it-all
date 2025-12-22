@@ -87,8 +87,8 @@ export const queryRouter = createTool({
 				displayName: 'Startups Agent',
 			},
 			events: {
-				agentName: 'eventAgent',
-				displayName: 'Event Agent',
+				agentName: 'calendarAgent',
+				displayName: 'Calendar Agent',
 			},
 			founders: {
 				agentName: 'foundersAgent', // Founders are handled by founders agent
@@ -118,7 +118,7 @@ export const queryRouter = createTool({
 				| 'lucie'
 				| 'orchestratorAgent'
 				| 'generalQuestionsAgent'
-				| 'eventAgent'
+				| 'calendarAgent'
 				| 'startupsAgent'
 				| 'foundersAgent',
 		);

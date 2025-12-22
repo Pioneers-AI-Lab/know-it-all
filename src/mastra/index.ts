@@ -26,7 +26,7 @@ import { LibSQLStore } from '@mastra/libsql';
 import { lucie } from './agents/lucie-agent';
 import { orchestratorAgent } from './agents/orchestrator-agent';
 import { generalQuestionsAgent } from './agents/general-questions-agent';
-import { eventAgent } from './agents/event-agent';
+import { calendarAgent } from './agents/calendar-agent';
 import { startupsAgent } from './agents/startups-agent';
 import { foundersAgent } from './agents/founders-agent';
 import { responseGeneratorAgent } from './agents/response-generator-agent';
@@ -38,7 +38,7 @@ export const mastra = new Mastra({
 		lucie,
 		orchestratorAgent,
 		generalQuestionsAgent,
-		eventAgent,
+		calendarAgent,
 		startupsAgent,
 		foundersAgent,
 		responseGeneratorAgent,

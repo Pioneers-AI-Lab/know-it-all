@@ -39,6 +39,7 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { loadJsonData, searchInObject } from './data-helpers';
 import { message, log } from '../../lib/print-helpers';
+import calendarEventsData from '../../../data/calendar-events.json';
 
 export const eventsQuery = createTool({
 	id: 'events-query',
