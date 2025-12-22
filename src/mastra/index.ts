@@ -29,6 +29,7 @@ import { generalQuestionsAgent } from './agents/general-questions-agent';
 import { calendarAgent } from './agents/calendar-agent';
 import { startupsAgent } from './agents/startups-agent';
 import { foundersAgent } from './agents/founders-agent';
+import { pioneerProfileBookAgent } from './agents/pioneer-profile-book-agent';
 import { responseGeneratorAgent } from './agents/response-generator-agent';
 import { slackRoutes } from './slack/routes';
 
@@ -41,6 +42,7 @@ export const mastra = new Mastra({
 		calendarAgent,
 		startupsAgent,
 		foundersAgent,
+		pioneerProfileBookAgent,
 		responseGeneratorAgent,
 	},
 

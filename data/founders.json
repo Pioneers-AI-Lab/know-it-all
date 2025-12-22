@@ -20,7 +20,7 @@
 			"motivation": "Building healthier and more human-centered workplaces",
 			"strengths": ["Vision", "Communication", "Team building"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Angel round",
 			"goals_next_12_months": ["Reach PMF", "Raise seed round"],
@@ -44,7 +44,7 @@
 			"motivation": "Applying AI to solve real-world problems",
 			"strengths": ["Technical excellence", "Problem solving"],
 			"weaknesses": ["Sales"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -71,13 +71,12 @@
 			"motivation": "Making legal information accessible to founders",
 			"strengths": ["Domain expertise", "Clarity"],
 			"weaknesses": ["Marketing"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": ["Grow MRR", "Automate onboarding"],
 			"open_to_mentorship": true
 		},
-
 		{
 			"founder_id": "f_004",
 			"full_name": "Lucas Bernard",
@@ -96,13 +95,12 @@
 			"motivation": "Reducing water waste in agriculture",
 			"strengths": ["Industry knowledge", "Execution"],
 			"weaknesses": ["Tech literacy"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Expand pilots", "International growth"],
 			"open_to_mentorship": false
 		},
-
 		{
 			"founder_id": "f_005",
 			"full_name": "Sofia Alvarez",
@@ -121,13 +119,12 @@
 			"motivation": "Building scalable systems for fast-growing startups",
 			"strengths": ["Organization", "Reliability"],
 			"weaknesses": ["Public speaking"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 2,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Operational scaling"],
 			"open_to_mentorship": true
 		},
-
 		{
 			"founder_id": "f_006",
 			"full_name": "Romain Dupuis",
@@ -146,13 +143,12 @@
 			"motivation": "Pushing AI products to production scale",
 			"strengths": ["Technical depth"],
 			"weaknesses": ["Delegation"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 2,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Improve model reliability"],
 			"open_to_mentorship": false
 		},
-
 		{
 			"founder_id": "f_007",
 			"full_name": "Nina Petrov",
@@ -171,7 +167,7 @@
 			"motivation": "Building creator-first platforms",
 			"strengths": ["Growth intuition"],
 			"weaknesses": ["Fundraising"],
-			"availability": "Part-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -180,7 +176,6 @@
 			],
 			"open_to_mentorship": true
 		},
-
 		{
 			"founder_id": "f_008",
 			"full_name": "Thomas Keller",
@@ -199,13 +194,12 @@
 			"motivation": "Building category-defining B2B products",
 			"strengths": ["Enterprise sales"],
 			"weaknesses": ["Hands-on execution"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 3,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Enterprise expansion"],
 			"open_to_mentorship": false
 		},
-
 		{
 			"founder_id": "f_009",
 			"full_name": "Yara Haddad",
@@ -224,13 +218,12 @@
 			"motivation": "Reinventing education systems",
 			"strengths": ["User empathy"],
 			"weaknesses": ["Sales"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": ["Launch MVP"],
 			"open_to_mentorship": true
 		},
-
 		{
 			"founder_id": "f_010",
 			"full_name": "Marco Rossi",
@@ -249,7 +242,7 @@
 			"motivation": "Building robust financial infrastructure",
 			"strengths": ["Reliability", "Scalability"],
 			"weaknesses": ["Marketing"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed",
 			"goals_next_12_months": ["Scale backend"],
@@ -277,7 +270,7 @@
 			"motivation": "Using technology to solve climate challenges",
 			"strengths": ["Technical depth", "Hardware expertise"],
 			"weaknesses": ["Business development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -308,7 +301,7 @@
 				"Stakeholder management"
 			],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Expand to 500 schools", "Raise Series B"],
@@ -336,7 +329,7 @@
 			"motivation": "Applying AI to improve educational outcomes",
 			"strengths": ["Technical excellence", "Research"],
 			"weaknesses": ["Sales"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -363,7 +356,7 @@
 			"motivation": "Creating products that truly help students learn",
 			"strengths": ["User empathy", "Product vision"],
 			"weaknesses": ["Engineering depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Launch mobile app", "Improve engagement"],
@@ -387,7 +380,7 @@
 			"motivation": "Democratizing access to global payments",
 			"strengths": ["Industry connections", "Execution"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -418,7 +411,7 @@
 			"motivation": "Building the future of financial infrastructure",
 			"strengths": ["Technical depth", "Security expertise"],
 			"weaknesses": ["Business development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -445,7 +438,7 @@
 			"motivation": "Building compliant financial products",
 			"strengths": ["Financial acumen", "Regulatory knowledge"],
 			"weaknesses": ["Product development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -472,7 +465,7 @@
 			"motivation": "Helping families eat healthier and waste less",
 			"strengths": ["Product sense", "Growth mindset"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": ["Reach 10K users", "Raise seed round"],
@@ -496,7 +489,7 @@
 			"motivation": "Using technology to solve sustainability challenges",
 			"strengths": ["Technical versatility", "Execution speed"],
 			"weaknesses": ["Enterprise sales"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [
@@ -523,7 +516,7 @@
 			"motivation": "Modernizing property management",
 			"strengths": ["Domain expertise", "Customer relationships"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Onboard 200 customers", "Raise Series A"],
@@ -551,7 +544,7 @@
 			"motivation": "Building smart buildings and cities",
 			"strengths": ["Technical depth", "Architecture"],
 			"weaknesses": ["Business development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -578,7 +571,7 @@
 			"motivation": "Helping property managers succeed",
 			"strengths": ["Sales execution", "Relationship building"],
 			"weaknesses": ["Product development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -609,7 +602,7 @@
 			"motivation": "Making developers more productive",
 			"strengths": ["Technical leadership", "Vision"],
 			"weaknesses": ["Sales"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Reach 50K developers", "Raise Series B"],
@@ -633,7 +626,7 @@
 			"motivation": "Applying cutting-edge AI to developer tools",
 			"strengths": ["Research", "Technical depth"],
 			"weaknesses": ["Product management"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -664,7 +657,7 @@
 			"motivation": "Creating tools developers love to use",
 			"strengths": ["Developer empathy", "Product vision"],
 			"weaknesses": ["Engineering depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Launch integrations", "Improve UX"],
@@ -688,7 +681,7 @@
 			"motivation": "Making fitness accessible and personalized",
 			"strengths": ["Domain expertise", "Vision"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Reach 50K users", "Raise Series A"],
@@ -712,7 +705,7 @@
 			"motivation": "Using AI to improve fitness outcomes",
 			"strengths": ["Technical depth", "Research"],
 			"weaknesses": ["Business development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -743,7 +736,7 @@
 			"motivation": "Building hardware that enhances fitness",
 			"strengths": ["Hardware expertise", "Product design"],
 			"weaknesses": ["Software development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -770,7 +763,7 @@
 			"motivation": "Creating transparent and sustainable supply chains",
 			"strengths": ["Industry expertise", "Enterprise relationships"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -801,7 +794,7 @@
 			"motivation": "Using blockchain to solve real-world problems",
 			"strengths": ["Technical depth", "Architecture"],
 			"weaknesses": ["Business development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -828,7 +821,7 @@
 			"motivation": "Streamlining global supply chains",
 			"strengths": ["Operations expertise", "Execution"],
 			"weaknesses": ["Product development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -859,7 +852,7 @@
 			"motivation": "Improving patient care through better data sharing",
 			"strengths": ["Domain expertise", "Credibility", "Vision"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": ["Onboard 50 hospitals", "Raise Series B"],
@@ -887,7 +880,7 @@
 			"motivation": "Building interoperable healthcare systems",
 			"strengths": ["Technical depth", "Domain expertise"],
 			"weaknesses": ["Business development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -918,7 +911,7 @@
 			"motivation": "Ensuring secure and compliant healthcare data",
 			"strengths": ["Regulatory expertise", "Risk management"],
 			"weaknesses": ["Product development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -953,7 +946,7 @@
 			"motivation": "Supporting local businesses and communities",
 			"strengths": ["Domain expertise", "Community relationships"],
 			"weaknesses": ["Technical depth"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Expand to 50 cities", "Raise Series A"],
@@ -981,7 +974,7 @@
 			"motivation": "Building technology that supports local economies",
 			"strengths": ["Technical versatility", "Execution"],
 			"weaknesses": ["Enterprise sales"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Scale platform", "Improve performance"],
@@ -1005,7 +998,7 @@
 			"motivation": "Helping local businesses grow",
 			"strengths": ["Growth expertise", "Data-driven"],
 			"weaknesses": ["Product development"],
-			"availability": "Full-time",
+			"availability": "closed",
 			"previous_startups": 0,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Reach 500K users", "Improve retention"],
@@ -1042,7 +1035,7 @@
 			"motivation": "Building scalable B2B SaaS products that solve real business problems",
 			"strengths": ["Technical depth", "Architecture", "Code quality"],
 			"weaknesses": ["Sales", "Business development"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1088,7 +1081,7 @@
 				"Fundraising"
 			],
 			"weaknesses": ["Technical implementation"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -1129,7 +1122,7 @@
 				"Technical innovation"
 			],
 			"weaknesses": ["Business strategy", "Go-to-market"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1175,7 +1168,7 @@
 				"Partnership building"
 			],
 			"weaknesses": ["Technical development"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1222,7 +1215,7 @@
 				"Developer experience"
 			],
 			"weaknesses": ["Marketing", "Sales"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [
@@ -1265,7 +1258,7 @@
 			"motivation": "Building consumer brands that resonate with modern audiences and create lasting impact",
 			"strengths": ["Brand building", "Growth", "Consumer insights"],
 			"weaknesses": ["Technical development", "Operations"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [
@@ -1308,7 +1301,7 @@
 			"motivation": "Using AI and mobile technology to solve everyday problems",
 			"strengths": ["AI/ML", "Mobile development", "Rapid prototyping"],
 			"weaknesses": ["Business strategy", "Go-to-market"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1354,7 +1347,7 @@
 				"Technical implementation",
 				"Engineering management"
 			],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 2,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -1401,7 +1394,7 @@
 				"Technical leadership"
 			],
 			"weaknesses": ["Product strategy", "Sales"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Seed round",
 			"goals_next_12_months": [
@@ -1448,7 +1441,7 @@
 				"Partnership building"
 			],
 			"weaknesses": ["Technical development", "Product development"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [
@@ -1495,7 +1488,7 @@
 				"User experience"
 			],
 			"weaknesses": ["Business strategy", "Sales"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1542,7 +1535,7 @@
 				"Healthcare networks"
 			],
 			"weaknesses": ["Technical development", "Software engineering"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1590,7 +1583,7 @@
 				"Privacy"
 			],
 			"weaknesses": ["Frontend development", "Marketing"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [
@@ -1633,7 +1626,7 @@
 			"motivation": "Creating consumer products that are sustainable, ethical, and delightful",
 			"strengths": ["Brand building", "Consumer insights", "Marketing"],
 			"weaknesses": ["Technical development", "Operations"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [
@@ -1680,7 +1673,7 @@
 				"Performance optimization"
 			],
 			"weaknesses": ["Product strategy", "Go-to-market"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1727,7 +1720,7 @@
 				"Revenue growth"
 			],
 			"weaknesses": ["Technical development", "Product development"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 2,
 			"funding_experience": "Series A",
 			"goals_next_12_months": [
@@ -1775,7 +1768,7 @@
 				"User experience"
 			],
 			"weaknesses": ["Business strategy", "Monetization"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 0,
 			"funding_experience": "None",
 			"goals_next_12_months": [
@@ -1822,7 +1815,7 @@
 				"Partnership building"
 			],
 			"weaknesses": ["Technical development", "Engineering"],
-			"availability": "Full-time",
+			"availability": "open",
 			"previous_startups": 1,
 			"funding_experience": "Pre-seed",
 			"goals_next_12_months": [

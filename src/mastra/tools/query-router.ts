@@ -13,11 +13,9 @@
  *
  * Routing Map:
  * - startups → startups-agent (company/portfolio queries)
- * - founders → startups-agent (founder-specific queries)
- * - events → event-agent (event information)
- * - guests → event-guests-agent (special guest events)
- * - workshops → workshops-agent (training sessions)
- * - timeline → timeline-agent (program schedule/phases)
+ * - founders → founders-agent (founder-specific queries)
+ * - events → calendar-agent (event information)
+ * - pioneers → pioneer-profile-book-agent (pioneer profile queries)
  * - general → general-questions-agent (general accelerator questions)
  *
  * Pipeline Position:
@@ -46,7 +44,7 @@ export const queryRouter = createTool({
 	inputSchema: z.object({
 		query: z.string().describe('The query to route to a specialized agent'),
 		questionType: z
-			.enum(['startups', 'events', 'founders', 'general'])
+			.enum(['startups', 'events', 'founders', 'pioneers', 'general'])
 			.describe(
 				'The type of question determining which agent to route to',
 			),
@@ -94,6 +92,10 @@ export const queryRouter = createTool({
 				agentName: 'foundersAgent', // Founders are handled by founders agent
 				displayName: 'Founders Agent',
 			},
+			pioneers: {
+				agentName: 'pioneerProfileBookAgent',
+				displayName: 'Pioneer Profile Book Agent',
+			},
 			general: {
 				agentName: 'generalQuestionsAgent',
 				displayName: 'General Questions Agent',
@@ -120,7 +122,8 @@ export const queryRouter = createTool({
 				| 'generalQuestionsAgent'
 				| 'calendarAgent'
 				| 'startupsAgent'
-				| 'foundersAgent',
+				| 'foundersAgent'
+				| 'pioneerProfileBookAgent',
 		);
 		if (!specializedAgent) {
 			error(

@@ -23,7 +23,8 @@
  * 4. timeline: Program schedule/phase questions
  * 5. founders: Founder-specific information
  * 6. guests: Special guest event queries
- * 7. general: Catch-all for other accelerator questions
+ * 7. pioneers: Pioneer profile book queries
+ * 8. general: Catch-all for other accelerator questions
  *
  * Pipeline Position:
  * User Message → [Query Extractor] → Orchestrator Sender → Orchestrator Agent → Specialized Agents
@@ -31,7 +32,7 @@
  * Output Format:
  * {
  *   query: "extracted question text",
- *   questionType: "startups|calendar|founders|general",
+ *   questionType: "startups|calendar|founders|pioneers|general",
  *   timestamp: "ISO date string"
  * }
  */
@@ -51,7 +52,14 @@ export const queryExtractor = createTool({
 	outputSchema: z.object({
 		query: z.string().describe('The extracted question'),
 		questionType: z
-			.enum(['startups', 'events', 'calendar', 'founders', 'general'])
+			.enum([
+				'startups',
+				'events',
+				'calendar',
+				'founders',
+				'pioneers',
+				'general',
+			])
 			.describe('The type of question based on data categories'),
 		formatted: z
 			.object({
@@ -133,12 +141,24 @@ export const queryExtractor = createTool({
 				/experience/i,
 				/skills/i,
 			],
+			pioneers: [
+				/pioneer/i,
+				/pioneers/i,
+				/profile book/i,
+				/pioneer profile/i,
+				/pioneer profiles/i,
+				/pioneer book/i,
+			],
 		};
 
 		// Check for keywords in the query (case-insensitive)
 		const queryLower = query.toLowerCase();
-		let questionType: 'startups' | 'calendar' | 'founders' | 'general' =
-			'general';
+		let questionType:
+			| 'startups'
+			| 'calendar'
+			| 'founders'
+			| 'pioneers'
+			| 'general' = 'general';
 
 		// Check each data type's keywords
 		for (const [type, patterns] of Object.entries(dataTypeKeywords)) {
