@@ -907,6 +907,396 @@ const startupsQuery = createTool({
   }
 });
 
+var generated_at = "2025-12-16";
+var dataset_purpose = "Demo / Slack chatbot / accelerator simulations / founder matching";
+var founders = [
+	{
+		founder_id: "f_001",
+		full_name: "Emma Laurent",
+		age: 32,
+		gender: "Female",
+		nationality: "French",
+		current_location: "Paris, France",
+		role: "CEO",
+		startup_stage: "Pre-seed",
+		background: {
+			education: "MBA, HEC Paris",
+			previous_experience: "HR Director at mid-size tech company",
+			domain_expertise: [
+				"HR",
+				"People Ops",
+				"SaaS"
+			]
+		},
+		skills: [
+			"Leadership",
+			"Hiring",
+			"Fundraising",
+			"Strategy"
+		],
+		motivation: "Building healthier and more human-centered workplaces",
+		strengths: [
+			"Vision",
+			"Communication",
+			"Team building"
+		],
+		weaknesses: [
+			"Technical depth"
+		],
+		availability: "Full-time",
+		previous_startups: 0,
+		funding_experience: "Angel round",
+		goals_next_12_months: [
+			"Reach PMF",
+			"Raise seed round"
+		],
+		open_to_mentorship: true
+	},
+	{
+		founder_id: "f_002",
+		full_name: "Julien Moreau",
+		age: 35,
+		gender: "Male",
+		nationality: "French",
+		current_location: "Lyon, France",
+		role: "CTO",
+		startup_stage: "Seed",
+		background: {
+			education: "MSc Computer Science",
+			previous_experience: "Machine Learning Engineer at scale-up",
+			domain_expertise: [
+				"AI",
+				"Data Engineering"
+			]
+		},
+		skills: [
+			"Machine Learning",
+			"System Design",
+			"Leadership"
+		],
+		motivation: "Applying AI to solve real-world problems",
+		strengths: [
+			"Technical excellence",
+			"Problem solving"
+		],
+		weaknesses: [
+			"Sales"
+		],
+		availability: "Full-time",
+		previous_startups: 1,
+		funding_experience: "Seed round",
+		goals_next_12_months: [
+			"Scale infrastructure",
+			"Hire engineering team"
+		],
+		open_to_mentorship: true
+	},
+	{
+		founder_id: "f_003",
+		full_name: "Alice Nguyen",
+		age: 29,
+		gender: "Female",
+		nationality: "Canadian",
+		current_location: "Remote",
+		role: "CEO",
+		startup_stage: "Bootstrapped",
+		background: {
+			education: "JD, University of Toronto",
+			previous_experience: "Corporate lawyer",
+			domain_expertise: [
+				"Legal",
+				"Compliance",
+				"Contracts"
+			]
+		},
+		skills: [
+			"Legal analysis",
+			"Product thinking",
+			"Writing"
+		],
+		motivation: "Making legal information accessible to founders",
+		strengths: [
+			"Domain expertise",
+			"Clarity"
+		],
+		weaknesses: [
+			"Marketing"
+		],
+		availability: "Full-time",
+		previous_startups: 0,
+		funding_experience: "None",
+		goals_next_12_months: [
+			"Grow MRR",
+			"Automate onboarding"
+		],
+		open_to_mentorship: true
+	},
+	{
+		founder_id: "f_004",
+		full_name: "Lucas Bernard",
+		age: 38,
+		gender: "Male",
+		nationality: "French",
+		current_location: "Toulouse, France",
+		role: "CEO",
+		startup_stage: "Seed",
+		background: {
+			education: "MSc Agricultural Engineering",
+			previous_experience: "Agronomist, farm consultant",
+			domain_expertise: [
+				"AgriTech",
+				"Climate"
+			]
+		},
+		skills: [
+			"Operations",
+			"Partnerships",
+			"Strategy"
+		],
+		motivation: "Reducing water waste in agriculture",
+		strengths: [
+			"Industry knowledge",
+			"Execution"
+		],
+		weaknesses: [
+			"Tech literacy"
+		],
+		availability: "Full-time",
+		previous_startups: 1,
+		funding_experience: "Seed round",
+		goals_next_12_months: [
+			"Expand pilots",
+			"International growth"
+		],
+		open_to_mentorship: false
+	},
+	{
+		founder_id: "f_005",
+		full_name: "Sofia Alvarez",
+		age: 31,
+		gender: "Female",
+		nationality: "Spanish",
+		current_location: "Barcelona, Spain",
+		role: "COO",
+		startup_stage: "Seed",
+		background: {
+			education: "BSc Industrial Engineering",
+			previous_experience: "Startup operations manager",
+			domain_expertise: [
+				"Operations",
+				"Logistics"
+			]
+		},
+		skills: [
+			"Process optimization",
+			"Execution",
+			"Hiring"
+		],
+		motivation: "Building scalable systems for fast-growing startups",
+		strengths: [
+			"Organization",
+			"Reliability"
+		],
+		weaknesses: [
+			"Public speaking"
+		],
+		availability: "Full-time",
+		previous_startups: 2,
+		funding_experience: "Seed round",
+		goals_next_12_months: [
+			"Operational scaling"
+		],
+		open_to_mentorship: true
+	},
+	{
+		founder_id: "f_006",
+		full_name: "Romain Dupuis",
+		age: 34,
+		gender: "Male",
+		nationality: "French",
+		current_location: "Remote",
+		role: "CTO",
+		startup_stage: "Series A",
+		background: {
+			education: "MSc AI",
+			previous_experience: "AI lead at fintech",
+			domain_expertise: [
+				"LLMs",
+				"NLP"
+			]
+		},
+		skills: [
+			"AI architecture",
+			"Team leadership"
+		],
+		motivation: "Pushing AI products to production scale",
+		strengths: [
+			"Technical depth"
+		],
+		weaknesses: [
+			"Delegation"
+		],
+		availability: "Full-time",
+		previous_startups: 2,
+		funding_experience: "Series A",
+		goals_next_12_months: [
+			"Improve model reliability"
+		],
+		open_to_mentorship: false
+	},
+	{
+		founder_id: "f_007",
+		full_name: "Nina Petrov",
+		age: 27,
+		gender: "Female",
+		nationality: "Bulgarian",
+		current_location: "Berlin, Germany",
+		role: "CEO",
+		startup_stage: "Idea",
+		background: {
+			education: "BSc Economics",
+			previous_experience: "Growth marketer",
+			domain_expertise: [
+				"Marketing",
+				"Growth"
+			]
+		},
+		skills: [
+			"User acquisition",
+			"Copywriting"
+		],
+		motivation: "Building creator-first platforms",
+		strengths: [
+			"Growth intuition"
+		],
+		weaknesses: [
+			"Fundraising"
+		],
+		availability: "Part-time",
+		previous_startups: 0,
+		funding_experience: "None",
+		goals_next_12_months: [
+			"Validate idea",
+			"Find technical co-founder"
+		],
+		open_to_mentorship: true
+	},
+	{
+		founder_id: "f_008",
+		full_name: "Thomas Keller",
+		age: 41,
+		gender: "Male",
+		nationality: "German",
+		current_location: "Munich, Germany",
+		role: "CEO",
+		startup_stage: "Series A",
+		background: {
+			education: "MBA",
+			previous_experience: "Consulting partner",
+			domain_expertise: [
+				"Enterprise SaaS"
+			]
+		},
+		skills: [
+			"Sales",
+			"Negotiation",
+			"Leadership"
+		],
+		motivation: "Building category-defining B2B products",
+		strengths: [
+			"Enterprise sales"
+		],
+		weaknesses: [
+			"Hands-on execution"
+		],
+		availability: "Full-time",
+		previous_startups: 3,
+		funding_experience: "Series A",
+		goals_next_12_months: [
+			"Enterprise expansion"
+		],
+		open_to_mentorship: false
+	},
+	{
+		founder_id: "f_009",
+		full_name: "Yara Haddad",
+		age: 30,
+		gender: "Female",
+		nationality: "Lebanese",
+		current_location: "Paris, France",
+		role: "CEO",
+		startup_stage: "Pre-seed",
+		background: {
+			education: "MSc Computer Science",
+			previous_experience: "Product manager",
+			domain_expertise: [
+				"EdTech",
+				"Product"
+			]
+		},
+		skills: [
+			"Product discovery",
+			"UX research"
+		],
+		motivation: "Reinventing education systems",
+		strengths: [
+			"User empathy"
+		],
+		weaknesses: [
+			"Sales"
+		],
+		availability: "Full-time",
+		previous_startups: 0,
+		funding_experience: "None",
+		goals_next_12_months: [
+			"Launch MVP"
+		],
+		open_to_mentorship: true
+	},
+	{
+		founder_id: "f_010",
+		full_name: "Marco Rossi",
+		age: 36,
+		gender: "Male",
+		nationality: "Italian",
+		current_location: "Milan, Italy",
+		role: "CTO",
+		startup_stage: "Seed",
+		background: {
+			education: "MSc Software Engineering",
+			previous_experience: "Backend engineer",
+			domain_expertise: [
+				"FinTech",
+				"APIs"
+			]
+		},
+		skills: [
+			"Go",
+			"Distributed systems"
+		],
+		motivation: "Building robust financial infrastructure",
+		strengths: [
+			"Reliability",
+			"Scalability"
+		],
+		weaknesses: [
+			"Marketing"
+		],
+		availability: "Full-time",
+		previous_startups: 1,
+		funding_experience: "Seed",
+		goals_next_12_months: [
+			"Scale backend"
+		],
+		open_to_mentorship: false
+	}
+];
+var foundersData = {
+	generated_at: generated_at,
+	dataset_purpose: dataset_purpose,
+	founders: founders
+};
+
 "use strict";
 const foundersQuery = createTool({
   id: "founders-query",
@@ -921,16 +1311,22 @@ const foundersQuery = createTool({
   execute: async ({ query }) => {
     message("\u{1F50E} FOUNDERS QUERY - Searching founders database");
     log("Query:", query);
-    const data = loadJsonData("founders.json");
+    const queryLower = query.toLowerCase();
+    const isAllFoundersQuery = queryLower.includes("all founder") || queryLower.includes("list of founder") || queryLower.includes("every founder") || queryLower.includes("all the founder") || queryLower === "founders" || queryLower === "founder";
     const results = [];
-    if (data.founders && Array.isArray(data.founders)) {
-      for (const founder of data.founders) {
-        if (searchInObject(founder, query)) {
-          results.push(founder);
+    if (foundersData.founders && Array.isArray(foundersData.founders)) {
+      if (isAllFoundersQuery) {
+        message("\u{1F4CB} FOUNDERS QUERY - Returning all founders");
+        results.push(...foundersData.founders);
+      } else {
+        for (const founder of foundersData.founders) {
+          if (searchInObject(founder, query)) {
+            results.push(founder);
+          }
         }
       }
     }
-    const finalResults = results.slice(0, 10);
+    const finalResults = results.slice(0, 50);
     message(`\u2705 FOUNDERS QUERY - Found ${finalResults.length} result(s)`);
     log(
       "Results:",
