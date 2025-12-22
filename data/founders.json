@@ -1010,6 +1010,828 @@
 			"funding_experience": "Seed round",
 			"goals_next_12_months": ["Reach 500K users", "Improve retention"],
 			"open_to_mentorship": false
+		},
+		{
+			"founder_id": "f_038",
+			"full_name": "Alexandre Dubois",
+			"age": 28,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Computer Science, École Polytechnique",
+				"previous_experience": "Senior Software Engineer at Google, 5 years",
+				"domain_expertise": [
+					"Full-stack Development",
+					"Cloud Infrastructure",
+					"Scalability"
+				]
+			},
+			"skills": [
+				"TypeScript",
+				"Node.js",
+				"AWS",
+				"System Architecture",
+				"Team Leadership"
+			],
+			"motivation": "Building scalable B2B SaaS products that solve real business problems",
+			"strengths": ["Technical depth", "Architecture", "Code quality"],
+			"weaknesses": ["Sales", "Business development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Validate idea",
+				"Build MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business-focused founder with domain expertise, sales experience, and fundraising ability"
+		},
+		{
+			"founder_id": "f_039",
+			"full_name": "Sophie Laurent",
+			"age": 31,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Lyon, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MBA, INSEAD",
+				"previous_experience": "Product Manager at Microsoft, Strategy Consultant at McKinsey",
+				"domain_expertise": [
+					"Product Strategy",
+					"B2B SaaS",
+					"Enterprise Sales"
+				]
+			},
+			"skills": [
+				"Product Management",
+				"Strategy",
+				"Sales",
+				"Fundraising",
+				"Market Research"
+			],
+			"motivation": "Building enterprise software that transforms how businesses operate",
+			"strengths": [
+				"Product vision",
+				"Customer discovery",
+				"Fundraising"
+			],
+			"weaknesses": ["Technical implementation"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate market",
+				"Raise pre-seed"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with full-stack capabilities, experience building scalable systems, and passion for enterprise software"
+		},
+		{
+			"founder_id": "f_040",
+			"full_name": "Thomas Moreau",
+			"age": 33,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Toulouse, France",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "PhD Computer Science, AI specialization",
+				"previous_experience": "AI Research Scientist at Meta, Machine Learning Engineer",
+				"domain_expertise": [
+					"Machine Learning",
+					"AI",
+					"Deep Learning",
+					"NLP"
+				]
+			},
+			"skills": ["Python", "TensorFlow", "PyTorch", "MLOps", "Research"],
+			"motivation": "Applying cutting-edge AI to solve healthcare and climate challenges",
+			"strengths": [
+				"AI/ML expertise",
+				"Research",
+				"Technical innovation"
+			],
+			"weaknesses": ["Business strategy", "Go-to-market"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Identify use case",
+				"Build AI prototype"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with healthcare or climate domain expertise, regulatory knowledge, and ability to navigate complex markets"
+		},
+		{
+			"founder_id": "f_041",
+			"full_name": "Camille Bernard",
+			"age": 29,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MSc Finance, HEC Paris",
+				"previous_experience": "Investment Banking Analyst, FinTech Product Manager",
+				"domain_expertise": [
+					"FinTech",
+					"Financial Services",
+					"Compliance",
+					"Regulatory"
+				]
+			},
+			"skills": [
+				"Product Strategy",
+				"Financial Modeling",
+				"Regulatory Compliance",
+				"Partnerships"
+			],
+			"motivation": "Democratizing access to financial services through innovative technology",
+			"strengths": [
+				"Domain expertise",
+				"Regulatory knowledge",
+				"Partnership building"
+			],
+			"weaknesses": ["Technical development"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Obtain regulatory approvals",
+				"Build MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with experience in financial systems, security, and compliance. Strong in backend development and API design."
+		},
+		{
+			"founder_id": "f_042",
+			"full_name": "Lucas Petit",
+			"age": 30,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Remote",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Software Engineering",
+				"previous_experience": "Senior Backend Engineer at Stripe, Infrastructure Engineer",
+				"domain_expertise": [
+					"Payment Systems",
+					"API Design",
+					"Distributed Systems",
+					"Security"
+				]
+			},
+			"skills": [
+				"Go",
+				"Python",
+				"PostgreSQL",
+				"Kubernetes",
+				"API Design"
+			],
+			"motivation": "Building developer tools and infrastructure that make software development easier",
+			"strengths": [
+				"System design",
+				"Scalability",
+				"Developer experience"
+			],
+			"weaknesses": ["Marketing", "Sales"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Validate developer need",
+				"Build initial product"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with developer tools or SaaS experience, strong in product marketing and developer community building"
+		},
+		{
+			"founder_id": "f_043",
+			"full_name": "Marie Dubois",
+			"age": 34,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MSc Marketing, ESCP Business School",
+				"previous_experience": "Head of Marketing at D2C brand, Growth Lead at e-commerce startup",
+				"domain_expertise": [
+					"E-commerce",
+					"D2C",
+					"Brand Building",
+					"Growth Marketing"
+				]
+			},
+			"skills": [
+				"Growth Marketing",
+				"Brand Strategy",
+				"E-commerce",
+				"Content Creation",
+				"Influencer Marketing"
+			],
+			"motivation": "Building consumer brands that resonate with modern audiences and create lasting impact",
+			"strengths": ["Brand building", "Growth", "Consumer insights"],
+			"weaknesses": ["Technical development", "Operations"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate product concept",
+				"Launch MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with e-commerce or marketplace experience, strong in frontend development and user experience"
+		},
+		{
+			"founder_id": "f_044",
+			"full_name": "Nicolas Martin",
+			"age": 27,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Bordeaux, France",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Computer Science, AI specialization",
+				"previous_experience": "ML Engineer at startup, Computer Vision Researcher",
+				"domain_expertise": [
+					"Computer Vision",
+					"AI",
+					"Mobile Development",
+					"IoT"
+				]
+			},
+			"skills": [
+				"Python",
+				"TensorFlow",
+				"React Native",
+				"iOS/Android",
+				"Computer Vision"
+			],
+			"motivation": "Using AI and mobile technology to solve everyday problems",
+			"strengths": ["AI/ML", "Mobile development", "Rapid prototyping"],
+			"weaknesses": ["Business strategy", "Go-to-market"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Identify market opportunity",
+				"Build prototype"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with consumer product experience, strong in user research and product-market fit discovery"
+		},
+		{
+			"founder_id": "f_045",
+			"full_name": "Julie Rousseau",
+			"age": 32,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MBA, Stanford GSB",
+				"previous_experience": "VP Product at unicorn startup, Management Consultant",
+				"domain_expertise": [
+					"Product Strategy",
+					"Enterprise SaaS",
+					"B2B Sales",
+					"Market Research"
+				]
+			},
+			"skills": [
+				"Product Management",
+				"Enterprise Sales",
+				"Strategy",
+				"Fundraising",
+				"Team Building"
+			],
+			"motivation": "Building enterprise software that transforms industries",
+			"strengths": ["Product vision", "Enterprise sales", "Fundraising"],
+			"weaknesses": [
+				"Technical implementation",
+				"Engineering management"
+			],
+			"availability": "Full-time",
+			"previous_startups": 2,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate enterprise need",
+				"Raise seed round"
+			],
+			"open_to_mentorship": false,
+			"ideal_cofounder_profile": "Technical founder with enterprise software experience, strong in backend architecture and security. Should be able to lead engineering team."
+		},
+		{
+			"founder_id": "f_046",
+			"full_name": "Antoine Laurent",
+			"age": 36,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Lille, France",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Computer Science",
+				"previous_experience": "Principal Engineer at Amazon, Tech Lead at scale-up",
+				"domain_expertise": [
+					"Cloud Infrastructure",
+					"Microservices",
+					"DevOps",
+					"Scalability"
+				]
+			},
+			"skills": [
+				"AWS",
+				"Kubernetes",
+				"Docker",
+				"Microservices",
+				"System Design"
+			],
+			"motivation": "Building developer infrastructure and tools that enable faster software development",
+			"strengths": [
+				"Infrastructure",
+				"Scalability",
+				"Technical leadership"
+			],
+			"weaknesses": ["Product strategy", "Sales"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Seed round",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Identify developer pain point",
+				"Build initial solution"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with developer tools or infrastructure experience, strong in product strategy and developer community engagement"
+		},
+		{
+			"founder_id": "f_047",
+			"full_name": "Isabelle Moreau",
+			"age": 30,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Marseille, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MSc Business Administration",
+				"previous_experience": "Operations Manager at logistics startup, Supply Chain Consultant",
+				"domain_expertise": [
+					"Logistics",
+					"Supply Chain",
+					"Operations",
+					"B2B Marketplaces"
+				]
+			},
+			"skills": [
+				"Operations",
+				"Supply Chain",
+				"Partnerships",
+				"Business Development",
+				"Process Optimization"
+			],
+			"motivation": "Digitizing and optimizing supply chains to reduce waste and improve efficiency",
+			"strengths": [
+				"Operations expertise",
+				"Industry knowledge",
+				"Partnership building"
+			],
+			"weaknesses": ["Technical development", "Product development"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate market need",
+				"Build MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with experience in logistics, IoT, or marketplace platforms. Strong in backend development and API design."
+		},
+		{
+			"founder_id": "f_048",
+			"full_name": "Pierre Bernard",
+			"age": 29,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Remote",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Software Engineering",
+				"previous_experience": "Full-stack Engineer at startup, Freelance Developer",
+				"domain_expertise": [
+					"Full-stack Development",
+					"Web Applications",
+					"API Development"
+				]
+			},
+			"skills": [
+				"JavaScript",
+				"TypeScript",
+				"React",
+				"Node.js",
+				"PostgreSQL",
+				"Full-stack"
+			],
+			"motivation": "Building web applications that improve productivity and collaboration",
+			"strengths": [
+				"Full-stack development",
+				"Rapid prototyping",
+				"User experience"
+			],
+			"weaknesses": ["Business strategy", "Sales"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Identify market opportunity",
+				"Build MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with SaaS or productivity tools experience, strong in product strategy and customer discovery"
+		},
+		{
+			"founder_id": "f_049",
+			"full_name": "Claire Martin",
+			"age": 35,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MSc Healthcare Management",
+				"previous_experience": "Healthcare Product Manager, Medical Device Sales",
+				"domain_expertise": [
+					"Healthcare",
+					"MedTech",
+					"Regulatory",
+					"Clinical Trials"
+				]
+			},
+			"skills": [
+				"Product Strategy",
+				"Regulatory Compliance",
+				"Healthcare Sales",
+				"Partnerships",
+				"Market Research"
+			],
+			"motivation": "Improving healthcare outcomes through innovative technology solutions",
+			"strengths": [
+				"Domain expertise",
+				"Regulatory knowledge",
+				"Healthcare networks"
+			],
+			"weaknesses": ["Technical development", "Software engineering"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate clinical need",
+				"Navigate regulatory requirements"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with healthcare or medical device experience, strong in software development, security, and compliance. Understanding of HIPAA/GDPR helpful."
+		},
+		{
+			"founder_id": "f_050",
+			"full_name": "Maxime Dubois",
+			"age": 31,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Nantes, France",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Computer Science",
+				"previous_experience": "Backend Engineer at fintech, Security Engineer",
+				"domain_expertise": [
+					"Backend Development",
+					"Security",
+					"Cryptography",
+					"Blockchain"
+				]
+			},
+			"skills": [
+				"Go",
+				"Rust",
+				"Security",
+				"Cryptography",
+				"Blockchain",
+				"API Design"
+			],
+			"motivation": "Building secure and privacy-focused technology solutions",
+			"strengths": [
+				"Security expertise",
+				"Backend architecture",
+				"Privacy"
+			],
+			"weaknesses": ["Frontend development", "Marketing"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Identify security/privacy market need",
+				"Build secure MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with security, privacy, or enterprise software experience. Strong in product strategy and enterprise sales."
+		},
+		{
+			"founder_id": "f_051",
+			"full_name": "Elise Rousseau",
+			"age": 28,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MSc Marketing & Innovation",
+				"previous_experience": "Brand Manager at consumer goods company, Marketing Lead at D2C startup",
+				"domain_expertise": [
+					"Consumer Products",
+					"Brand Building",
+					"E-commerce",
+					"Social Media"
+				]
+			},
+			"skills": [
+				"Brand Strategy",
+				"Digital Marketing",
+				"E-commerce",
+				"Content Creation",
+				"Influencer Relations"
+			],
+			"motivation": "Creating consumer products that are sustainable, ethical, and delightful",
+			"strengths": ["Brand building", "Consumer insights", "Marketing"],
+			"weaknesses": ["Technical development", "Operations"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate product concept",
+				"Launch pilot"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with e-commerce or consumer tech experience, strong in full-stack development and user experience design"
+		},
+		{
+			"founder_id": "f_052",
+			"full_name": "Vincent Moreau",
+			"age": 34,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Remote",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Computer Science, Distributed Systems",
+				"previous_experience": "Senior Engineer at Netflix, Distributed Systems Architect",
+				"domain_expertise": [
+					"Distributed Systems",
+					"Microservices",
+					"Real-time Systems",
+					"Video Streaming"
+				]
+			},
+			"skills": [
+				"Java",
+				"Scala",
+				"Kafka",
+				"Microservices",
+				"System Architecture"
+			],
+			"motivation": "Building real-time systems and platforms that handle massive scale",
+			"strengths": [
+				"Distributed systems",
+				"Scalability",
+				"Performance optimization"
+			],
+			"weaknesses": ["Product strategy", "Go-to-market"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Identify platform opportunity",
+				"Build prototype"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with platform or infrastructure experience, strong in product strategy and developer/enterprise sales"
+		},
+		{
+			"founder_id": "f_053",
+			"full_name": "Amélie Bernard",
+			"age": 32,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MBA, HEC Paris",
+				"previous_experience": "VP Sales at SaaS company, Account Executive at Salesforce",
+				"domain_expertise": [
+					"B2B Sales",
+					"Enterprise SaaS",
+					"Customer Success",
+					"Revenue Operations"
+				]
+			},
+			"skills": [
+				"Enterprise Sales",
+				"Account Management",
+				"Revenue Strategy",
+				"Customer Success",
+				"Fundraising"
+			],
+			"motivation": "Building B2B SaaS products that solve real enterprise problems",
+			"strengths": [
+				"Sales execution",
+				"Customer relationships",
+				"Revenue growth"
+			],
+			"weaknesses": ["Technical development", "Product development"],
+			"availability": "Full-time",
+			"previous_startups": 2,
+			"funding_experience": "Series A",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate enterprise need",
+				"Raise seed round"
+			],
+			"open_to_mentorship": false,
+			"ideal_cofounder_profile": "Technical founder with enterprise SaaS experience, strong in backend development, security, and API design. Should understand enterprise requirements."
+		},
+		{
+			"founder_id": "f_054",
+			"full_name": "Baptiste Laurent",
+			"age": 26,
+			"gender": "Male",
+			"nationality": "French",
+			"current_location": "Grenoble, France",
+			"role": "CTO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Business/CEO",
+			"background": {
+				"education": "MSc Computer Science",
+				"previous_experience": "Software Engineer at gaming company, Game Developer",
+				"domain_expertise": [
+					"Game Development",
+					"Unity",
+					"Unreal Engine",
+					"Mobile Games",
+					"AR/VR"
+				]
+			},
+			"skills": [
+				"Unity",
+				"C#",
+				"Game Design",
+				"Mobile Development",
+				"AR/VR"
+			],
+			"motivation": "Creating engaging games and interactive experiences",
+			"strengths": [
+				"Game development",
+				"Creative problem solving",
+				"User experience"
+			],
+			"weaknesses": ["Business strategy", "Monetization"],
+			"availability": "Full-time",
+			"previous_startups": 0,
+			"funding_experience": "None",
+			"goals_next_12_months": [
+				"Find business co-founder",
+				"Validate game concept",
+				"Build prototype"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Business founder with gaming or entertainment industry experience, strong in product strategy, monetization, and user acquisition"
+		},
+		{
+			"founder_id": "f_055",
+			"full_name": "Céline Dubois",
+			"age": 33,
+			"gender": "Female",
+			"nationality": "French",
+			"current_location": "Paris, France",
+			"role": "CEO",
+			"startup_stage": "Looking for co-founder",
+			"startup_affiliation": null,
+			"seeking_cofounder": true,
+			"cofounder_type_seeking": "Technical/CTO",
+			"background": {
+				"education": "MSc Education Technology",
+				"previous_experience": "EdTech Product Manager, Education Consultant",
+				"domain_expertise": [
+					"EdTech",
+					"Education",
+					"Learning Platforms",
+					"Curriculum Design"
+				]
+			},
+			"skills": [
+				"Product Strategy",
+				"Education Design",
+				"Partnerships",
+				"Market Research",
+				"User Research"
+			],
+			"motivation": "Transforming education through innovative technology and personalized learning",
+			"strengths": [
+				"Education expertise",
+				"Product vision",
+				"Partnership building"
+			],
+			"weaknesses": ["Technical development", "Engineering"],
+			"availability": "Full-time",
+			"previous_startups": 1,
+			"funding_experience": "Pre-seed",
+			"goals_next_12_months": [
+				"Find technical co-founder",
+				"Validate educational need",
+				"Build learning platform MVP"
+			],
+			"open_to_mentorship": true,
+			"ideal_cofounder_profile": "Technical founder with EdTech or learning platform experience, strong in full-stack development, AI/ML for personalization, and user experience"
 		}
 	]
 }

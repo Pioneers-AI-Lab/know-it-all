@@ -220,6 +220,608 @@
 			],
 			"visibility": "cohort_only",
 			"tags": ["exit", "mna", "strategy"]
+		},
+		{
+			"event_id": "sg_008",
+			"title": "Marketing on a Shoestring Budget",
+			"type": "special_guest",
+			"guest": {
+				"name": "Camille Rousseau",
+				"role": "CMO",
+				"organization": "GrowthHack Labs"
+			},
+			"start": "2026-01-15T14:00:00",
+			"end": "2026-01-15T15:30:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room A"
+			},
+			"description": "Learn how to build brand awareness and acquire customers without a massive marketing budget. Covers content marketing, community building, and growth hacking tactics.",
+			"audience": ["Early-stage founders", "Marketing leads"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_008"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["marketing", "growth", "budget"]
+		},
+		{
+			"event_id": "sg_009",
+			"title": "Legal Essentials for Startups",
+			"type": "special_guest",
+			"guest": {
+				"name": "Marie Leclerc",
+				"role": "Startup Lawyer",
+				"organization": "TechLegal Partners"
+			},
+			"start": "2026-01-29T18:30:00",
+			"end": "2026-01-29T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room B"
+			},
+			"description": "Essential legal knowledge for founders: incorporation, equity, IP protection, contracts, and compliance basics. Q&A session included.",
+			"audience": ["All founders"],
+			"mandatory": false,
+			"capacity": 150,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_009"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["legal", "compliance", "ip"]
+		},
+		{
+			"event_id": "net_001",
+			"title": "Cohort Kickoff Networking",
+			"type": "networking",
+			"start": "2026-01-12T18:00:00",
+			"end": "2026-01-12T20:30:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Main Hall"
+			},
+			"description": "Welcome event for the new cohort. Meet fellow founders, mentors, and the Pioneers team. Light refreshments and networking activities.",
+			"audience": ["All founders"],
+			"mandatory": true,
+			"capacity": 300,
+			"registration": {
+				"required": false,
+				"rsvp_url": null
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["networking", "kickoff", "social"]
+		},
+		{
+			"event_id": "ws_001",
+			"title": "Pitch Deck Workshop",
+			"type": "workshop",
+			"guest": {
+				"name": "Alexandre Moreau",
+				"role": "Investment Partner",
+				"organization": "Pioneers VC"
+			},
+			"start": "2026-01-19T10:00:00",
+			"end": "2026-01-19T12:30:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room C"
+			},
+			"description": "Hands-on workshop to refine your pitch deck. Bring your current deck for live feedback and iteration. Covers storytelling, metrics, and investor psychology.",
+			"audience": ["Fundraising-stage founders"],
+			"mandatory": false,
+			"capacity": 40,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/ws_001"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["workshop", "pitch", "fundraising"]
+		},
+		{
+			"event_id": "sg_010",
+			"title": "Customer Discovery & Validation",
+			"type": "special_guest",
+			"guest": {
+				"name": "Thomas Bernard",
+				"role": "Product Strategy Lead",
+				"organization": "LeanStartup Academy"
+			},
+			"start": "2026-02-12T18:30:00",
+			"end": "2026-02-12T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room A"
+			},
+			"description": "Master the art of customer interviews, validation techniques, and building products people actually want. Includes practical frameworks and case studies.",
+			"audience": ["Early-stage founders", "Product teams"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_010"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["validation", "customer", "product"]
+		},
+		{
+			"event_id": "oh_001",
+			"title": "Office Hours: Fundraising",
+			"type": "office_hours",
+			"guest": {
+				"name": "Sophie Martin",
+				"role": "Investment Director",
+				"organization": "Pioneers VC"
+			},
+			"start": "2026-02-15T14:00:00",
+			"end": "2026-02-15T17:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Office Hours Room 1"
+			},
+			"description": "One-on-one office hours for fundraising questions. 20-minute slots available. Sign up required.",
+			"audience": ["Fundraising-stage founders"],
+			"mandatory": false,
+			"capacity": 12,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/oh_001"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 30 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["office_hours", "fundraising", "mentorship"]
+		},
+		{
+			"event_id": "sg_011",
+			"title": "Data-Driven Decision Making",
+			"type": "special_guest",
+			"guest": {
+				"name": "Lucas Chen",
+				"role": "Head of Analytics",
+				"organization": "DataFirst"
+			},
+			"start": "2026-02-26T18:30:00",
+			"end": "2026-02-26T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room B"
+			},
+			"description": "How to set up metrics, dashboards, and analytics infrastructure from day one. Learn which metrics matter and how to avoid vanity metrics.",
+			"audience": ["All founders", "Data/Product teams"],
+			"mandatory": false,
+			"capacity": 120,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_011"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["analytics", "metrics", "data"]
+		},
+		{
+			"event_id": "net_002",
+			"title": "Mid-Cohort Mixer",
+			"type": "networking",
+			"start": "2026-02-28T18:00:00",
+			"end": "2026-02-28T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Main Hall"
+			},
+			"description": "Mid-program networking event. Connect with peers, share progress, and build relationships. Food and drinks provided.",
+			"audience": ["All founders"],
+			"mandatory": false,
+			"capacity": 250,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/net_002"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["networking", "social", "community"]
+		},
+		{
+			"event_id": "sg_012",
+			"title": "International Expansion Strategies",
+			"type": "special_guest",
+			"guest": {
+				"name": "Isabella Rodriguez",
+				"role": "VP International",
+				"organization": "GlobalScale"
+			},
+			"start": "2026-03-08T18:30:00",
+			"end": "2026-03-08T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room A"
+			},
+			"description": "When and how to expand internationally. Covers market selection, localization, regulatory considerations, and building remote teams.",
+			"audience": ["Growth-stage founders", "Expansion teams"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_012"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["expansion", "international", "growth"]
+		},
+		{
+			"event_id": "ws_002",
+			"title": "Financial Modeling Workshop",
+			"type": "workshop",
+			"guest": {
+				"name": "Julien Moreau",
+				"role": "CFO",
+				"organization": "FinancePro"
+			},
+			"start": "2026-03-15T10:00:00",
+			"end": "2026-03-15T13:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room C"
+			},
+			"description": "Build your first financial model. Hands-on session covering revenue projections, unit economics, burn rate, and runway calculations. Bring your laptop.",
+			"audience": ["All founders", "Finance teams"],
+			"mandatory": false,
+			"capacity": 30,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/ws_002"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["workshop", "finance", "modeling"]
+		},
+		{
+			"event_id": "sg_013",
+			"title": "Building a Remote-First Culture",
+			"type": "special_guest",
+			"guest": {
+				"name": "Emma Thompson",
+				"role": "Head of People",
+				"organization": "RemoteFirst Co"
+			},
+			"start": "2026-03-22T18:30:00",
+			"end": "2026-03-22T19:45:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room B"
+			},
+			"description": "Best practices for building and maintaining company culture in distributed teams. Covers communication, onboarding, and team building remotely.",
+			"audience": ["All founders", "HR/People teams"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_013"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["culture", "remote", "hr"]
+		},
+		{
+			"event_id": "demo_001",
+			"title": "Demo Day Rehearsal",
+			"type": "demo_day",
+			"start": "2026-03-29T09:00:00",
+			"end": "2026-03-29T17:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Central Stage (Auditorium)"
+			},
+			"description": "Full-day rehearsal for Demo Day. Each startup presents their pitch with feedback from mentors and investors. Mandatory for all presenting teams.",
+			"audience": ["All founders"],
+			"mandatory": true,
+			"capacity": 300,
+			"registration": {
+				"required": false,
+				"rsvp_url": null
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 2880 },
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["demo_day", "pitch", "mandatory"]
+		},
+		{
+			"event_id": "demo_002",
+			"title": "Demo Day 2026",
+			"type": "demo_day",
+			"start": "2026-04-01T14:00:00",
+			"end": "2026-04-01T18:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Central Stage (Auditorium)"
+			},
+			"description": "The main event! Startups present to investors, partners, and the startup community. Networking reception follows.",
+			"audience": ["All founders", "Investors", "Partners", "Community"],
+			"mandatory": true,
+			"capacity": 500,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/demo_002"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 2880 },
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "public",
+			"tags": ["demo_day", "pitch", "mandatory", "investors"]
+		},
+		{
+			"event_id": "sg_014",
+			"title": "AI & Machine Learning for Startups",
+			"type": "special_guest",
+			"guest": {
+				"name": "Dr. Yuki Nakamura",
+				"role": "AI Research Lead",
+				"organization": "AI Innovations Lab"
+			},
+			"start": "2026-01-26T18:30:00",
+			"end": "2026-01-26T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room C"
+			},
+			"description": "Practical guide to integrating AI/ML into your product. When to build vs. buy, cost considerations, and real-world use cases.",
+			"audience": ["Tech founders", "Product teams"],
+			"mandatory": false,
+			"capacity": 120,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_014"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["ai", "ml", "technology"]
+		},
+		{
+			"event_id": "sg_015",
+			"title": "Crypto & Web3 for Founders",
+			"type": "special_guest",
+			"guest": {
+				"name": "Marcus Weber",
+				"role": "Web3 Advisor",
+				"organization": "Blockchain Ventures"
+			},
+			"start": "2026-02-09T18:30:00",
+			"end": "2026-02-09T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room B"
+			},
+			"description": "Understanding blockchain, crypto, and Web3 opportunities for traditional startups. Tokenomics, NFTs, and decentralized models explained.",
+			"audience": ["Tech founders", "Web3-curious founders"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_015"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["web3", "crypto", "blockchain"]
+		},
+		{
+			"event_id": "oh_002",
+			"title": "Office Hours: Product Strategy",
+			"type": "office_hours",
+			"guest": {
+				"name": "David Kim",
+				"role": "Product Advisor",
+				"organization": "Pioneers VC"
+			},
+			"start": "2026-02-22T14:00:00",
+			"end": "2026-02-22T17:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Office Hours Room 2"
+			},
+			"description": "One-on-one office hours for product strategy questions. 20-minute slots available. Sign up required.",
+			"audience": ["Product leads", "Founders"],
+			"mandatory": false,
+			"capacity": 12,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/oh_002"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 30 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["office_hours", "product", "mentorship"]
+		},
+		{
+			"event_id": "sg_016",
+			"title": "Content Marketing & SEO",
+			"type": "special_guest",
+			"guest": {
+				"name": "Sarah Mitchell",
+				"role": "Content Strategy Director",
+				"organization": "ContentFirst"
+			},
+			"start": "2026-03-01T18:30:00",
+			"end": "2026-03-01T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room A"
+			},
+			"description": "How to build organic traffic through content marketing and SEO. Content strategy, keyword research, and distribution channels.",
+			"audience": ["Marketing leads", "Content teams"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_016"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["marketing", "seo", "content"]
+		},
+		{
+			"event_id": "net_003",
+			"title": "Investor Mixer",
+			"type": "networking",
+			"start": "2026-03-10T18:00:00",
+			"end": "2026-03-10T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Main Hall"
+			},
+			"description": "Exclusive networking event with VCs and angel investors. Opportunity to pitch and build relationships before Demo Day.",
+			"audience": ["Fundraising-stage founders", "Investors"],
+			"mandatory": false,
+			"capacity": 150,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/net_003"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["networking", "investors", "fundraising"]
+		},
+		{
+			"event_id": "sg_017",
+			"title": "User Experience Design Principles",
+			"type": "special_guest",
+			"guest": {
+				"name": "Léa Martin",
+				"role": "UX Design Lead",
+				"organization": "DesignStudio"
+			},
+			"start": "2026-03-15T18:30:00",
+			"end": "2026-03-15T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room B"
+			},
+			"description": "UX fundamentals for non-designers. Learn how to create user-friendly products, conduct user testing, and iterate on design.",
+			"audience": ["Product teams", "Founders"],
+			"mandatory": false,
+			"capacity": 100,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_017"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["ux", "design", "product"]
+		},
+		{
+			"event_id": "sg_018",
+			"title": "Crisis Management & Pivoting",
+			"type": "special_guest",
+			"guest": {
+				"name": "Robert Chen",
+				"role": "Former CEO",
+				"organization": "PivotSuccess"
+			},
+			"start": "2026-03-29T18:30:00",
+			"end": "2026-03-29T20:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Workshop Room A"
+			},
+			"description": "How to navigate crises, make tough decisions, and pivot when necessary. Real stories from founders who successfully pivoted.",
+			"audience": ["All founders"],
+			"mandatory": false,
+			"capacity": 120,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/sg_018"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 120 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["crisis", "pivot", "strategy"]
+		},
+		{
+			"event_id": "net_004",
+			"title": "Cohort Closing Celebration",
+			"type": "networking",
+			"start": "2026-04-02T18:00:00",
+			"end": "2026-04-02T21:00:00",
+			"location": {
+				"venue": "Station F",
+				"room": "Main Hall"
+			},
+			"description": "Celebrate the end of the cohort program! Awards ceremony, networking, and farewell party. All founders, mentors, and partners welcome.",
+			"audience": ["All founders", "Mentors", "Partners"],
+			"mandatory": false,
+			"capacity": 400,
+			"registration": {
+				"required": true,
+				"rsvp_url": "https://example.com/rsvp/net_004"
+			},
+			"reminders": [
+				{ "channel": "slack", "minutes_before": 1440 },
+				{ "channel": "slack", "minutes_before": 60 }
+			],
+			"visibility": "cohort_only",
+			"tags": ["networking", "celebration", "closing"]
 		}
 	],
 	"calendar_settings": {
