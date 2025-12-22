@@ -84,7 +84,13 @@ const queryExtractor = createTool({
         /mrr/i,
         /revenue/i
       ],
-      founders: [
+      pioneers: [
+        /pioneer/i,
+        /pioneers/i,
+        /profile book/i,
+        /pioneer profile/i,
+        /pioneer profiles/i,
+        /pioneer book/i,
         /founder/i,
         /founders/i,
         /entrepreneur/i,
@@ -104,14 +110,6 @@ const queryExtractor = createTool({
         /background/i,
         /experience/i,
         /skills/i
-      ],
-      pioneers: [
-        /pioneer/i,
-        /pioneers/i,
-        /profile book/i,
-        /pioneer profile/i,
-        /pioneer profiles/i,
-        /pioneer book/i
       ],
       sessions: [
         /event/i,
@@ -631,14 +629,28 @@ const pioneerProfileBookQuery = createTool({
       message(
         "\u{1F50D} PIONEER PROFILE BOOK QUERY - Performing general search"
       );
+      let nameMatches = [];
       for (const pioneer of allPioneers) {
-        if (searchInObject(pioneer, query)) {
-          results.push(pioneer);
+        const nameLower = (pioneer["Name"] || "").toLowerCase();
+        if (queryLower.includes(nameLower) || nameLower.includes(queryLower)) {
+          nameMatches.push(pioneer);
         }
       }
-      metadata = {
-        queryType: "general"
-      };
+      if (nameMatches.length > 0) {
+        results = nameMatches;
+        metadata = {
+          queryType: "general"
+        };
+      } else {
+        for (const pioneer of allPioneers) {
+          if (searchInObject(pioneer, query)) {
+            results.push(pioneer);
+          }
+        }
+        metadata = {
+          queryType: "general"
+        };
+      }
     }
     const finalResults = results.slice(0, 50);
     message(

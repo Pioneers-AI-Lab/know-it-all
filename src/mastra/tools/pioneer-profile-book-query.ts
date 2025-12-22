@@ -324,20 +324,39 @@ export const pioneerProfileBookQuery = createTool({
 				};
 			}
 		}
-		// General search - use semantic matching
+		// General search - check for name match first, then semantic matching
 		else {
 			message(
 				'🔍 PIONEER PROFILE BOOK QUERY - Performing general search',
 			);
-			// Search across all pioneer fields using searchInObject
+
+			// First, try to find by name (exact or partial match)
+			let nameMatches: any[] = [];
 			for (const pioneer of allPioneers) {
-				if (searchInObject(pioneer, query)) {
-					results.push(pioneer);
+				const nameLower = (pioneer['Name'] || '').toLowerCase();
+				// Check if the query contains the pioneer's name or vice versa
+				if (queryLower.includes(nameLower) || nameLower.includes(queryLower)) {
+					nameMatches.push(pioneer);
 				}
 			}
-			metadata = {
-				queryType: 'general' as const,
-			};
+
+			// If we found name matches, use those
+			if (nameMatches.length > 0) {
+				results = nameMatches;
+				metadata = {
+					queryType: 'general' as const,
+				};
+			} else {
+				// Otherwise, search across all pioneer fields using searchInObject
+				for (const pioneer of allPioneers) {
+					if (searchInObject(pioneer, query)) {
+						results.push(pioneer);
+					}
+				}
+				metadata = {
+					queryType: 'general' as const,
+				};
+			}
 		}
 
 		const finalResults = results.slice(0, 50); // Limit to top 50 results
