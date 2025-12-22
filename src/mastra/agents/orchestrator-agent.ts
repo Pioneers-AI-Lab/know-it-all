@@ -42,7 +42,7 @@ export const orchestratorAgent = new Agent({
 
 		The questionType can be one of: startups, events, founders, pioneers, or general.
 		Always use the query-router tool to route the query.`,
-	model: 'anthropic/claude-haiku-4-20250514',
+	model: 'anthropic/claude-3-5-haiku-20241022',
 	tools: { queryRouter },
 	memory: new Memory({
 		options: {

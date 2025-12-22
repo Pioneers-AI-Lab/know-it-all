@@ -438,7 +438,7 @@ Response Guidelines:
 - Be concise but thorough
 
 Do NOT call any other tools or agents - generate your final response directly after using the general-questions-query tool.`,
-  model: "anthropic/claude-haiku-4-20250514",
+  model: "anthropic/claude-3-5-haiku-20241022",
   tools: {
     generalQuestionsQuery
   },
@@ -574,7 +574,7 @@ Response Guidelines:
 - Be concise but thorough
 
 Do NOT call any other tools or agents - generate your final response directly after using the events-query tool.`,
-  model: "anthropic/claude-haiku-4-20250514",
+  model: "anthropic/claude-3-5-haiku-20241022",
   tools: {
     eventsQuery
   },
@@ -709,7 +709,7 @@ Response Guidelines:
 - Be concise but thorough
 
 Do NOT call any other tools or agents - generate your final response directly after using the startups-query tool.`,
-  model: "anthropic/claude-haiku-4-20250514",
+  model: "anthropic/claude-3-5-haiku-20241022",
   tools: {
     startupsQuery
   },
@@ -896,7 +896,7 @@ Response Guidelines:
 - Be concise but thorough
 
 Do NOT call any other tools or agents - generate your final response directly after using the founders-query tool.`,
-  model: "anthropic/claude-haiku-4-20250514",
+  model: "anthropic/claude-3-5-haiku-20241022",
   tools: {
     foundersQuery
   },
@@ -1110,7 +1110,7 @@ Response Guidelines:
 - Be concise but thorough
 
 Do NOT call any other tools or agents - generate your final response directly after using the pioneer-profile-book-query tool.`,
-  model: "anthropic/claude-haiku-4-20250514",
+  model: "anthropic/claude-3-5-haiku-20241022",
   tools: {
     pioneerProfileBookQuery
   },

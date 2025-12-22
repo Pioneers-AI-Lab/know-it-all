@@ -42,7 +42,7 @@ Response Guidelines:
 - Be concise but thorough
 
 Do NOT call any other tools or agents - generate your final response directly after using the founders-query tool.`,
-	model: 'anthropic/claude-haiku-4-20250514',
+	model: 'anthropic/claude-3-5-haiku-20241022',
 	tools: {
 		foundersQuery,
 	},
