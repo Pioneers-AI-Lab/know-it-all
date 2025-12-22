@@ -11,23 +11,20 @@
  * - Handles conversational context and extracts the core question intent
  *
  * Classification Strategy:
- * - Analyzes keywords related to data categories (startups, events, workshops, timeline, founders, guests)
+ * - Analyzes keywords related to data categories (startups, founders, pioneers, sessions, general)
  * - Detects question indicators (question marks, interrogative words)
- * - Maps detected keywords to one of 7 question types
+ * - Maps detected keywords to one of 5 question types
  * - Falls back to 'general' type for unclassified questions
  *
  * Question Types:
  * 1. startups: Company/portfolio queries
- * 2. events: Event information requests
- * 3. workshops: Training/workshop queries
- * 4. timeline: Program schedule/phase questions
- * 5. founders: Founder-specific information
- * 6. guests: Special guest event queries
- * 7. pioneers: Pioneer profile book queries
- * 8. general: Catch-all for other accelerator questions
+ * 2. founders: Founder-specific information
+ * 3. pioneers: Pioneer profile book queries
+ * 4. sessions: Session information requests
+ * 5. general: Catch-all for other accelerator questions
  *
  * Pipeline Position:
- * User Message → [Query Extractor] → Orchestrator Sender → Orchestrator Agent → Specialized Agents
+ * User Message → Lucie Agent → Query Extractor → Specialized Agent Router → Specialized Agent
  *
  * Output Format:
  * {
@@ -39,7 +36,6 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { message, log } from '../../lib/print-helpers';
 export const queryExtractor = createTool({
 	id: 'query-extractor',
 	description:
@@ -52,14 +48,7 @@ export const queryExtractor = createTool({
 	outputSchema: z.object({
 		query: z.string().describe('The extracted question'),
 		questionType: z
-			.enum([
-				'startups',
-				'events',
-				'founders',
-				'pioneers',
-				'sessions',
-				'general',
-			])
+			.enum(['startups', 'founders', 'pioneers', 'sessions', 'general'])
 			.describe('The type of question based on data categories'),
 		formatted: z
 			.object({
@@ -70,9 +59,6 @@ export const queryExtractor = createTool({
 			.describe('The formatted JSON object containing the question'),
 	}),
 	execute: async ({ message: userMessage }) => {
-		// message('🔍 QUERY EXTRACTOR - Starting extraction');
-		// log('Raw message:', userMessage);
-
 		// Clean the message - remove extra whitespace and normalize
 		const cleanedMessage = userMessage.trim().replace(/\s+/g, ' ');
 
@@ -189,11 +175,6 @@ export const queryExtractor = createTool({
 			type: questionType,
 			timestamp: new Date().toISOString(),
 		};
-
-		// message('🔍 QUERY EXTRACTOR - Result');
-		// log('Extracted query:', query);
-		// log('Detected questionType:', questionType);
-		// log('Formatted object:', JSON.stringify(formatted, null, 2));
 
 		return {
 			query,
