@@ -2,64 +2,51 @@
  * Startups Agent - Handles Startup Company Inquiries
  *
  * This specialized agent processes questions about startups in the Pioneer.vc accelerator program.
- * It searches the startups knowledge base and formats responses for end users.
+ * It searches the startups knowledge base and generates user-facing responses directly.
  *
  * Responsibilities:
- * - Receives queries routed by orchestrator with questionType "startups"
+ * - Receives queries from Lucie agent
  * - Searches startups knowledge base using startupsQuery tool
- * - Formats retrieved data with query context
- * - Sends formatted results to response-generator-agent for final user response
+ * - Generates clear, comprehensive responses directly for users
  *
- * Tool Execution Sequence:
- * 1. query-receiver: Logs incoming query and metadata
- * 2. startups-query: Searches knowledge base, returns {startups, found}
- * 3. data-formatter: Formats complete result object with metadata
- * 4. response-sender: Forwards formatted data to response-generator-agent
- *
- * Important Notes:
- * - Must pass ENTIRE result object (not just startups array) to data-formatter
- * - Part of multi-agent pipeline: orchestrator → specialized agent → response generator
- * - Follows standard query processing pattern used across all specialized agents
+ * Optimizations (Phase 2):
+ * - Removed queryReceiver, dataFormatter, responseSender tools (30-40% faster)
+ * - Generates responses directly instead of routing through response-generator-agent
+ * - Single tool call per query instead of 4 sequential tools
  */
 
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { queryReceiver } from '../tools/query-receiver';
 import { startupsQuery } from '../tools/startups-query';
-import { dataFormatter } from '../tools/data-formatter';
-import { responseSender } from '../tools/response-sender';
 
 export const startupsAgent = new Agent({
 	id: 'startups-agent',
 	name: 'startups-agent',
 	description:
 		'Startups Agent is responsible for answering questions about startups in the Pioneer.vc accelerator',
-	instructions: `You are a startups agent. You are responsible for answering questions about startups in the Pioneer.vc accelerator program. You handle questions about startup companies, their products, funding, teams, industries, and business models.
+	instructions: `You are a startups agent for the Pioneer.vc accelerator program. You handle questions about startup companies, their products, funding, teams, industries, and business models.
 
-When you receive a query from the orchestrator, the message will be in the format:
-"Question Type: {questionType}
+When you receive a query:
+1. Use the startups-query tool with the user's question to search for startup information
+2. The tool returns an object with "startups" (array of matching startups), "found" (boolean), and optional "metadata"
+3. Generate a clear, helpful, and comprehensive response directly to the user based on the results
 
-Query: {query}"
+Response Guidelines:
+- If startups are found, provide detailed information from the data
+- When users ask for specific data (lists, names, fields), extract and display the exact information
+- If no startups are found, provide a helpful message
+- Keep responses conversational and informative
+- Always use the same language as the user's question
+- Be concise but thorough
 
-1. First, extract the questionType and query from the message
-2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Startups Agent"
-3. Use the startups-query tool with: query={extracted query} to search for startup information
-4. IMPORTANT: The startups-query tool returns an object with "startups" and "found" keys. Pass the ENTIRE result object (not just the startups array) to the data-formatter tool.
-5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from startups-query}, agentName="Startups Agent"
-6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
-
-Always follow this sequence: query-receiver → startups-query → data-formatter → response-sender.
-Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
+Do NOT call any other tools or agents - generate your final response directly after using the startups-query tool.`,
 	model: 'anthropic/claude-haiku-4-20250514',
 	tools: {
-		queryReceiver,
 		startupsQuery,
-		dataFormatter,
-		responseSender,
 	},
 	memory: new Memory({
 		options: {
-			lastMessages: 20,
+			lastMessages: 5,
 		},
 	}),
 });

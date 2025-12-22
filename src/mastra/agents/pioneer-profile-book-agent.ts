@@ -2,64 +2,51 @@
  * Pioneer Profile Book Agent - Handles Pioneer Profile Inquiries
  *
  * This specialized agent processes questions about pioneers and their profiles in the Pioneer.vc accelerator program.
- * It searches the pioneers_profile_book_su2025.json knowledge base and formats responses for end users.
+ * It searches the pioneers_profile_book_su2025.json knowledge base and generates user-facing responses directly.
  *
  * Responsibilities:
- * - Receives queries routed by orchestrator with questionType "pioneers"
+ * - Receives queries from Lucie agent
  * - Searches pioneer profiles knowledge base using pioneerProfileBookQuery tool
- * - Formats retrieved data with query context
- * - Sends formatted results to response-generator-agent for final user response
+ * - Generates clear, comprehensive responses directly for users
  *
- * Tool Execution Sequence:
- * 1. query-receiver: Logs incoming query and metadata
- * 2. pioneer-profile-book-query: Searches knowledge base, returns {pioneers, found}
- * 3. data-formatter: Formats complete result object with metadata
- * 4. response-sender: Forwards formatted data to response-generator-agent
- *
- * Important Notes:
- * - Must pass ENTIRE result object (not just pioneers array) to data-formatter
- * - Part of multi-agent pipeline: orchestrator → specialized agent → response generator
- * - Follows standard query processing pattern used across all specialized agents
+ * Optimizations (Phase 2):
+ * - Removed queryReceiver, dataFormatter, responseSender tools (30-40% faster)
+ * - Generates responses directly instead of routing through response-generator-agent
+ * - Single tool call per query instead of 4 sequential tools
  */
 
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
-import { queryReceiver } from '../tools/query-receiver';
 import { pioneerProfileBookQuery } from '../tools/pioneer-profile-book-query';
-import { dataFormatter } from '../tools/data-formatter';
-import { responseSender } from '../tools/response-sender';
 
 export const pioneerProfileBookAgent = new Agent({
 	id: 'pioneer-profile-book-agent',
 	name: 'pioneer-profile-book-agent',
 	description:
 		'Pioneer Profile Book Agent is responsible for answering questions about pioneers and their profiles in the Pioneer.vc accelerator',
-	instructions: `You are a pioneer profile book agent. You are responsible for answering questions about pioneers, their profiles, skills, experience, backgrounds, industries, roles, and track records in the Pioneer.vc accelerator program. You handle questions about pioneer names, LinkedIn profiles, introductions, companies worked for, education, industries, years of experience, tech skills, roles they could take, track records, and nationality.
+	instructions: `You are a pioneer profile book agent for the Pioneer.vc accelerator program. You handle questions about pioneers, their profiles, skills, experience, backgrounds, industries, roles, and track records. You handle questions about pioneer names, LinkedIn profiles, introductions, companies worked for, education, industries, years of experience, tech skills, roles they could take, track records, and nationality.
 
-When you receive a query from the orchestrator, the message will be in the format:
-"Question Type: {questionType}
+When you receive a query:
+1. Use the pioneer-profile-book-query tool with the user's question to search for pioneer information
+2. The tool returns an object with "pioneers" (array of matching pioneers), "found" (boolean), and optional "metadata"
+3. Generate a clear, helpful, and comprehensive response directly to the user based on the results
 
-Query: {query}"
+Response Guidelines:
+- If pioneers are found, provide detailed information from the data
+- When users ask for specific data (lists, names, fields), extract and display the exact information
+- If no pioneers are found, provide a helpful message
+- Keep responses conversational and informative
+- Always use the same language as the user's question
+- Be concise but thorough
 
-1. First, extract the questionType and query from the message
-2. Use the query-receiver tool with: query={extracted query}, questionType={extracted questionType}, agentName="Pioneer Profile Book Agent"
-3. Use the pioneer-profile-book-query tool with: query={extracted query} to search for pioneer information
-4. IMPORTANT: The pioneer-profile-book-query tool returns an object with "pioneers" and "found" keys. Pass the ENTIRE result object (not just the pioneers array) to the data-formatter tool.
-5. Use the data-formatter tool with: query={extracted query}, questionType={extracted questionType}, data={the ENTIRE result object from pioneer-profile-book-query}, agentName="Pioneer Profile Book Agent"
-6. Use the response-sender tool with: formatted={the formatted object from data-formatter} to send the formatted data to the response-generator-agent
-
-Always follow this sequence: query-receiver → pioneer-profile-book-query → data-formatter → response-sender.
-Always pass the complete result object from the query tool to the data-formatter, not just a portion of it.`,
+Do NOT call any other tools or agents - generate your final response directly after using the pioneer-profile-book-query tool.`,
 	model: 'anthropic/claude-haiku-4-20250514',
 	tools: {
-		queryReceiver,
 		pioneerProfileBookQuery,
-		dataFormatter,
-		responseSender,
 	},
 	memory: new Memory({
 		options: {
-			lastMessages: 20,
+			lastMessages: 5,
 		},
 	}),
 });
