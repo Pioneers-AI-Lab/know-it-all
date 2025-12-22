@@ -44,7 +44,6 @@ export const specializedAgentRouter = createTool({
 			.enum([
 				'startups',
 				'events',
-				'calendar',
 				'founders',
 				'pioneers',
 				'sessions',
@@ -92,11 +91,7 @@ export const specializedAgentRouter = createTool({
 				displayName: 'Startups Agent',
 			},
 			events: {
-				agentName: 'calendarAgent',
-				displayName: 'Calendar Agent',
-			},
-			calendar: {
-				agentName: 'calendarAgent',
+				agentName: 'sessionEventGridAgent',
 				displayName: 'Calendar Agent',
 			},
 			founders: {
@@ -133,7 +128,6 @@ export const specializedAgentRouter = createTool({
 			mapping.agentName as
 				| 'lucie'
 				| 'generalQuestionsAgent'
-				| 'calendarAgent'
 				| 'startupsAgent'
 				| 'foundersAgent'
 				| 'pioneerProfileBookAgent'

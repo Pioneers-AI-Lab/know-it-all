@@ -30,7 +30,6 @@ import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { lucie } from './agents/lucie-agent';
 import { generalQuestionsAgent } from './agents/general-questions-agent';
-import { calendarAgent } from './agents/calendar-agent';
 import { startupsAgent } from './agents/startups-agent';
 import { foundersAgent } from './agents/founders-agent';
 import { pioneerProfileBookAgent } from './agents/pioneer-profile-book-agent';
@@ -42,7 +41,6 @@ export const mastra = new Mastra({
 	agents: {
 		lucie,
 		generalQuestionsAgent,
-		calendarAgent,
 		startupsAgent,
 		foundersAgent,
 		pioneerProfileBookAgent,

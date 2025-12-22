@@ -85,7 +85,7 @@ export const queryRouter = createTool({
 				displayName: 'Startups Agent',
 			},
 			events: {
-				agentName: 'calendarAgent',
+				agentName: 'sessionEventGridAgent',
 				displayName: 'Calendar Agent',
 			},
 			founders: {
@@ -118,9 +118,8 @@ export const queryRouter = createTool({
 		const specializedAgent = mastra.getAgent(
 			mapping.agentName as
 				| 'lucie'
-				| 'orchestratorAgent'
 				| 'generalQuestionsAgent'
-				| 'calendarAgent'
+				| 'sessionEventGridAgent'
 				| 'startupsAgent'
 				| 'foundersAgent'
 				| 'pioneerProfileBookAgent',
