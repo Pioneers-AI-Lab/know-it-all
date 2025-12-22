@@ -32,7 +32,7 @@
  * Output Format:
  * {
  *   query: "extracted question text",
- *   questionType: "startups|calendar|founders|pioneers|general",
+ *   questionType: "startups|calendar|founders|pioneers|sessions|general",
  *   timestamp: "ISO date string"
  * }
  */
@@ -58,6 +58,7 @@ export const queryExtractor = createTool({
 				'calendar',
 				'founders',
 				'pioneers',
+				'sessions',
 				'general',
 			])
 			.describe('The type of question based on data categories'),
@@ -149,6 +150,20 @@ export const queryExtractor = createTool({
 				/pioneer profiles/i,
 				/pioneer book/i,
 			],
+			sessions: [
+				/session/i,
+				/sessions/i,
+				/event grid/i,
+				/session grid/i,
+				/schedule/i,
+				/program week/i,
+				/week \d+/i,
+				/masterclass/i,
+				/group exercise/i,
+				/office hours/i,
+				/pitch day/i,
+				/friday pitch/i,
+			],
 		};
 
 		// Check for keywords in the query (case-insensitive)
@@ -158,6 +173,7 @@ export const queryExtractor = createTool({
 			| 'calendar'
 			| 'founders'
 			| 'pioneers'
+			| 'sessions'
 			| 'general' = 'general';
 
 		// Check each data type's keywords

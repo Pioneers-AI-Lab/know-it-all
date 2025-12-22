@@ -37,15 +37,33 @@ export const specializedAgentRouter = createTool({
 	description:
 		'Routes a query directly to the appropriate specialized agent based on the question type',
 	inputSchema: z.object({
-		query: z.string().describe('The user query to route to a specialized agent'),
+		query: z
+			.string()
+			.describe('The user query to route to a specialized agent'),
 		questionType: z
-			.enum(['startups', 'events', 'calendar', 'founders', 'pioneers', 'general'])
-			.describe('The type of question determining which agent to route to'),
+			.enum([
+				'startups',
+				'events',
+				'calendar',
+				'founders',
+				'pioneers',
+				'sessions',
+				'general',
+			])
+			.describe(
+				'The type of question determining which agent to route to',
+			),
 	}),
 	outputSchema: z.object({
-		success: z.boolean().describe('Whether the query was successfully routed'),
-		agentName: z.string().describe('The name of the agent that handled the query'),
-		response: z.string().describe('The response from the specialized agent'),
+		success: z
+			.boolean()
+			.describe('Whether the query was successfully routed'),
+		agentName: z
+			.string()
+			.describe('The name of the agent that handled the query'),
+		response: z
+			.string()
+			.describe('The response from the specialized agent'),
 	}),
 	execute: async ({
 		query,
@@ -55,7 +73,9 @@ export const specializedAgentRouter = createTool({
 		agentName: string;
 		response: string;
 	}> => {
-		message('🎯 SPECIALIZED AGENT ROUTER - Routing query directly to specialized agent');
+		message(
+			'🎯 SPECIALIZED AGENT ROUTER - Routing query directly to specialized agent',
+		);
 		log('Question type:', questionType);
 		log('Query:', query);
 
@@ -87,6 +107,10 @@ export const specializedAgentRouter = createTool({
 				agentName: 'pioneerProfileBookAgent',
 				displayName: 'Pioneer Profile Book Agent',
 			},
+			sessions: {
+				agentName: 'sessionEventGridAgent',
+				displayName: 'Session Event Grid Agent',
+			},
 			general: {
 				agentName: 'generalQuestionsAgent',
 				displayName: 'General Questions Agent',
@@ -96,7 +120,9 @@ export const specializedAgentRouter = createTool({
 		const mapping = agentMapping[questionType];
 		if (!mapping) {
 			error('No agent mapping found for question type:', questionType);
-			throw new Error(`No agent mapping found for question type: ${questionType}`);
+			throw new Error(
+				`No agent mapping found for question type: ${questionType}`,
+			);
 		}
 
 		// Lazy import to avoid circular dependency
@@ -110,12 +136,18 @@ export const specializedAgentRouter = createTool({
 				| 'calendarAgent'
 				| 'startupsAgent'
 				| 'foundersAgent'
-				| 'pioneerProfileBookAgent',
+				| 'pioneerProfileBookAgent'
+				| 'sessionEventGridAgent',
 		);
 
 		if (!specializedAgent) {
-			error(`Specialized agent "${mapping.agentName}" not found`, mapping);
-			throw new Error(`Specialized agent "${mapping.agentName}" not found`);
+			error(
+				`Specialized agent "${mapping.agentName}" not found`,
+				mapping,
+			);
+			throw new Error(
+				`Specialized agent "${mapping.agentName}" not found`,
+			);
 		}
 
 		// Send the query directly to the specialized agent
@@ -126,7 +158,9 @@ export const specializedAgentRouter = createTool({
 
 		const responseText = response.text || JSON.stringify(response);
 
-		message(`✅ SPECIALIZED AGENT ROUTER - Received response from ${mapping.displayName}`);
+		message(
+			`✅ SPECIALIZED AGENT ROUTER - Received response from ${mapping.displayName}`,
+		);
 
 		return {
 			success: true,

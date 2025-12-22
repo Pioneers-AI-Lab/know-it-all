@@ -34,6 +34,7 @@ import { calendarAgent } from './agents/calendar-agent';
 import { startupsAgent } from './agents/startups-agent';
 import { foundersAgent } from './agents/founders-agent';
 import { pioneerProfileBookAgent } from './agents/pioneer-profile-book-agent';
+import { sessionEventGridAgent } from './agents/session-event-grid-agent';
 import { slackRoutes } from './slack/routes';
 
 export const mastra = new Mastra({
@@ -45,6 +46,7 @@ export const mastra = new Mastra({
 		startupsAgent,
 		foundersAgent,
 		pioneerProfileBookAgent,
+		sessionEventGridAgent,
 	},
 
 	// Registered workflows - available to agents via their workflows config
