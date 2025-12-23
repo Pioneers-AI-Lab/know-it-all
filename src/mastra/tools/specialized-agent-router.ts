@@ -112,17 +112,9 @@ export const specializedAgentRouter = createTool({
 				displayName: string;
 			}
 		> = {
-			startups: {
-				agentName: 'startupsAgent',
-				displayName: 'Startups Agent',
-			},
 			events: {
 				agentName: 'sessionEventGridAgent',
 				displayName: 'Calendar Agent',
-			},
-			founders: {
-				agentName: 'foundersAgent',
-				displayName: 'Founders Agent',
 			},
 			pioneers: {
 				agentName: 'pioneerProfileBookAgent',
