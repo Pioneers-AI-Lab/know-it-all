@@ -75,7 +75,7 @@ function getProjectRoot(): string {
  * Helper function to load JSON data files from the data directory
  * Uses in-memory caching to avoid repeated disk reads (10-20% performance improvement)
  */
-export function loadJsonData(filename: string): any {
+export function loadJsonData<T>(filename: string): T {
 	// Check cache first
 	if (dataCache.has(filename)) {
 		return dataCache.get(filename);
