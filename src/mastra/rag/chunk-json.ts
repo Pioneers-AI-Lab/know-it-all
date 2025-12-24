@@ -15,7 +15,7 @@ const doc = MDocument.fromJSON(JSON.stringify(pioneerProfileBook));
 console.log(doc);
 
 const chunks = await doc.chunk({
-	maxSize: 10,
+	maxSize: 50,
 });
 
 console.log(chunks);
