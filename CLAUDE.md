@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A Slack bot framework built on Mastra that connects AI agents to Slack workspaces. This project implements a **multi-agent pipeline architecture** where a primary agent (Lucie) routes user queries through specialized agents for Pioneer.vc accelerator questions. Features streaming responses, thread-based conversation memory, and a knowledge base backed by JSON data files.
+A Slack bot framework built on Mastra that connects AI agents to Slack workspaces. This project implements a **simplified single-agent architecture** where Lucie directly answers user queries about the Pioneer.vc accelerator using specialized query tools. Features streaming responses, thread-based conversation memory, and a knowledge base backed by JSON data files.
 
 ## Key Commands
 
@@ -30,68 +30,53 @@ ngrok http 4111
 
 ## Architecture
 
-### Multi-Agent Pipeline Architecture (Phase 2 Optimized)
+### Simplified Single-Agent Architecture (Phase 3)
 
-This codebase implements an **optimized direct-routing pattern** for query processing:
+This codebase implements a **direct single-agent pattern** for query processing:
 
 ```
-User → Lucie (entry) → Query Extractor → Specialized Agent Router → Specialized Agent → User
+User → Lucie → Query Tool → Response
 ```
 
-**Phase 2 Optimizations (70-80% faster):**
-- ✅ Removed orchestrator-agent (eliminates 1-2 LLM calls)
-- ✅ Removed response-generator-agent (specialized agents format responses directly)
-- ✅ Simplified specialized agents (1 tool instead of 4 sequential tools)
-- ✅ Direct routing from Lucie to specialized agents with context preservation
+**Phase 3 Simplifications (40-50% faster than Phase 2):**
+- ✅ Single agent architecture (Lucie handles all queries)
+- ✅ Removed routing layer (no query-extractor, specialized-agent-router)
+- ✅ Removed specialized agents (generalQuestionsAgent, pioneerProfileBookAgent, sessionEventGridAgent)
+- ✅ Direct tool usage (Lucie chooses appropriate query tool)
 - ✅ JSON data caching (10-20% faster disk I/O)
-- ✅ Haiku 3.5 for specialized agents (2-3x faster than Sonnet 4)
-- ✅ Optimized memory: 10 messages for specialized agents (maintains context)
-- ✅ Context-enrichment pattern: Lucie adds relevant history to follow-up questions
+- ✅ 1 LLM call per query (down from 2-3)
+- ✅ Simpler codebase (easier to maintain and extend)
 
-**Pipeline Flow:**
+**Flow:**
 
 1. **Lucie Agent** (`src/mastra/agents/lucie-agent.ts`)
-   - Entry point for all user queries via Slack
-   - Uses Claude Sonnet 4 (user-facing, needs high intelligence)
-   - Uses `queryExtractor` tool to parse and classify questions
-   - Uses `specializedAgentRouter` tool to directly route to specialized agents
-   - Returns specialized agent's response to user
+   - Single entry point for all user queries via Slack
+   - Uses Claude Sonnet 4 (intelligent query understanding + response generation)
+   - Intelligently chooses the appropriate query tool based on the question
+   - Generates clear, user-facing responses directly
+   - Memory: last 20 messages for conversation continuity and follow-up questions
 
-2. **Query Extractor Tool** (`src/mastra/tools/query-extractor.ts`)
-   - Parses natural language messages using regex (fast, no LLM)
-   - Classifies into types: `startups`, `events`, `founders`, `pioneers`, `general`
-   - Returns structured query object with type and timestamp
+2. **Query Tools** (`src/mastra/tools/`)
+   - **generalQuestionsQuery**: General accelerator questions (FAQ, policies, benefits)
+   - **sessionEventGridQuery**: Sessions, events, activities, schedules
+   - **pioneerProfileBookQuery**: Pioneer profiles, skills, co-founder matching
+   - Each tool loads data from cached JSON files
+   - Returns data with `found` flag and optional metadata
+   - Fast, efficient, no LLM calls
 
-3. **Specialized Agent Router Tool** (`src/mastra/tools/specialized-agent-router.ts`)
-   - Direct routing to specialized agents (no LLM, just mapping logic)
-   - Replaces orchestrator-agent and query-router tool
-   - Maps question types to agent names and invokes them directly
-
-4. **Specialized Agents** (`src/mastra/agents/`)
-   - `startups-agent.ts`: Company and portfolio queries
-   - `founders-agent.ts`: Founder-specific information
-   - `calendar-agent.ts`: Event information
-   - `pioneer-profile-book-agent.ts`: Pioneer profile book queries
-   - `general-questions-agent.ts`: General accelerator questions
-   - Each uses Claude Haiku 3.5 (fast, cost-effective for data lookup)
-   - Each uses a single query tool and generates responses directly
-   - Memory set to last 10 messages (maintains context for follow-up questions)
-   - Receives threadId/resourceId to maintain conversation continuity
-
-**Key Pattern:** Direct agent-to-agent routing via `mastra.getAgent(name).generate()` with minimal intermediary steps.
+**Key Pattern:** Single agent with multiple specialized tools - Sonnet 4 intelligently selects the right tool and formats responses.
 
 **Performance:**
-- Before: 5-7 LLM calls per query (~8-12 seconds)
+- Before Phase 1: 5-7 LLM calls per query (~8-12 seconds)
 - After Phase 1: 5-7 LLM calls with caching + Haiku (~6-8 seconds, 20-30% faster)
-- After Phase 2: 2-3 LLM calls (~2-4 seconds, 70-80% faster overall)
+- After Phase 2: 2-3 LLM calls (~2-4 seconds, 70-80% faster)
+- **After Phase 3: 1 LLM call (~1-2 seconds, 85-90% faster overall)**
 
 ### Knowledge Base Structure
 
 Data is stored in JSON files under `data/`:
-- `startups.json`: Company profiles, founders, funding, industries
-- `founders.json`: Individual founder information
-- `calendar-events.json`: Event schedule and details
-- `general-questions.json`: FAQ-style general information
+- `general-questions.json`: FAQ-style general information about the accelerator
+- `session_event_grid_view.json`: Session and event schedule with details
 - `pioneers_profile_book_su2025.json`: Pioneer profile book data
 
 Tools use `data-helpers.ts` for loading and searching JSON data.
@@ -151,29 +136,23 @@ Slack message → /slack/lucie/events → lucie agent → streaming response
 - Uses timing-safe comparison to prevent timing attacks
 
 **Agents** (`src/mastra/agents/`)
-- Each agent has its own Mastra Agent instance with Memory
-- Agents can have tools, workflows, or both
-- Memory configuration:
-  - Lucie: `lastMessages: 20` (user-facing, needs full conversation context)
-  - Specialized agents: `lastMessages: 10` (maintains context for same-agent follow-ups)
-- Context-enrichment pattern: Lucie enriches follow-up queries with relevant conversation context before routing
-  - Detects reference words ("the first", "those", "them", etc.)
-  - Adds brief context from previous responses to the query
-  - Example: "Tell me about the first two" → "Tell me about the first two startups from the 12 in the accelerator"
-- Agent instructions should specify when to use tools vs. workflows
-- Phase 2 optimization: Specialized agents generate responses directly (no intermediate agents)
+- Currently only one agent: Lucie
+- Lucie has Memory with `lastMessages: 20` for full conversation context
+- Handles all Pioneer.vc accelerator queries
+- Intelligently selects appropriate query tools based on user questions
+- Generates responses directly without routing to other agents
+- Memory enables natural follow-up questions and contextual understanding
 
 **Tools** (`src/mastra/tools/`)
 - Created with `createTool()` from `@mastra/core/tools`
 - Define input/output schemas with Zod
 - Execute function receives typed inputs from schema and execution context
-- Tools can invoke other agents via `mastra.getAgent(name).generate(query, { threadId, resourceId })`
-- Key tools:
-  - `query-extractor.ts`: Classification via regex (no LLM)
-  - `specialized-agent-router.ts`: Direct routing to specialized agents with context preservation
-  - `{domain}-query.ts`: Data lookup from cached JSON files
-- Context-aware routing: specializedAgentRouter passes threadId/resourceId to maintain conversation memory
-- Phase 2 removed: queryReceiver, dataFormatter, responseSender, orchestratorSender, queryRouter
+- Active query tools:
+  - `general-questions-query.ts`: Searches general-questions.json for FAQ answers
+  - `session-event-grid-query.ts`: Searches session_event_grid_view.json for events/sessions
+  - `pioneer-profile-book-query.ts`: Searches pioneers_profile_book_su2025.json for pioneer profiles
+- All query tools use `data-helpers.ts` for cached data loading
+- Tools return structured data with `found` flag and optional metadata
 
 **Workflows** (`src/mastra/workflows/`)
 - Multi-step workflows using `createWorkflow` and `createStep`
@@ -193,41 +172,43 @@ SLACK_SIGNING_SECRET=...
 
 For multiple apps, use naming convention: `SLACK_{APP_NAME}_BOT_TOKEN` (uppercase snake_case)
 
-## Adding a New Specialized Agent (Phase 2 Pattern)
+## Adding a New Query Tool
 
-1. Create agent file in `src/mastra/agents/{name}-agent.ts`
-   - Use Claude Haiku 3.5 model: `model: 'anthropic/claude-3-5-haiku-20241022'`
-   - Set memory to 10 messages: `lastMessages: 10` (maintains context for follow-ups)
-   - Include only the query tool (no queryReceiver, dataFormatter, responseSender)
-   - Agent should generate final user response directly
+To add a new data source and query tool:
 
-2. Create corresponding query tool in `src/mastra/tools/{name}-query.ts`
+1. Create data file in `data/{name}.json`
+
+2. Create query tool in `src/mastra/tools/{name}-query.ts`
+   - Use `createTool()` from `@mastra/core/tools`
    - Load data via `loadJsonData()` from `data-helpers.ts` (uses cache)
    - Return object with data array, found boolean, and optional metadata
    - Follow pattern from existing query tools
 
-3. Add data file in `data/{name}.json` if needed
+3. Import and add tool to Lucie agent in `src/mastra/agents/lucie-agent.ts`
+   - Import: `import { myQuery } from '../tools/my-query';`
+   - Add to tools object: `tools: { generalQuestionsQuery, sessionEventGridQuery, pioneerProfileBookQuery, myQuery }`
 
-4. Import and register agent in `src/mastra/index.ts`: `agents: { myAgent }`
+4. Update Lucie's instructions to describe when to use the new tool
 
-5. Add questionType mapping in `src/mastra/tools/query-extractor.ts`
-   - Add keywords to `dataTypeKeywords` object
-   - Add enum value to questionType
+5. Test with CLI: `pnpm dev:cli --agent lucie`
 
-6. Add routing case in `src/mastra/tools/specialized-agent-router.ts`
-   - Add entry to `agentMapping` object
-
-7. Test with CLI: `pnpm dev:cli --agent myAgent`
-
-**Example Agent Structure:**
+**Example Query Tool Structure:**
 ```typescript
-export const myAgent = new Agent({
-  id: 'my-agent',
-  name: 'my-agent',
-  model: 'anthropic/claude-3-5-haiku-20241022',
-  tools: { myQuery },  // Single query tool only
-  memory: new Memory({ options: { lastMessages: 10 } }),
-  instructions: `Use the my-query tool to search data, then generate a clear response directly to the user.`
+export const myQuery = createTool({
+  id: 'my-query',
+  description: 'Query description',
+  inputSchema: z.object({
+    query: z.string().describe('The search query'),
+  }),
+  outputSchema: z.object({
+    results: z.array(z.any()).describe('Matching results'),
+    found: z.boolean().describe('Whether results were found'),
+  }),
+  execute: async ({ query }) => {
+    const data = loadJsonData('my-data.json');
+    // Search logic here
+    return { results: [...], found: results.length > 0 };
+  },
 });
 ```
 
@@ -269,10 +250,10 @@ Status display logic in `src/mastra/slack/status.ts` uses these states to show c
 - Thread context is preserved using Slack's `thread_ts` field for Lucie's memory
 - Animation timing is configurable via constants in `src/mastra/slack/constants.ts`
 - Workflow events are nested in `tool-output` chunks and require special extraction logic
-- **Phase 2:** Specialized agents are invoked directly by Lucie via specializedAgentRouter (no orchestrator)
-- **Context handling:** Lucie uses context-enrichment pattern for follow-up questions
+- **Phase 3 Architecture:** Single agent (Lucie) with direct tool usage
   - Lucie maintains conversation memory (20 messages)
-  - When routing follow-ups, Lucie adds relevant context to the query itself
-  - Specialized agents get self-contained queries that don't require shared thread context
+  - Memory enables natural follow-up questions and contextual understanding
+  - No routing layer - Lucie intelligently chooses the right query tool
+  - 1 LLM call per query (85-90% faster than original architecture)
 - Data files in `data/` directory are loaded once and cached in memory by `data-helpers.ts`
 - Use `clearDataCache()` from `data-helpers.ts` when JSON files are updated during development
