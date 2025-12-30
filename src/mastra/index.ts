@@ -10,10 +10,11 @@
  * - Storage: LibSQL (SQLite) database for conversation memory and state
  * - Server: API routes for Slack webhook endpoints
  *
- * Phase 2 Optimizations:
- * - Removed orchestrator-agent (direct routing from Lucie to specialized agents)
- * - Removed response-generator-agent (specialized agents generate responses directly)
- * - Reduced from 5-7 LLM calls to 2-3 LLM calls per query (70-80% faster)
+ * Phase 3 Simplified Architecture:
+ * - Single agent (Lucie) with direct tool access
+ * - Removed specialized agents (generalQuestionsAgent, pioneerProfileBookAgent, sessionEventGridAgent)
+ * - Removed routing layer (query-extractor, specialized-agent-router)
+ * - Reduced from 2-3 LLM calls to 1 LLM call per query (40-50% faster than Phase 2)
  *
  * The Mastra instance is exported and used by:
  * - Slack route handlers to get agents and process messages
@@ -29,18 +30,12 @@
 import { Mastra } from '@mastra/core/mastra';
 import { LibSQLStore } from '@mastra/libsql';
 import { lucie } from './agents/lucie-agent';
-import { generalQuestionsAgent } from './agents/general-questions-agent';
-import { pioneerProfileBookAgent } from './agents/pioneer-profile-book-agent';
-import { sessionEventGridAgent } from './agents/session-event-grid-agent';
 import { slackRoutes } from './slack/routes';
 
 export const mastra = new Mastra({
 	// Registered agents - keys must match agentName in slack/routes.ts
 	agents: {
 		lucie,
-		generalQuestionsAgent,
-		pioneerProfileBookAgent,
-		sessionEventGridAgent,
 	},
 
 	// Registered workflows - available to agents via their workflows config

@@ -21,17 +21,7 @@ import { mastra } from '../index.js';
 import { streamToTerminal } from './streaming.js';
 
 // Available agents - must match keys in src/mastra/index.ts
-const availableAgents = [
-	'lucie',
-	'orchestratorAgent',
-	'generalQuestionsAgent',
-	'eventGuestsAgent',
-	'eventAgent',
-	'startupsAgent',
-	'timelineAgent',
-	'workshopsAgent',
-	'responseGeneratorAgent',
-];
+const availableAgents = ['lucie'];
 
 /**
  * Create readline interface for user input
