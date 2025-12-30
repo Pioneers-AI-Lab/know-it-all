@@ -177,7 +177,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// Handle matching queries - find pioneers by skills, roles, industries
 		else if (isMatchingQuery) {
-
 			// Extract search terms from query
 			const searchTerms = queryLower
 				.replace(
@@ -277,7 +276,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// Handle specific field queries
 		else if (isSpecificFieldQuery) {
-
 			// Try to extract pioneer name from query
 			let matchedPioneers: any[] = [];
 			for (const pioneer of allPioneers) {
@@ -311,13 +309,15 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// General search - check for name match first, then semantic matching
 		else {
-
 			// First, try to find by name (exact or partial match)
 			let nameMatches: any[] = [];
 			for (const pioneer of allPioneers) {
 				const nameLower = (pioneer['Name'] || '').toLowerCase();
 				// Check if the query contains the pioneer's name or vice versa
-				if (queryLower.includes(nameLower) || nameLower.includes(queryLower)) {
+				if (
+					queryLower.includes(nameLower) ||
+					nameLower.includes(queryLower)
+				) {
 					nameMatches.push(pioneer);
 				}
 			}
