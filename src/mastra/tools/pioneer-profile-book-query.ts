@@ -46,7 +46,6 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { message, log } from '../../lib/print-helpers';
 import { loadJsonData, searchInObject, searchInText } from './data-helpers';
 
 export const pioneerProfileBookQuery = createTool({
@@ -92,9 +91,6 @@ export const pioneerProfileBookQuery = createTool({
 			.describe('Additional metadata about the query results'),
 	}),
 	execute: async ({ query }) => {
-		message('🔎 PIONEER PROFILE BOOK QUERY - Searching pioneers database');
-		log('Query:', query);
-
 		const data = loadJsonData('pioneers_profile_book_su2025.json');
 		const allPioneers = Array.isArray(data) ? data : [];
 		const queryLower = query.toLowerCase();
@@ -157,9 +153,6 @@ export const pioneerProfileBookQuery = createTool({
 			| undefined;
 
 		if (allPioneers.length === 0) {
-			message(
-				'⚠️ PIONEER PROFILE BOOK QUERY - No pioneers found in database',
-			);
 			return {
 				pioneers: [],
 				found: false,
@@ -168,9 +161,6 @@ export const pioneerProfileBookQuery = createTool({
 
 		// Handle aggregate queries - return all pioneers with metadata
 		if (isAggregateQuery) {
-			message(
-				'📊 PIONEER PROFILE BOOK QUERY - Detected aggregate query, returning all pioneers',
-			);
 			results = [...allPioneers];
 			metadata = {
 				queryType: 'aggregate' as const,
@@ -179,7 +169,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// Handle "all pioneers" queries
 		else if (isAllPioneersQuery) {
-			message('📋 PIONEER PROFILE BOOK QUERY - Returning all pioneers');
 			results = [...allPioneers];
 			metadata = {
 				queryType: 'all' as const,
@@ -188,7 +177,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// Handle matching queries - find pioneers by skills, roles, industries
 		else if (isMatchingQuery) {
-			message('🎯 PIONEER PROFILE BOOK QUERY - Detected matching query');
 
 			// Extract search terms from query
 			const searchTerms = queryLower
@@ -289,9 +277,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// Handle specific field queries
 		else if (isSpecificFieldQuery) {
-			message(
-				'🎯 PIONEER PROFILE BOOK QUERY - Detected specific field query',
-			);
 
 			// Try to extract pioneer name from query
 			let matchedPioneers: any[] = [];
@@ -326,9 +311,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 		// General search - check for name match first, then semantic matching
 		else {
-			message(
-				'🔍 PIONEER PROFILE BOOK QUERY - Performing general search',
-			);
 
 			// First, try to find by name (exact or partial match)
 			let nameMatches: any[] = [];
@@ -360,24 +342,6 @@ export const pioneerProfileBookQuery = createTool({
 		}
 
 		const finalResults = results.slice(0, 50); // Limit to top 50 results
-		message(
-			`✅ PIONEER PROFILE BOOK QUERY - Found ${finalResults.length} result(s)`,
-		);
-		log(
-			'Results:',
-			finalResults.length > 0
-				? `${finalResults.length} pioneer(s) found`
-				: 'No pioneers found',
-		);
-		if (metadata) {
-			log('Query type:', metadata.queryType);
-			if (metadata.totalCount !== undefined) {
-				log('Total count:', metadata.totalCount);
-			}
-			if (metadata.filterField) {
-				log('Filter field:', metadata.filterField);
-			}
-		}
 
 		return {
 			pioneers: finalResults,

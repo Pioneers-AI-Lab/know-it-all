@@ -45,11 +45,13 @@ import { message, log } from '../../lib/print-helpers';
 export const generalQuestionsQuery = createTool({
 	id: 'general-questions-query',
 	description:
-		'Queries the general questions knowledge base to find answers to questions about the Pioneers accelerator program',
+		'Queries the general questions knowledge base to find answers to questions about the Pioneers accelerator program. Use simple keywords (e.g., "program", "equity", "application") or "all" to get all Q&As. The tool returns matching Q&A pairs that you can then analyze.',
 	inputSchema: z.object({
 		query: z
 			.string()
-			.describe('The question to search for in the knowledge base'),
+			.describe(
+				'Simple search keyword(s) or "all" to get all questions. Examples: "problem", "equity", "timeline", "all"',
+			),
 	}),
 	outputSchema: z.object({
 		answers: z
@@ -64,9 +66,6 @@ export const generalQuestionsQuery = createTool({
 		found: z.boolean().describe('Whether matching answers were found'),
 	}),
 	execute: async ({ query }) => {
-		message('🔎 GENERAL QUESTIONS QUERY - Searching knowledge base');
-		log('Query:', query);
-
 		const data = loadJsonData('general-questions.json');
 		const results: Array<{
 			question: string;
@@ -74,40 +73,54 @@ export const generalQuestionsQuery = createTool({
 			category: string;
 		}> = [];
 
+		// If query is empty or very broad ("all", "questions", etc.), return all Q&As
+		const isAllQuery =
+			!query ||
+			query.trim() === '' ||
+			['all', 'all questions', 'everything', 'questions'].includes(
+				query.toLowerCase().trim(),
+			);
+
 		// Search through all categories in knowledge_base
-		if (data.knowledge_base) {
+		if (data && typeof data === 'object' && 'knowledge_base' in data && data.knowledge_base) {
 			for (const [category, items] of Object.entries(
-				data.knowledge_base,
+				data.knowledge_base as Record<string, any[]>,
 			)) {
 				if (Array.isArray(items)) {
 					for (const item of items) {
-						if (
-							item.question &&
-							item.answer &&
-							(searchInText(item.question, query) ||
-								searchInText(item.answer, query))
-						) {
-							results.push({
-								question: item.question,
-								answer: item.answer,
-								category: category.replace(/_/g, ' '),
-							});
+						if (item.question && item.answer) {
+							// If broad query, include all items
+							if (isAllQuery) {
+								results.push({
+									question: item.question,
+									answer: item.answer,
+									category: category.replace(/_/g, ' '),
+								});
+							}
+							// Otherwise, search for matches
+							else if (
+								searchInText(item.question, query) ||
+								searchInText(item.answer, query)
+							) {
+								results.push({
+									question: item.question,
+									answer: item.answer,
+									category: category.replace(/_/g, ' '),
+								});
+							}
 						}
 					}
 				}
 			}
 		}
 
-		const finalResults = results.slice(0, 5); // Limit to top 5 results
-		message(
-			`✅ GENERAL QUESTIONS QUERY - Found ${finalResults.length} result(s)`,
-		);
-		log(
-			'Results:',
-			finalResults.length > 0
-				? `${finalResults.length} answer(s) found`
-				: 'No answers found',
-		);
+		// Limit results - more for "all" queries, fewer for specific searches
+		const limit = isAllQuery ? 50 : 5;
+		const finalResults = results.slice(0, limit);
+
+		if (isAllQuery) {
+			log('Query type: All questions (broad query)', query);
+		}
 
 		return {
 			answers: finalResults,

@@ -46,7 +46,6 @@
 
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { message, log } from '../../lib/print-helpers';
 import { loadJsonData, searchInObject, searchInText } from './data-helpers';
 
 export const sessionEventGridQuery = createTool({
@@ -92,9 +91,6 @@ export const sessionEventGridQuery = createTool({
 			.describe('Additional metadata about the query results'),
 	}),
 	execute: async ({ query }) => {
-		message('🔎 SESSION EVENT GRID QUERY - Searching sessions database');
-		log('Query:', query);
-
 		const data = loadJsonData('session_event_grid_view.json');
 		const allSessions = Array.isArray(data) ? data : [];
 		const queryLower = query.toLowerCase();
@@ -159,9 +155,6 @@ export const sessionEventGridQuery = createTool({
 			| undefined;
 
 		if (allSessions.length === 0) {
-			message(
-				'⚠️ SESSION EVENT GRID QUERY - No sessions found in database',
-			);
 			return {
 				sessions: [],
 				found: false,
@@ -170,9 +163,6 @@ export const sessionEventGridQuery = createTool({
 
 		// Handle aggregate queries - return all sessions with metadata
 		if (isAggregateQuery) {
-			message(
-				'📊 SESSION EVENT GRID QUERY - Detected aggregate query, returning all sessions',
-			);
 			results = [...allSessions];
 			metadata = {
 				queryType: 'aggregate' as const,
@@ -181,7 +171,6 @@ export const sessionEventGridQuery = createTool({
 		}
 		// Handle "all sessions" queries
 		else if (isAllSessionsQuery) {
-			message('📋 SESSION EVENT GRID QUERY - Returning all sessions');
 			results = [...allSessions];
 			metadata = {
 				queryType: 'all' as const,
@@ -190,7 +179,6 @@ export const sessionEventGridQuery = createTool({
 		}
 		// Handle participant queries - find sessions by participant names
 		else if (isParticipantQuery) {
-			message('👥 SESSION EVENT GRID QUERY - Detected participant query');
 
 			// Extract participant name from query
 			for (const session of allSessions) {
@@ -213,9 +201,6 @@ export const sessionEventGridQuery = createTool({
 		}
 		// Handle specific field queries
 		else if (isSpecificFieldQuery) {
-			message(
-				'🎯 SESSION EVENT GRID QUERY - Detected specific field query',
-			);
 
 			// Try to extract session name from query
 			let matchedSessions: any[] = [];
@@ -250,7 +235,6 @@ export const sessionEventGridQuery = createTool({
 		}
 		// General search - use semantic matching
 		else {
-			message('🔍 SESSION EVENT GRID QUERY - Performing general search');
 			// Search across all session fields using searchInObject
 			for (const session of allSessions) {
 				if (searchInObject(session, query)) {
@@ -263,24 +247,6 @@ export const sessionEventGridQuery = createTool({
 		}
 
 		const finalResults = results.slice(0, 50); // Limit to top 50 results
-		message(
-			`✅ SESSION EVENT GRID QUERY - Found ${finalResults.length} result(s)`,
-		);
-		log(
-			'Results:',
-			finalResults.length > 0
-				? `${finalResults.length} session(s) found`
-				: 'No sessions found',
-		);
-		if (metadata) {
-			log('Query type:', metadata.queryType);
-			if (metadata.totalCount !== undefined) {
-				log('Total count:', metadata.totalCount);
-			}
-			if (metadata.filterField) {
-				log('Filter field:', metadata.filterField);
-			}
-		}
 
 		return {
 			sessions: finalResults,

@@ -1,40 +1,5 @@
-/**
- * Query Receiver Tool - Specialized Agent Query Reception Logging
- *
- * This tool provides logging capabilities for specialized agents when they receive queries
- * from the orchestrator. Each specialized agent uses this tool as the first step in their
- * processing pipeline for visibility and debugging.
- *
- * Purpose:
- * - Logs query reception at specialized agent level
- * - Displays which agent received the query
- * - Shows query content and classification type
- * - Provides visibility into the distributed query flow
- *
- * Log Output:
- * - Agent name and emoji indicator (🎯)
- * - Query text and question type
- * - Visual separators for readability
- * - Confirms successful query reception
- *
- * Pipeline Position (for each specialized agent):
- * Orchestrator → [Query Receiver] → Data Query Tool → Data Formatter → Response Sender
- *
- * Used By:
- * - general-questions-agent
- * - session-event-grid-agent
- * - pioneer-profile-book-agent
- *
- * Important Notes:
- * - Always first tool called by specialized agents
- * - Non-blocking logging operation
- * - Helps track query distribution across agents
- * - Useful for debugging routing issues
- */
-
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { message, log } from '../../lib/print-helpers';
 export const queryReceiver = createTool({
 	id: 'query-receiver',
 	description:
@@ -56,11 +21,6 @@ export const queryReceiver = createTool({
 			.describe('Whether the query was successfully logged'),
 	}),
 	execute: async ({ query, questionType, agentName }) => {
-		message(`📨 ${agentName.toUpperCase()} - Received Query`);
-		log('Query:', query);
-		log('Question Type:', questionType);
-		log('Received at:', new Date().toISOString());
-
 		return { logged: true };
 	},
 });

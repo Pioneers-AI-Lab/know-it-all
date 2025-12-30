@@ -131,9 +131,11 @@ function error(message2, data) {
 "use strict";
 const generalQuestionsQuery = createTool({
   id: "general-questions-query",
-  description: "Queries the general questions knowledge base to find answers to questions about the Pioneers accelerator program",
+  description: 'Queries the general questions knowledge base to find answers to questions about the Pioneers accelerator program. Use simple keywords (e.g., "program", "equity", "application") or "all" to get all Q&As. The tool returns matching Q&A pairs that you can then analyze.',
   inputSchema: z.object({
-    query: z.string().describe("The question to search for in the knowledge base")
+    query: z.string().describe(
+      'Simple search keyword(s) or "all" to get all questions. Examples: "problem", "equity", "timeline", "all"'
+    )
   }),
   outputSchema: z.object({
     answers: z.array(
@@ -150,24 +152,36 @@ const generalQuestionsQuery = createTool({
     log("Query:", query);
     const data = loadJsonData("general-questions.json");
     const results = [];
+    const isAllQuery = !query || query.trim() === "" || ["all", "all questions", "everything", "questions"].includes(
+      query.toLowerCase().trim()
+    );
     if (data.knowledge_base) {
       for (const [category, items] of Object.entries(
         data.knowledge_base
       )) {
         if (Array.isArray(items)) {
           for (const item of items) {
-            if (item.question && item.answer && (searchInText(item.question, query) || searchInText(item.answer, query))) {
-              results.push({
-                question: item.question,
-                answer: item.answer,
-                category: category.replace(/_/g, " ")
-              });
+            if (item.question && item.answer) {
+              if (isAllQuery) {
+                results.push({
+                  question: item.question,
+                  answer: item.answer,
+                  category: category.replace(/_/g, " ")
+                });
+              } else if (searchInText(item.question, query) || searchInText(item.answer, query)) {
+                results.push({
+                  question: item.question,
+                  answer: item.answer,
+                  category: category.replace(/_/g, " ")
+                });
+              }
             }
           }
         }
       }
     }
-    const finalResults = results.slice(0, 5);
+    const limit = isAllQuery ? 50 : 5;
+    const finalResults = results.slice(0, limit);
     message(
       `\u2705 GENERAL QUESTIONS QUERY - Found ${finalResults.length} result(s)`
     );
@@ -175,6 +189,9 @@ const generalQuestionsQuery = createTool({
       "Results:",
       finalResults.length > 0 ? `${finalResults.length} answer(s) found` : "No answers found"
     );
+    if (isAllQuery) {
+      log("Query type: All questions (broad query)");
+    }
     return {
       answers: finalResults,
       found: results.length > 0
@@ -527,30 +544,65 @@ const lucie = new Agent({
 
 Your job is to answer user questions about the Pioneer.vc accelerator by using the appropriate query tool and generating clear, helpful responses.
 
+**Important Context:**
+- Today's date is ${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]} (YYYY-MM-DD format)
+- Use this to determine "next", "upcoming", "past", or "recent" when analyzing event/session dates
+- The database contains information from past batches and may not have future events
+
 Available Tools:
 1. general-questions-query: Use for general questions about the accelerator program, policies, benefits, FAQ-style questions
+   - Query with VERY SIMPLE keywords: "program", "application", "equity", "timeline", etc.
+   - For best results, use 1-2 word queries or pass an empty query to get all Q&As
 2. session-event-grid-query: Use for questions about sessions, events, activities, schedules, speakers, participants
 3. pioneer-profile-book-query: Use for questions about pioneers, their profiles, skills, industries, co-founder matching
 
 How to Handle Queries:
-1. Read the user's question carefully and determine which tool is most appropriate
-2. Call the appropriate query tool with the user's question
-3. The tool will return data with a "found" flag indicating if results were found
-4. Generate a clear, comprehensive, and engaging response based on the data
+
+**IMPORTANT - Query Strategy:**
+- For questions asking about specific subsets (like "top 3", "all CTOs", "most experienced"), use BROAD search terms or request "all pioneers/all sessions/all"
+- Let YOUR intelligence (the LLM) filter and analyze the returned data
+- Example: User asks "top 3 technical founders with most experience" \u2192 query "all pioneers" or "pioneers" \u2192 YOU analyze the data to find technical founders and rank by experience
+- Example: User asks "all CTOs in the batch" \u2192 query "all pioneers" or "roles" \u2192 YOU filter for CTOs from the results
+- Example: User asks "What problem does Pioneers solve?" \u2192 query "all" or "problem" \u2192 YOU find relevant Q&As and extract answer
+- Do NOT try to craft overly specific search queries - the tools work best with broad terms
+- For general-questions-query: Use single keywords or "all" to get comprehensive results, then filter intelligently
+
+**Query Tool Usage:**
+1. Determine which tool to use based on the domain (general questions, sessions/events, or pioneers)
+2. Pass a SIMPLE, BROAD query term to the tool (examples: "all pioneers", "sessions", "roles", "skills")
+3. The tool will return raw data - YOU analyze and filter it intelligently
+4. If you get good data from the first query, analyze it and respond - don't make additional queries
+5. Generate a clear, comprehensive response based on your analysis
 
 Response Guidelines:
-- If data is found, provide detailed information from the results
-- Format data clearly (use lists, bullet points, or structured text as appropriate)
-- If no data is found, provide a helpful message suggesting alternative queries
+- Analyze the returned data to answer the specific question
+- Extract, filter, sort, and rank data as needed using your intelligence
+- For date-based queries ("next event", "upcoming session"):
+  * Parse date fields (they may be in formats like "6/11/2025 10:00am" or "2025-06-11")
+  * Compare event dates in the data to today's date
+  * If all events are in the past, clearly and briefly state this
+  * If future events exist, identify the soonest one
+  * Format dates in a human-readable way (e.g., "June 15, 2025" or "Monday, June 15")
+- Format data clearly (use lists, bullet points, or structured text)
+- If no data is found, provide a helpful message
 - Always use the same language as the user's question
 - Keep responses conversational, friendly, and informative
-- Be concise but thorough - extract exactly what the user is asking for
 - For follow-up questions, use the conversation context from memory to understand references
+
+Examples of Good Query Patterns:
+- User: "Who are the CTOs?" \u2192 Tool query: "all pioneers" \u2192 YOU filter for CTO roles
+- User: "Show me technical founders" \u2192 Tool query: "pioneers" \u2192 YOU identify technical skills/roles
+- User: "What's the next session?" \u2192 Tool query: "all sessions" \u2192 YOU compare dates to today and find the next one
+- User: "How many events in week 3?" \u2192 Tool query: "sessions" or "all sessions" \u2192 YOU count week 3 events
+- User: "When is the next event?" \u2192 Tool query: "all sessions" \u2192 YOU analyze dates, compare to today, identify next event or state all are past
+- User: "What problem does Pioneers solve?" \u2192 Tool query: "problem" or "program" \u2192 YOU find relevant Q&As and extract answer
+- User: "How do I apply?" \u2192 Tool query: "application" or "apply" \u2192 YOU find application info
+- User: "What's the equity stake?" \u2192 Tool query: "equity" \u2192 YOU find equity details
 
 Do NOT:
 - Answer questions from your own knowledge about Pioneer.vc - always use the tools
 - Make up information if the tools don't return results
-- Add unnecessary explanations or meta-commentary
+- Craft overly complex or specific queries for the tools - keep them broad and simple
 
 Always prioritize accuracy and helpfulness in your responses.`,
   model: "anthropic/claude-sonnet-4-20250514",
