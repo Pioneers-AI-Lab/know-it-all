@@ -49,35 +49,45 @@ import { formatName } from './utils.js';
  * @param chunk - Stream chunk that may contain nested events
  * @param state - Current stream state to update
  */
-export function handleNestedChunkEvents(chunk: ChunkType, state: StreamState): void {
-  // Guard: some chunk types (like "object") don't have payload
-  if (!('payload' in chunk)) return;
+export function handleNestedChunkEvents(
+	chunk: ChunkType,
+	state: StreamState,
+): void {
+	// Guard: some chunk types (like "object") don't have payload
+	if (!('payload' in chunk)) return;
 
-  // Agent execution nested events (e.g., "agent-execution-event-text-delta")
-  if (chunk.type.startsWith('agent-execution-event-')) {
-    const innerChunk = chunk.payload;
-    if (innerChunk && typeof innerChunk === 'object' && 'type' in innerChunk && innerChunk.type === 'text-delta') {
-      const payload = (innerChunk as { payload?: { text?: string } }).payload;
-      if (payload?.text) {
-        state.text += payload.text;
-        state.chunkType = 'text-delta';
-      }
-    }
-    return;
-  }
+	// Agent execution nested events (e.g., "agent-execution-event-text-delta")
+	if (chunk.type.startsWith('agent-execution-event-')) {
+		const innerChunk = chunk.payload;
+		if (
+			innerChunk &&
+			typeof innerChunk === 'object' &&
+			'type' in innerChunk &&
+			innerChunk.type === 'text-delta'
+		) {
+			const payload = (innerChunk as { payload?: { text?: string } })
+				.payload;
+			if (payload?.text) {
+				state.text += payload.text;
+				state.chunkType = 'text-delta';
+			}
+		}
+		return;
+	}
 
-  // Workflow execution nested events (e.g., "workflow-execution-event-workflow-step-start")
-  if (chunk.type.startsWith('workflow-execution-event-')) {
-    const innerChunk = chunk.payload;
-    if (
-      innerChunk &&
-      typeof innerChunk === 'object' &&
-      'type' in innerChunk &&
-      innerChunk.type === 'workflow-step-start'
-    ) {
-      const payload = (innerChunk as { payload?: { id?: string } }).payload;
-      state.chunkType = 'workflow-step-start';
-      state.stepName = formatName(payload?.id ?? 'step');
-    }
-  }
+	// Workflow execution nested events (e.g., "workflow-execution-event-workflow-step-start")
+	if (chunk.type.startsWith('workflow-execution-event-')) {
+		const innerChunk = chunk.payload;
+		if (
+			innerChunk &&
+			typeof innerChunk === 'object' &&
+			'type' in innerChunk &&
+			innerChunk.type === 'workflow-step-start'
+		) {
+			const payload = (innerChunk as { payload?: { id?: string } })
+				.payload;
+			state.chunkType = 'workflow-step-start';
+			state.stepName = formatName(payload?.id ?? 'step');
+		}
+	}
 }

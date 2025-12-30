@@ -1,0 +1,159 @@
+/**
+ * Query Router Tool - Intelligent Agent Routing Based on Question Type
+ *
+ * This tool implements the routing logic that directs queries from the orchestrator-agent
+ * to the appropriate specialized agent based on the classified question type. Acts as the
+ * central dispatcher in the multi-agent architecture.
+ *
+ * Purpose:
+ * - Maps question types to corresponding specialized agents
+ * - Invokes the correct agent with properly formatted query
+ * - Handles agent-to-agent communication via Mastra's agent system
+ * - Returns specialized agent responses back to orchestrator
+ *
+ * Routing Map:
+ * - startups → startups-agent (company/portfolio queries)
+ * - pioneers → pioneer-profile-book-agent (pioneer profile queries)
+ * - sessions → session-event-grid-agent (session information)
+ * - pioneers → pioneer-profile-book-agent (pioneer profile queries)
+ * - general → general-questions-agent (general accelerator questions)
+ *
+ * Pipeline Position:
+ * Lucie → Orchestrator → Query Logger → [Query Router] → Specialized Agent → Response Generator
+ *
+ * Communication Flow:
+ * 1. Receives query and questionType from orchestrator
+ * 2. Formats message: "Question Type: {type}\n\nQuery: {query}"
+ * 3. Invokes appropriate agent via Mastra.agent(name).generate()
+ * 4. Returns agent's response to orchestrator
+ *
+ * Important Notes:
+ * - All specialized agents must be registered in Mastra instance
+ * - Agent names must match exactly (case-sensitive)
+ * - Specialized agents expect specific message format
+ * - Routing errors return descriptive failure messages
+ */
+
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+import { message, log, error } from '../../lib/print-helpers';
+export const queryRouter = createTool({
+	id: 'query-router',
+	description:
+		'Routes a query to the appropriate specialized agent based on the question type',
+	inputSchema: z.object({
+		query: z.string().describe('The query to route to a specialized agent'),
+		questionType: z
+			.enum(['startups', 'events', 'founders', 'pioneers', 'general'])
+			.describe(
+				'The type of question determining which agent to route to',
+			),
+	}),
+	outputSchema: z.object({
+		success: z
+			.boolean()
+			.describe('Whether the query was successfully routed'),
+		agentName: z
+			.string()
+			.describe('The name of the agent that handled the query'),
+		response: z
+			.string()
+			.describe('The response from the specialized agent'),
+	}),
+	execute: async ({
+		query,
+		questionType,
+	}): Promise<{
+		success: boolean;
+		agentName: string;
+		response: string;
+	}> => {
+		message('🧭 QUERY ROUTER - Routing query to specialized agent');
+		log('Question type:', questionType);
+		log('Query:', query);
+
+		// Map question types to agent names
+		const agentMapping: Record<
+			string,
+			{
+				agentName: string;
+				displayName: string;
+			}
+		> = {
+			startups: {
+				agentName: 'startupsAgent',
+				displayName: 'Startups Agent',
+			},
+			events: {
+				agentName: 'sessionEventGridAgent',
+				displayName: 'Calendar Agent',
+			},
+			founders: {
+				agentName: 'foundersAgent', // Founders are handled by founders agent
+				displayName: 'Founders Agent',
+			},
+			pioneers: {
+				agentName: 'pioneerProfileBookAgent',
+				displayName: 'Pioneer Profile Book Agent',
+			},
+			general: {
+				agentName: 'generalQuestionsAgent',
+				displayName: 'General Questions Agent',
+			},
+		};
+
+		const mapping = agentMapping[questionType];
+		if (!mapping) {
+			error('No agent mapping found for question type:', questionType);
+			throw new Error(
+				`No agent mapping found for question type: ${questionType}`,
+			);
+		}
+
+		// log('Resolved mapping:', JSON.stringify(mapping));
+
+		// Lazy import to avoid circular dependency
+		const { mastra } = await import('../index');
+		// Get the specialized agent from the mastra instance
+		const specializedAgent = mastra.getAgent(
+			mapping.agentName as
+				| 'lucie'
+				| 'generalQuestionsAgent'
+				| 'pioneerProfileBookAgent'
+				| 'sessionEventGridAgent',
+		);
+		if (!specializedAgent) {
+			error(
+				`Specialized agent "${mapping.agentName}" not found`,
+				mapping,
+			);
+			throw new Error(
+				`Specialized agent "${mapping.agentName}" not found`,
+			);
+		}
+
+		// Create a message that includes the query and question type
+		// The agent will use its query-receiver tool to log the incoming query
+		const agentMessage = `Question Type: ${questionType}\n\nQuery: ${query}`;
+
+		// Send the query to the specialized agent
+		message(
+			`🧭 QUERY ROUTER - Calling specialized agent: ${mapping.agentName}`,
+		);
+		log('Message sent:', agentMessage);
+
+		const response = await specializedAgent.generate(agentMessage);
+
+		const responseText = response.text || JSON.stringify(response);
+
+		message(
+			`✅ QUERY ROUTER - Received response from ${mapping.agentName}`,
+		);
+
+		return {
+			success: true,
+			agentName: mapping.displayName,
+			response: responseText,
+		};
+	},
+});
