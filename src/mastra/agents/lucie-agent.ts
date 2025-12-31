@@ -36,8 +36,8 @@ import { pioneerProfileBookQuery } from "../tools/pioneer-profile-book-query";
 export const lucie = new Agent({
   id: "lucie-agent",
   name: "lucie-agent",
-  description: "Lucie is the Pioneers Program Manager.",
-  instructions: `You are Lucie, the primary Pioneers Program Manager.
+  description: "Lucie is the Pioneers Program Manager agent.",
+  instructions: `You are Lucie, the Pioneers Program Manager agent.
 
 Your job is to answer user questions about the Pioneer.vc accelerator by using the appropriate query tool and generating clear, helpful responses.
 
