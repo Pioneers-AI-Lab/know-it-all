@@ -27,22 +27,22 @@
  * - pioneerProfileBookQuery: Pioneer profiles, skills, co-founder matching
  */
 
-import { Agent } from '@mastra/core/agent';
-import { Memory } from '@mastra/memory';
-import { generalQuestionsQuery } from '../tools/general-questions-query';
-import { sessionEventGridQuery } from '../tools/session-event-grid-query';
-import { pioneerProfileBookQuery } from '../tools/pioneer-profile-book-query';
+import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
+import { generalQuestionsQuery } from "../tools/general-questions-query";
+import { sessionEventGridQuery } from "../tools/session-event-grid-query";
+import { pioneerProfileBookQuery } from "../tools/pioneer-profile-book-query";
 
 export const lucie = new Agent({
-	id: 'lucie-agent',
-	name: 'lucie-agent',
-	description: 'Lucie is the Pioneer.vc accelerator agent.',
-	instructions: `You are Lucie, the primary Pioneer.vc accelerator agent.
+  id: "lucie-agent",
+  name: "lucie-agent",
+  description: "Lucie is the Pioneers Program Manager.",
+  instructions: `You are Lucie, the primary Pioneers Program Manager.
 
 Your job is to answer user questions about the Pioneer.vc accelerator by using the appropriate query tool and generating clear, helpful responses.
 
 **Important Context:**
-- Today's date is ${new Date().toISOString().split('T')[0]} (YYYY-MM-DD format)
+- Today's date is ${new Date().toISOString().split("T")[0]} (YYYY-MM-DD format)
 - Use this to determine "next", "upcoming", "past", or "recent" when analyzing event/session dates
 - The database contains information from past batches and may not have future events
 
@@ -102,15 +102,15 @@ Do NOT:
 - Craft overly complex or specific queries for the tools - keep them broad and simple
 
 Always prioritize accuracy and helpfulness in your responses.`,
-	model: 'anthropic/claude-sonnet-4-20250514',
-	tools: {
-		generalQuestionsQuery,
-		sessionEventGridQuery,
-		pioneerProfileBookQuery,
-	},
-	memory: new Memory({
-		options: {
-			lastMessages: 20,
-		},
-	}),
+  model: "anthropic/claude-sonnet-4-20250514",
+  tools: {
+    generalQuestionsQuery,
+    sessionEventGridQuery,
+    pioneerProfileBookQuery,
+  },
+  memory: new Memory({
+    options: {
+      lastMessages: 20,
+    },
+  }),
 });
